@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <!--
+    - External dependencies (CDN)
+   -->
+  
+  <!-- Bundled in vendor/util.js -->
+  <!--
+  <script src="//cdnjs.cloudflare.com/ajax/libs/fetch/0.11.0/fetch.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/4.10.0/lodash.min.js"></script>
+  -->
+
+  <!-- Bundled in vendor/react-with-redux.js -->
+  <!--
+  <script src="//fb.me/react-with-addons-15.0.1.js"></script>
+  <script src="//fb.me/react-dom-15.0.1.js"></script>
+  -->
+
+  <!-- Bundled in vendor/react-with-redux.js -->
+  <!--
+  <script src="//cdnjs.cloudflare.com/ajax/libs/redux/3.4.0/redux.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/react-redux/4.4.2/react-redux.js"></script> 
+  <script src="//cdnjs.cloudflare.com/ajax/libs/redux-thunk/2.0.1/redux-thunk.js"></script> 
+  <script src="//npmcdn.com/redux-logger@2.6.1/dist/index.js"></script>
+  -->
+
+  <!-- A part of ECharts (index.common) is bundled in vendor/echarts.js -->
+  <!--<script src="//cdnjs.cloudflare.com/ajax/libs/echarts/3.1.6/echarts.js"></script>-->
+  
+  <!-- 
+    - External dependencies (local bundles) 
+   -->
+  <script src="vendor/util.js"></script>
+  <script src="vendor/react-with-redux.js"></script>
+  <script src="vendor/echarts.js"></script>
+  
+  <!--
+   - Local
+   -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <style>
+    .page {margin: 25px 15px;font-size: 14px;}
+  </style>
+</head>
+
+<body>
+   <div class="page container-fluid">
+     <h1>React-ECharts examples</h1>
+     <div id="root">Loading root...</div>
+   </div>
+</body>
+
+<script src="main.js" data-root="#root"></script> 
+</html>

@@ -1,0 +1,61 @@
+/** 
+ * Apply site-local style 
+ */
+
+.form-group input.form-control {
+    border-radius: 1px;
+    height: 32px;
+    line-height: 1.25em;
+    padding: 3px 9px;
+    border: solid 1px #ccc;
+}
+
+.form-group input[type="file"] {
+    padding: 4px 0px;
+}
+
+.form-group .input-group-addon {
+    border-radius: 1px;
+}
+
+.btn {
+    border-radius: 1px;
+    padding: 4px 10px;
+}
+
+.form-group select {
+    line-height: 1.25em;
+    padding: 3px 9px;
+}
+
+.horizontal-form legend {
+    font-size: 1.35em;
+} 
+
+.progress {
+    border-radius: 1px;
+    border: solid 1px #ccc;
+}
+
+section:after {
+  content: '';
+  display: block;
+  float: none;
+  clear: both;
+}
+
+button {
+  padding: 3px;
+  vertical-align: middle;
+}
+
+/* Chart component */
+
+.chart.portal {
+    width: 550px;
+    height: 300px;
+    margin: 10px 0px;
+    padding: 5px 0px;
+    background-color: #fff;
+    border: solid 1px silver;
+}

@@ -4,4 +4,4 @@ build
 dist
 node_modules
 scratch.js
-public/www
+example/public/www

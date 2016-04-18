@@ -113,7 +113,6 @@ module.exports = function(grunt) {
          files: [
            'example/src/js/**.js',
            'example/src/js/components/**.js',
-           'example/src/js/components/echarts/**.js',
            'example/src/html/**.html',
            'example/assets/style.css'
          ],

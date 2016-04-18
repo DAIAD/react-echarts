@@ -1,0 +1,23 @@
+{
+  "name": "react-echarts",
+  "version": "0.0.1",
+  "description": "A collection of React components for ECharts charts",
+  "main": "src/js/index.js",
+  "scripts": {
+    "test": "src/js/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drmalex07/react-echarts.git"
+  },
+  "keywords": [
+    "React",
+    "ECharts"
+  ],
+  "author": "Michail Alexakis",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/drmalex07/react-echarts/issues"
+  },
+  "homepage": "https://github.com/drmalex07/react-echarts#readme"
+}

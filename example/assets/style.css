@@ -49,6 +49,14 @@ button {
   vertical-align: middle;
 }
 
+.nav-pills > li > a {
+  border-radius: 1px;
+}
+
+.tab-content {
+  padding: 10px 0px;
+}
+
 /* Chart component */
 
 .chart.portal {

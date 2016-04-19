@@ -1,14 +1,14 @@
-var _index = require('./index');
+var {renderRoot} = require('./index');
 
 var rootSelector = document.currentScript.getAttribute('data-root') || '#root';
 
 document.addEventListener("DOMContentLoaded", function () {
   var rootEl = document.querySelector(rootSelector);
-  var renderRoot = _index.renderRoot.bind(window, rootEl);
-  renderRoot();
+  renderRoot(rootEl);
 });
 
-window.addEventListener('hashchange', function () {
-  var store = _index.store, actions = _index.actions;
-  store.dispatch(actions.updateRoute());
-});
+// Note: only for debugging purposes
+global.$a = {
+  apiclient: require('./api-client/action'),
+  actions: require('./actions') 
+};

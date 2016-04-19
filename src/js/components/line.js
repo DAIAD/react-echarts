@@ -212,7 +212,6 @@ var Chart = React.createClass({
       max: PropTypes.number,
     }),
     yAxis: PropTypes.shape({
-      data: PropTypes.array,
       formatter: PropTypes.func,
       numTicks: PropTypes.number,
       min: PropTypes.number,
@@ -272,7 +271,7 @@ var Chart = React.createClass({
       // in reality, these props will be provided by a parent component!
       {
         xAxis: {
-          type: 'category',
+          // An axis of `category` type 
           data: ['A','B','C','D','E','F','G'], 
           numTicks: 10,
         },

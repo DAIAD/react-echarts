@@ -1,56 +1,65 @@
 var React = global.React || require('react');
+var ReactBootstrap = global.ReactBootstrap || require('react-bootstrap');
+var ReactRouter = global.ReactRouter || require('react-router');
 var ReactRedux = global.ReactRedux || require('react-redux');
 
+var {Nav, Navbar, NavItem} = ReactBootstrap;
+var {Router, Route, IndexRoute, Link, hashHistory} = ReactRouter;
 var actions = require('../actions');
-var LineChart = require('./line-container');
+var charts = require('./react-echarts');
+var LineChart = charts.LineChart;
 
-// Presentational component
+var RootMenu = React.createClass({
+  render: function ()
+  {
+    return (
+      <div>
+        <Navbar>
+          <Navbar.Header>
+            <Navbar.Brand><a href="#">React-Echarts example!</a></Navbar.Brand>
+          </Navbar.Header>
+          <Nav activeHref={'#' + this.props.location.pathname}>
+            <NavItem href="#/stats/temperature">Temperature Stats</NavItem>
+            <NavItem href="#/stats/humidity">Humidity Stats</NavItem>
+            <NavItem href="#/about">About</NavItem>
+          </Nav>
+        </Navbar>
+        {this.props.children}
+      </div>
+    );
+  }
+});
+
+var AboutPage = ({}) => (<div><h4>A demo using <em>DAiAD/react-echarts</em></h4></div>);
 
 var Root = React.createClass({
   render: function ()
   {
     return (
-      <div>
-        <section id='sec-1'>
-          <h3>Example #1: Lines/Areas</h3>
-          <LineChart 
-            xAxis={{
-              data: ['Mo','Tu','We','Th','Fr','Sa','Su'],
-            }}
-            yAxis={{
-              name: 'Temperature (' + this.props.name + ')',
-              numTicks: 3,
-              //min: 0,
-              //max: 30,
-              formatter: (y) => (y.toString() + '°C')
-            }}
-            refreshData={this.props.refreshData}
-           />
-          <div className="panel">
-            <button 
-              onClick={(ev) => (this.props.refreshData(), false)}
-             >Refresh</button>
-            <button 
-              onClick={(ev) => (console.info('Cleanup'), false)}
-             >Cleanup</button>
-          </div>
-        </section>
-      </div>
+      <Router history={hashHistory}>
+        <Route path="/" component={RootMenu}>
+          <Route path="about" component={AboutPage} />
+          <Route path="stats/temperature" component={AboutPage} />
+          <Route path="stats/humidity" component={AboutPage} />
+        </Route>
+      </Router>
     );
   }
 });
 
 // Container component
 
-const mapStateToProps = (state, ownProps) => ({
-  route: state.route,
-});
+//const mapStateToProps = (state, ownProps) => ({
+//  route: state.route,
+//});
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
-  refreshData: function () {
-    console.info('Loading series data...');
-    dispatch(actions.refreshTemperatureData());
-  },
-});
+//const mapDispatchToProps = (dispatch, ownProps) => ({
+//  refreshData: function () {
+//    console.info('Loading series data...');
+//    dispatch(actions.refreshTemperatureData());
+//  },
+//});
 
-module.exports = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Root)
+//Root = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Root)
+
+module.exports = Root;

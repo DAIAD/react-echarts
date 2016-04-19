@@ -1,32 +1,33 @@
+var _ = global.lodash || require('lodash');
 
-var reduceRoute = function (state='stats/daily', action)
+var reduceTemperatureStats = function (state={}, action)
 {
   switch (action.type) {
-    case 'CHANGE_ROUTE':
-      return action.routePath;
+    case 'TEMPERATURE/REQUEST_DATA':
+      return _.extend({}, state, {
+        finished: false,
+        requested: action.timestamp,
+        series: state.series, // keep previous data until update arrives
+      });
       break;
-    default:
-      return state;
-      break;
-  }
-}
-
-var reduceTemperatureStats = function (state={_finished: null, series: []}, action)
-{
-  switch (action.type) {
-    case 'REQUEST_TEMPERATURE_DATA':
-      return {
-        _finished: false,
-        _requested: action.timestamp,
-        series: state.series, // keep previous data snapshot
-      };
-      break;
-    case 'SET_TEMPERATURE_DATA':
-      return {
-        _finished: action.timestamp,
-        _requested: state._requested,
+    case 'TEMPERATURE/SET_DATA':
+      return _.extend({}, state, {
+        finished: action.timestamp,
+        invalid: false,
         series: action.series,
-      };
+      });
+      break;
+    case 'TEMPERATURE/SET_GRANULARITY':
+      return _.extend({}, state, {
+        granularity: action.name,
+        invalid: (state.granularity == action.name),
+      });
+      break;
+    case 'TEMPERATURE/SET_TIMESPAN':
+      return _.extend({}, state, {
+        timespan: action.timespan,
+        invalid: (state.timespan == action.timespan),
+      });
       break;
     default:
       return state;
@@ -34,4 +35,4 @@ var reduceTemperatureStats = function (state={_finished: null, series: []}, acti
   }
 }
 
-module.exports = {reduceRoute, reduceTemperatureStats}
+module.exports = {reduceTemperatureStats}

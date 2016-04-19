@@ -66,7 +66,7 @@ The `series` property is an array that provides the actual data to be plotted:
 | Name | Required | Type | Description | Example |
 | ---- | -------- | ---- | ----------- | --------|
 | `series.0.name` | Yes | `String` | The name of this dataset | `Temperature - Athens` |
-| `series.0.data` | Yes | `Array` | The data points. See [note](#note--series-data) | `[11.0, 11.5, 13, 14, 13, 15, 17]` |
+| `series.0.data` | Yes | `Array` | The data points. See [note](#note---series-data) | `[11.0, 11.5, 13, 14, 13, 15, 17]` |
 | `series.0.color` | No | `String` | The color for this line/area | `'#C23531'` |
 | `series.0.smooth` | No | `Boolean` | Smoothen line for this series (spline interpolation) | `false` |
 | `series.0.fill` | No | `Number` | Fill areas with the given opacity | `null` or `0.55`|
@@ -110,7 +110,13 @@ The `series` property is an array that provides the actual data to be plotted:
 
 #### Note - Series Data
 
-_Todo_
+The expected `series.X.data` shape is completely different depending on `xAxis.data` (see also [ECharts - xAxis type](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~xAxis-i)). 
+
+We have 2 cases:
+
+1. If `xAxis.data` is supplied (thus, fully describing the value domain of x as a set of distinct values), then `series.X.data` (for all series!) should be an array of numbers mapped 1-1 to the set of x values. This is a _category_ x axis. Example: `[5.0, 8.5, 13.5, 14.7, 16, 19, 21.5]` mapping to `['Mo','Tu','We','Th','Fr','Sa','Su']` 
+
+2. If `xAxis.data` is missing, this implies that each one of the series will carry its own data points (i.e pairs of (x,y) numerical values). This is a _value_ x axis. Example: some (rougly stepped at `0.5`) measurements: `[[0.0, 15.6], [0.43, 19.1], [0.97, 18.8], [1.52, 17], [2.10, 17.6]]`
 
 ## Examples
 

@@ -3,11 +3,11 @@ var ReactBootstrap = global.ReactBootstrap || require('react-bootstrap');
 var ReactRouter = global.ReactRouter || require('react-router');
 var ReactRedux = global.ReactRedux || require('react-redux');
 
-var {Nav, Navbar, NavItem} = ReactBootstrap;
+var PropTypes = React.PropTypes;
+var {Nav, Navbar, NavItem, NavDropdown, MenuItem} = ReactBootstrap;
 var {Router, Route, IndexRoute, Link, hashHistory} = ReactRouter;
-var actions = require('../actions');
-var charts = require('./react-echarts');
-var LineChart = charts.LineChart;
+
+var ChartPane = require('./chart-pane');
 
 var RootMenu = React.createClass({
   render: function ()
@@ -19,18 +19,39 @@ var RootMenu = React.createClass({
             <Navbar.Brand><a href="#">React-Echarts example!</a></Navbar.Brand>
           </Navbar.Header>
           <Nav activeHref={'#' + this.props.location.pathname}>
-            <NavItem href="#/stats/temperature">Temperature Stats</NavItem>
-            <NavItem href="#/stats/humidity">Humidity Stats</NavItem>
+            <NavDropdown title={'Measurements'} id="stats-nav-dropdown">
+              <MenuItem href="#/stats/temperature">Temperature</MenuItem> 
+              <MenuItem href="#/stats/humidity">Humidity</MenuItem> 
+            </NavDropdown>
             <NavItem href="#/about">About</NavItem>
           </Nav>
         </Navbar>
-        {this.props.children}
+        <div className="container page-inner">
+          {this.props.children}
+        </div>
       </div>
     );
   }
 });
 
-var AboutPage = ({}) => (<div><h4>A demo using <em>DAiAD/react-echarts</em></h4></div>);
+var HomePage = ({}) => (
+  <div>
+    <h3>An example!</h3>
+    <p>An exmaple using <strong><a href="://github.com/DAIAD/react-echarts.git">DAIAD/react-echarts</a></strong></p>
+  </div>
+);
+
+var AboutPage = ({}) => (
+  <div><h3>About me</h3><p>This is about me</p></div>
+);
+
+var StatsPage = ({source, title}) => (
+  <div>
+    <h3>Measurements / {title}</h3>
+    <ChartPane.Panel source={source} />
+    <ChartPane.Chart source={source} />
+  </div>
+);
 
 var Root = React.createClass({
   render: function ()
@@ -38,28 +59,28 @@ var Root = React.createClass({
     return (
       <Router history={hashHistory}>
         <Route path="/" component={RootMenu}>
+          <IndexRoute component={HomePage} />
           <Route path="about" component={AboutPage} />
-          <Route path="stats/temperature" component={AboutPage} />
-          <Route path="stats/humidity" component={AboutPage} />
+          <Route path="stats/:source" 
+            component={
+              ({params}) => ( /* params provided by <Router> */
+                <StatsPage 
+                  source={params.source}
+                  title={this.props.info[params.source].title} />
+              )
+            } 
+           />
         </Route>
       </Router>
     );
   }
 });
 
-// Container component
-
-//const mapStateToProps = (state, ownProps) => ({
-//  route: state.route,
-//});
-
-//const mapDispatchToProps = (dispatch, ownProps) => ({
-//  refreshData: function () {
-//    console.info('Loading series data...');
-//    dispatch(actions.refreshTemperatureData());
-//  },
-//});
-
-//Root = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Root)
+Root = ReactRedux.connect(
+  (state, ownProps) => ({
+    info: _.mapValues(state.stats, v => v.info),
+  }), 
+  null
+)(Root);
 
 module.exports = Root;

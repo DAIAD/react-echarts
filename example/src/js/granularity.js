@@ -1,6 +1,6 @@
 var moment = global.moment || require('moment');
 
-Granularity = function (name, quantity, unit)
+var Granularity = function (name, quantity, unit)
 {
   // This unit should be something understood by Moment.js
   // see http://momentjs.com/docs/#/manipulating/add/
@@ -43,9 +43,8 @@ Granularity.common = [
 
 ];
 
-Granularity.fromName = function (name) 
-{
-  return Granularity.common.find(v => (v.name == name));
-}
+Granularity.fromName = (name) => (Granularity.common.find(g => (g.name == name)));
+
+Granularity.names = () => (Granularity.common.map(g => g.name))
 
 module.exports = Granularity;

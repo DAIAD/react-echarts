@@ -7,40 +7,44 @@ var actions = {
 
   // Plain actions
   
-  requestTemperatureData: (t) => ({
-    type: 'TEMPERATURE/REQUEST_DATA',
-    timestamp: t.getTime(),
+  requestData: (source, t=null) => ({
+    type: 'REQUEST_DATA',
+    source: source, 
+    timestamp: (t || new Date()).getTime(),
   }),
   
-  setTemperatureData: (series, t) => ({
-    type: 'TEMPERATURE/SET_DATA',
-    timestamp: t.getTime(), 
+  setData: (source, series, t=null) => ({
+    type: 'SET_DATA',
+    source: source,
+    timestamp: (t || new Date()).getTime(), 
     series: series,
   }),
   
-  setTemperatureGranularity: (name) => ({
-    type: 'TEMPERATURE/SET_GRANULARITY',
+  setGranularity: (source, name) => ({
+    type: 'SET_GRANULARITY',
+    source: source,
     name: name,
   }),
   
-  setTemperatureTimespan: (timespan) => ({
-    type: 'TEMPERATURE/SET_TIMESPAN',
+  setTimespan: (source, timespan) => ({
+    type: 'SET_TIMESPAN',
+    source: source,
     timespan: timespan,
   }),
 
   // Complex actions: functions processed by thunk middleware
   
-  refreshTemperatureData: () => (dispatch, getState) => {
+  refreshData: (source) => (dispatch, getState) => {
     var state = getState();
-    dispatch(actions.requestTemperatureData(new Date()));
+    dispatch(actions.requestData(source, new Date()));
     api.queryStats({
-      source: 'temperature',
+      source: source,
       metric: state.temperature.metric,
       granularity: state.temperature.granularity,
       timespan: state.temperature.timespan,
     }).then(res => {
       if (!res.error) {
-        dispatch(actions.setTemperatureData(res.result.series, new Date()));
+        dispatch(actions.setData(source, res.result.series, new Date()));
       } else {
         // do something on a failed api request
       }

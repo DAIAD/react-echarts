@@ -5,21 +5,44 @@ var ReduxThunk = global.ReduxThunk || require('redux-thunk');
 var reducers = require('./reducers');
 
 var rootReducer = Redux.combineReducers({
-  temperature: reducers.reduceTemperatureStats,
+  stats: reducers.reduceStats,
 });
 
 // Create and configure store
 
 var initialState = {
-  temperature: {
-    granularity: 'day',
-    metric: 'avg',
-    timespan: 'week',
-    invalid: false,   // flag data that need to be refreshed
-    finished: null,   // timestamp of last successfull update of series data
-    requested: null,  // timestamp of last successfull attempt to fetch series data
-    series: null,
-  }
+  stats: {
+    temperature: {
+      info: {
+        name: 'temperature',
+        title: 'Temperature',
+        description: 'The set of measurements on temperature',
+        unit: '°C',
+      },
+      granularity: 'day',
+      metric: 'avg',
+      timespan: 'week',
+      invalid: false,   // flag data that need to be refreshed
+      finished: null,   // timestamp of last successfull update of series data
+      requested: null,  // timestamp of last successfull attempt to fetch series data
+      series: null,
+    },
+    humidity: {
+      info: {
+        name: 'humidity',
+        title: 'Humidity',
+        description: 'The set of measurements for relative humidity',
+        unit: null, // unit-less 
+      },
+      granularity: 'day',
+      metric: 'avg',
+      timespan: 'week',
+      invalid: false,
+      finished: null,
+      requested: null,
+      series: null,
+    },
+  },
 };
 
 var middleware = [

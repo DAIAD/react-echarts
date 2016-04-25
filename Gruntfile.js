@@ -30,7 +30,7 @@ module.exports = function(grunt) {
       vendor: {
         files: {
           'build/vendor/util.min.js': ['build/vendor/util.js'],
-          'build/vendor/react-with-redux.min.js': ['build/vendor/react-with-redux.js'], 
+          'build/vendor/react-with-friends.min.js': ['build/vendor/react-with-friends.js'], 
           'build/vendor/echarts.min.js': ['build/vendor/echarts.js'],
         },
       },
@@ -60,7 +60,7 @@ module.exports = function(grunt) {
       vendor: {
         files: {
           'build/vendor/util.js': ['vendor/js/util.js'],
-          'build/vendor/react-with-redux.js': ['vendor/js/react-with-redux.js'],
+          'build/vendor/react-with-friends.js': ['vendor/js/react-with-friends.js'],
           'build/vendor/echarts.js': ['vendor/js/echarts.js'],
         },
       },
@@ -111,6 +111,8 @@ module.exports = function(grunt) {
     watch: {
       example: {
          files: [
+           'src/js/**.js',
+           'src/js/components/**.js',
            'example/src/js/**.js',
            'example/src/js/components/**.js',
            'example/src/html/**.html',
@@ -137,7 +139,7 @@ module.exports = function(grunt) {
 
   // Register new tasks
 
-  grunt.registerTask('build:example', ['browserify:example', 'uglify:example']);
+  grunt.registerTask('build:example', ['browserify:example']); // uglify:example
   grunt.registerTask('build:vendor', ['browserify:vendor', 'uglify:vendor']);
   grunt.registerTask('build', ['browserify', 'uglify']);
   

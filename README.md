@@ -80,6 +80,8 @@ The `series` property is an array that provides the actual data to be plotted:
 
 ```jsx
 <LineChart 
+    width='400px'
+    height='250px'
     xAxis={{
         numTicks: 5,
         data: ['Mo','Tu','We','Th','Fr','Sa','Su'],

@@ -9,11 +9,13 @@ React.addons.PureRenderMixin = require('react-addons-pure-render-mixin');
 var ReactRouter = require('react-router');
 
 var ReactBootstrap = require('react-bootstrap');
+var ReactDatetime = require('react-datetime');
 
 global.React = React;
 global.ReactDOM = ReactDOM;
 global.ReactRouter = ReactRouter;
 global.ReactBootstrap = ReactBootstrap;
+global.ReactDatetime = ReactDatetime;
 
 // Redux
 

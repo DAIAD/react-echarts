@@ -1,10 +1,15 @@
+'use strict';
+
 var React = global.React || require('react');
+var ReactDOM = global.ReactDOM || require('react-dom');
 var echarts = global.echarts || require('echarts/index.common');
 var _ = global.lodash || require('lodash');
 var rgbcolor = global.rgbcolor || require('rgbcolor');
 
 var PropTypes = React.PropTypes;
-var randomString = () => (parseInt(Math.random() * 1e+9).toString(36));
+
+var {randomString} = require('../util');
+var validators = require('../validators');
 
 // A ECharts-based chart implemented as a React portal component
 var Chart = React.createClass({
@@ -197,8 +202,8 @@ var Chart = React.createClass({
     // Properties for the container (i.e. portal) element
     id: PropTypes.string,
     prefix: PropTypes.string,
-    width: PropTypes.number,
-    height: PropTypes.number,
+    width: validators.validateDimension,
+    height: validators.validateDimension,
     // Properties injected from parent for callbacks
     refreshData: PropTypes.func,
     // Properties for various chart options:

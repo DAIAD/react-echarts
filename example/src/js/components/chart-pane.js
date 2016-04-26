@@ -14,7 +14,7 @@ var echarts = require('./react-echarts');
 var Granularity = require('../granularity');
 
 var propTypes = { 
-  source: PropTypes.oneOf(['temperature', 'humidity']),
+  source: PropTypes.oneOf(['consumption', 'energy']),
   granularity: PropTypes.oneOf(Granularity.names()),
   info: PropTypes.shape({
     name: PropTypes.string,
@@ -103,6 +103,10 @@ var Panel = React.createClass({
 
   getDefaultProps: function () {
     return {};
+  },
+  
+  componentDidMount: function () {
+    this.props.refreshData();
   },
   
   render: function ()
@@ -226,62 +230,61 @@ var Chart = React.createClass({
   propTypes: _.extend({}, propTypes, {
     series: PropTypes.array, // Todo shape elements
   }),
-
+  
   render: function ()
   {
     var info = this.props.info;
-    var yf = (info.unit)? ((y) => (y.toString() + ' ' + info.unit)) : null;
+    var [xf, yf] = this._getFormatters();
     var pilot = (this.props.series || [])[0];
+
     return (
        <echarts.LineChart 
-          width={750}
-          height={350}
+          width={800}
+          height={380}
           xAxis={{
-              numTicks: 5,
+              numTicks: pilot? Math.min(6, pilot.length) : 0,
               min: pilot? (pilot.data[0][0]) : null,
-              max: pilot? (pilot.data[pilot.data.length - 1][0]) : null,
-              formatter: (t) => (moment(t).format('DD/MM/YYYY')), // Todo according to granularity 
+              formatter: xf,
           }}
           yAxis={{
               name: info.title,
-              numTicks: 3,
+              numTicks: 4,
               formatter: yf,
           }}
-          series={this.props.series} // Fixme names?
+          series={this.props.series}
       />
     );
-    /*
-    return (
-      <echarts.LineChart 
-          width={750}
-          height={350}
-          xAxis={{
-              numTicks: 5,
-              data: ['Mo','Tu','We','Th','Fr','Sa','Su'],
-          }}
-          yAxis={{
-              name: "Temperature",
-              numTicks: 3,
-              formatter: (y) => (y.toString() + " oC")
-          }}
-          series={[
-              {
-                  name: 'Athens',
-                  smooth: true,
-                  fill: 0.4,
-                  data: [11.0, 11.5, 13, 14, 13, 15, 17],
-                  mark: {
-                      lines: [{type: "max", name: "Max Temperature"}],
-                  },
-              },
-              {
-                  name: 'Thesalloniki',
-                  data: [5.0, 8.5, 13.5, 14.7, 16, 19, 21.5],
-              },
-          ]}
-      />
-  );*/
-}
+  },
+
+  // Helpers
+  
+  _getFormatters: function () {
+    var xf, yf;
+    var info = this.props.info;
+    
+    yf = (info.unit)? ((y) => (y.toFixed(2) + ' ' + info.unit)) : null;
+    
+    switch (this.props.granularity) {
+      case 'minute':
+        xf = (t) => (moment(t).format('HH:MM'));
+        break;
+      case 'hour':
+        xf = (t) => (moment(t).format('HH:00'));
+        break;
+      case 'day':
+      case 'week':
+        xf = (t) => (moment(t).format('DD/MM'));
+        break;
+      case 'month':
+        xf = (t) => (moment(t).format('MM/YYYY'));
+        break;
+      case 'year':
+        xf = (t) => (moment(t).format('YYYY'));
+        break;
+    }
+
+    return [xf, yf]
+  },
 });
 
 // Container components

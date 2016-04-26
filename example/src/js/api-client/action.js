@@ -26,7 +26,7 @@ var api = {
   { 
     // Todo Move somewhere else, e.g. to state
     const sources = [
-      'temperature', 'humidity',
+      'consumption', 'energy'
     ];
     
     q = _.extend({}, {

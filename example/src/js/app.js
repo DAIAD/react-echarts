@@ -32,7 +32,7 @@ app.post('/api/action/query-stats', function (req, res) {
   var Granularity = require('./granularity.js');
   
   var q = _.extend({}, {
-    source: 'temperature',
+    source: 'consumption',
     metric: 'avg',
     granularity: 'day',
     timespan: 'week',
@@ -90,7 +90,7 @@ app.post('/api/action/query-stats', function (req, res) {
         // Mock an API response
         series: [
           {
-            name: 'Athens',
+            name: 'Group A',
             data: zeros.map((_zero, i) => (
               [
                 t0.clone().add(i * granularity.quantity, granularity.unit).valueOf(),
@@ -99,7 +99,7 @@ app.post('/api/action/query-stats', function (req, res) {
             )),
           },
           {
-            name: 'Thessaloniki', 
+            name: 'Group B', 
             data: zeros.map((_zero, i) => (
               [
                 t0.clone().add(i * granularity.quantity, granularity.unit).valueOf(),

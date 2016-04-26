@@ -24,10 +24,10 @@ var Chart = React.createClass({
       // Note: This part feeds getDefaultProps() method needed for React.
       props: {
         grid: {
-          x: '15%', 
-          y: '15%', 
+          x: '12%', 
+          y: '10%', 
           y2: '10%', 
-          x2: '15%',
+          x2: '12%',
         },
         color: [
           '#C23531', '#2F4554', '#61A0A8', '#ECA63F', '#41B024', 
@@ -64,6 +64,11 @@ var Chart = React.createClass({
           symbol: 'emptyCircle',
           symbolSize: 4,
         },
+      },
+      // Provide class-level defaults for messages, titles etc (lodash templates).
+      templates: {
+        pointTooltip: '<%= seriesName %> <br/><%= x %>: <%= y %>',
+        lineTooltip: '<%= seriesName %> <br/><%= name %>: <%= y %',
       },
     },
 
@@ -115,15 +120,36 @@ var Chart = React.createClass({
     
     propsToTooltipOptions: function (props)
     {
-      var defaults = this.defaults.options;
-      return {
-        tooltip: props.tooltip? 
-          _.extend(
-            {}, 
-            defaults.tooltip, 
-            {formatter: this.markupTooltip}
-          ) : false,
-      };  
+      if (!props.tooltip)
+        return {tooltip: false};
+      
+      var defaults = this.defaults;
+      var opts = _.extend({}, defaults.options.tooltip);
+      
+      var fx = props.xAxis.formatter || (x => x.toString());
+      var fy = props.yAxis.formatter || (y => y.toString());
+      var markupForPoint = _.template(defaults.templates.pointTooltip);
+      var markupForLine = _.template(defaults.templates.lineTooltip);
+      
+      opts.formatter = (p) => {
+        if (_.isArray(p.value)) {
+          // Tooltip for a point
+          return markupForPoint({
+            seriesName: p.seriesName,
+            x: fx(p.value[0]),
+            y: fy(p.value[1]),
+          })
+        } else {
+          // Tooltip for a line (?)
+          return markupForLine({
+            seriesName: p.seriesName,
+            name: p.name,
+            y: fy(p.value)
+          })
+        } 
+      }; 
+      
+      return {tooltip: opts};
     },
 
     propsToSeries: function (props)
@@ -185,17 +211,6 @@ var Chart = React.createClass({
       return data;
     },
 
-    markupTooltip: function (p)
-    {
-      var s = p.seriesName + "<br/>";
-      if (Array.isArray(p.value)) {
-        // Tooltip for a point 
-        return s + p.value[0].toFixed(1) + ', ' + p.value[1].toFixed(1);
-      } else {
-        // Tooltip for a line?
-        return s + p.name + ': ' + p.value.toFixed(1);
-      }
-    }, 
   },
 
   propTypes: {
@@ -376,7 +391,7 @@ var Chart = React.createClass({
   { 
     console.info('Redrawing <Chart>...')
     var opts = this.constructor.propsToOptions(nextProps);
-    this._chart.setOption(opts);
+    this._chart.setOption(opts, true);
   },
 
   destroyChart: function ()

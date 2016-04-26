@@ -12,12 +12,12 @@ var rootReducer = Redux.combineReducers({
 
 var initialState = {
   stats: {
-    temperature: {
+    consumption: {
       info: {
-        name: 'temperature',
-        title: 'Temperature',
-        description: 'The set of measurements on temperature',
-        unit: '°C',
+        name: 'consumption',
+        title: 'Water Consumption',
+        description: 'The set of measurements on water consumption',
+        unit: 'm3',
       },
       granularity: 'day',
       metric: 'avg',
@@ -27,12 +27,12 @@ var initialState = {
       requested: null,  // timestamp of last successfull attempt to fetch series data
       series: null,
     },
-    humidity: {
+    energy: {
       info: {
-        name: 'humidity',
-        title: 'Humidity',
-        description: 'The set of measurements for relative humidity',
-        unit: null, // unit-less 
+        name: 'energy',
+        title: 'Energy',
+        description: 'The set of measurements for energy consumption',
+        unit: 'kW' 
       },
       granularity: 'day',
       metric: 'avg',

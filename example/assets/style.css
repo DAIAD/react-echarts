@@ -3,55 +3,47 @@
  */
 
 .form-group input {
-    border-radius: 1px;
-    height: 32px;
-    line-height: 1.25em;
-    padding: 2px 9px;
-    border: solid 1px #ccc;
+  border-radius: 1px;
+  height: 32px;
+  line-height: 1.25em;
+  padding: 2px 9px;
+  border: solid 1px #ccc;
 }
 
 .form-group input[type="file"] {
-    padding: 4px 0px;
+  padding: 4px 0px;
 }
 
 .form-group .input-group-addon {
-    border-radius: 1px;
+  border-radius: 1px;
 }
 
 .btn {
-    border-radius: 1px;
-    padding: 5px 10px;
+  border-radius: 1px;
+  /*padding: 5px 10px;*/
+}
+
+.glyphicon {
+  top: 2px;
 }
 
 .form-group select {
-    line-height: 1.25em;
-    padding: 4px 9px;
+  line-height: 1.25em;
+  padding: 4px 9px;
 }
 
 .horizontal-form legend {
-    font-size: 1.35em;
+  font-size: 1.35em;
 } 
 
 .progress {
-    border-radius: 1px;
-    border: solid 1px #ccc;
+  border-radius: 1px;
+  border: solid 1px #ccc;
 }
 
 .form-inline .form-group > input,
 .form-inline .form-group > select {
   margin: 0px 5px;
-}
-
-section:after {
-  content: '';
-  display: block;
-  float: none;
-  clear: both;
-}
-
-button {
-  padding: 3px;
-  vertical-align: middle;
 }
 
 .nav-pills > li > a {
@@ -62,19 +54,74 @@ button {
   padding: 10px 0px;
 }
 
-/* Chart component */
+.dropdown-menu {
+  border-radius: 1px;
+}
+
+/* 
+ * Override react-datetime 
+ */
+
+.form-group > .rdt {
+  display: inline-block;
+}
+
+.form-group .rdtPicker {
+  padding: 1px;
+  border: solid #ccc 1px;
+}
+
+.form-group .rdtPicker .rdtDays tbody td {
+  cursor: pointer;
+  height: 1.9em;
+}
+
+.form-group .rdtPicker .rdtDays tbody td:hover {
+  background-color: #F7E1B7;
+  color: #555;
+}
+
+/* 
+ * Charts/Panels 
+ */
+
+div.stats-page {
+  width: 100%;
+}
 
 form.chart-panel {
-  margin: 10px 0px;
+  margin: 4px 0px;
   padding: 4px 0px;
   width: 100%;
 }
 
+form.chart-panel p.help {
+  margin: 3px 0px; 
+}
+
+form.chart-panel.form-inline .form-group {
+  margin: 8px 16px 8px 0px;
+  /*
+  display: block;
+  float: left;
+  */
+}
+
+.chart-panel .dropdown.select-timespan button > span.text {
+  width: 5.5em;
+}
+
+.chart-panel .dropdown.select-granularity button > span.text {
+  width: 5em;
+}
+
 .chart.portal {
-    width: 550px;
-    height: 300px;
-    margin: 10px 0px;
-    padding: 5px 0px;
-    background-color: #fff;
-    border: solid 1px silver;
+  /*
+  width: 550px;
+  height: 300px;
+  */
+  margin: 5px 0px;
+  padding: 5px 0px;
+  background-color: #fff;
+  border: solid 1px silver;
 }

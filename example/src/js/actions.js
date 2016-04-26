@@ -39,9 +39,9 @@ var actions = {
     dispatch(actions.requestData(source, new Date()));
     api.queryStats({
       source: source,
-      metric: state.temperature.metric,
-      granularity: state.temperature.granularity,
-      timespan: state.temperature.timespan,
+      metric: state.stats[source].metric,
+      granularity: state.stats[source].granularity,
+      timespan: state.stats[source].timespan,
     }).then(res => {
       if (!res.error) {
         dispatch(actions.setData(source, res.result.series, new Date()));

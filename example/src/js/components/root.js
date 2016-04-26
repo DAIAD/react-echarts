@@ -46,7 +46,7 @@ var AboutPage = ({}) => (
 );
 
 var StatsPage = ({source, title}) => (
-  <div>
+  <div className="stats-page">
     <h3>Measurements / {title}</h3>
     <ChartPane.Panel source={source} />
     <ChartPane.Chart source={source} />

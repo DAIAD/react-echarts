@@ -48,10 +48,12 @@ var Chart = React.createClass({
         yAxis: {
           splitArea: {show: true},
           splitNumber: 5,
+          scale: true,
         },
         xAxis: {
           boundaryGap: false,
           splitNumber: 10,
+          scale: true,
         },
         tooltip: {
           trigger: 'item',
@@ -100,6 +102,7 @@ var Chart = React.createClass({
           axisLabel: {
             formatter: props.xAxis.formatter
           },
+          scale: defaults.xAxis.scale,
           min: props.xAxis.min, 
           max: props.xAxis.max,
         }],
@@ -112,6 +115,7 @@ var Chart = React.createClass({
           axisLabel: {
             formatter: props.yAxis.formatter
           },
+          scale: defaults.yAxis.scale,
           min: props.yAxis.min, 
           max: props.yAxis.max,
         }],
@@ -156,7 +160,9 @@ var Chart = React.createClass({
     {
       var defaults = this.defaults.options;
       var N = this.limits.numSeries;
-      var series = (props.series.length > N)? props.series.slice(0, N) : props.series;
+      var series = props.series || [];
+      
+      series = (series.length > N)? series.slice(0, N) : series;
       return {
         legend: {data: series.map(y => y.name)},
         series: series

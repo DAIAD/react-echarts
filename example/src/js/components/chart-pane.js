@@ -58,6 +58,7 @@ var Panel = React.createClass({
       // Compute the actual timespan as a pair of Epoch timestamps
       var t0, t1;
       if (_.isString(val)) {
+        // Translate a symbolic name to a timespan
         switch (val) {
           case 'hour':
             t0 = moment().startOf('hour');
@@ -130,11 +131,11 @@ var Panel = React.createClass({
       helpParagraph = (
         <p className="help text-danger">The given timespan is invalid. Please, fix it.</p> 
       );
-    } /*else if (this.state.dirty) {
+    } else if (this.state.dirty) {
       helpParagraph = (
         <p className="help text-warning">Your parameters have changed. Press <i>Refresh</i> to redraw data!</p> 
       ); 
-    }*/ else {
+    } else {
       helpParagraph = (
         <p className="help text-muted">Press <i>Refresh</i> to redraw data</p>
       );
@@ -227,64 +228,54 @@ var Panel = React.createClass({
 
 var Chart = React.createClass({
   
+  statics: {
+    defaults: {
+      xAxis: {
+        dateformat: {
+          'minute': 'HH:MM',
+          'hour': 'HH:00',
+          'day': 'DD/MM/YYYY',
+          'week': 'DD/MM/YYYY',
+          'month': 'MM/YYYY',
+          'quarter': 'Qo YYYY',
+          'year': 'YYYY',
+        },
+      }
+    },
+  }, 
+
   propTypes: _.extend({}, propTypes, {
-    series: PropTypes.array, // Todo shape elements
-  }),
-  
+    series: PropTypes.array,
+  }), 
+
   render: function ()
   {
+    var defaults = this.constructor.defaults;
     var info = this.props.info;
-    var [xf, yf] = this._getFormatters();
+    var xf = defaults.xAxis.dateformat[this.props.granularity];
+    
     var pilot = (this.props.series || [])[0];
-
     return (
-       <echarts.LineChart 
-          width={800}
-          height={380}
-          xAxis={{
-              numTicks: pilot? Math.min(6, pilot.length) : 0,
-              min: pilot? (pilot.data[0][0]) : null,
-              formatter: xf,
-          }}
-          yAxis={{
-              name: info.title,
+       <div id={'chart-' + this.props.source}>
+         <echarts.LineChart 
+            width={750}
+            height={340}
+            xAxis={{
+              numTicks: pilot? Math.min(6, pilot.data.length) : 0,
+              formatter: (t) => (moment(t).format(xf)),
+            }}
+            yAxis={{
+              name: info.title + ((info.unit)?(' (' + info.unit + ')') : ''),
               numTicks: 4,
-              formatter: yf,
-          }}
-          series={this.props.series}
-      />
+              formatter: (info.unit)? ((y) => (y.toFixed(2) + ' ' + info.unit)) : null,
+            }}
+            series={this.props.series}
+        />
+      </div>
     );
   },
 
   // Helpers
-  
-  _getFormatters: function () {
-    var xf, yf;
-    var info = this.props.info;
-    
-    yf = (info.unit)? ((y) => (y.toFixed(2) + ' ' + info.unit)) : null;
-    
-    switch (this.props.granularity) {
-      case 'minute':
-        xf = (t) => (moment(t).format('HH:MM'));
-        break;
-      case 'hour':
-        xf = (t) => (moment(t).format('HH:00'));
-        break;
-      case 'day':
-      case 'week':
-        xf = (t) => (moment(t).format('DD/MM'));
-        break;
-      case 'month':
-        xf = (t) => (moment(t).format('MM/YYYY'));
-        break;
-      case 'year':
-        xf = (t) => (moment(t).format('YYYY'));
-        break;
-    }
-
-    return [xf, yf]
-  },
 });
 
 // Container components

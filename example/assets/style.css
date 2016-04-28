@@ -96,7 +96,8 @@ form.chart-panel {
 }
 
 form.chart-panel p.help {
-  margin: 3px 0px; 
+  margin: 0px 0px;
+  font-size: 0.85em;
 }
 
 form.chart-panel.form-inline .form-group {

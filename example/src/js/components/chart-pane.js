@@ -126,6 +126,11 @@ var Panel = React.createClass({
     
     _.isString(this.props.timespan) && (datetimeProps.inputProps.disabled = 'disabled');
     
+    var filterGranularity = this._filterGranularity.bind(this, [t0, t1]);
+    var granularityOptions = Granularity.names().map(v => (
+      <option key={v} value={v} disabled={filterGranularity(v)? null : true}>{v}</option>
+    ));
+
     var helpParagraph;
     if (t1 < t0) {
       helpParagraph = (
@@ -143,6 +148,7 @@ var Panel = React.createClass({
 
     return (
       <form className="form-inline chart-panel" id={'panel-' + this.props.source} >
+
         <div className="form-group">
           <label>Time Span:</label>
           &nbsp;
@@ -154,8 +160,7 @@ var Panel = React.createClass({
               this._setTimespan(val? (val) : ([t0.valueOf(), t1.valueOf()]))
             )} 
            />
-          &nbsp; 
-          {/*&nbsp;From:&nbsp;*/}
+          &nbsp;{/*&nbsp;From:&nbsp;*/}
           <DatetimeInput 
             {...datetimeProps} 
             value={t0.toDate()} 
@@ -163,8 +168,7 @@ var Panel = React.createClass({
               this._setTimespan([val.valueOf(), t1.valueOf()])
             )} 
            />
-          &nbsp; 
-          {/*&nbsp;To:&nbsp;*/}
+          &nbsp;{/*&nbsp;To:&nbsp;*/}
           <DatetimeInput 
             {...datetimeProps} 
             value={t1.toDate()}
@@ -179,26 +183,37 @@ var Panel = React.createClass({
           <Select
             className='select-granularity'
             value={this.props.granularity}
-            options={Granularity.names()}
             onChange={this._setGranularity}
-           />
+           >
+            {granularityOptions}
+          </Select> 
         </div>
         <div className="form-group">
           <Button title="Refresh" 
             onClick={this._refresh}
-           >
-            <Glyphicon glyph="refresh" />&nbsp;Refresh
+           ><Glyphicon glyph="refresh" />&nbsp;Refresh
           </Button>
           &nbsp;
           <Button title="Save as image" 
             onClick={this._saveAsImage}
-           >
-            <Glyphicon glyph="save"/>&nbsp;Save
+           ><Glyphicon glyph="save"/>&nbsp;Save
           </Button>
         </div>
         {helpParagraph}
       </form>
     )
+  },
+  
+  // Helpers
+
+  _filterGranularity: function (r, name) {
+    var dtr = r[1].valueOf() - r[0].valueOf();
+    var dtg = Granularity.fromName(name).valueOf();
+    if (dtg > dtr)
+      return false;
+    if (dtg * 1e+3 < dtr)
+      return false; // more than 3 orders of magnitude less
+    return true;
   },
 
   // Event handlers

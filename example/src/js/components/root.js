@@ -20,7 +20,7 @@ var RootMenu = React.createClass({
           </Navbar.Header>
           <Nav activeHref={'#' + this.props.location.pathname}>
             <NavDropdown title={'Measurements'} id="stats-nav-dropdown">
-              <MenuItem href="#/stats/consumption">Water Consumption</MenuItem> 
+              <MenuItem href="#/stats/water">Water Consumption</MenuItem> 
               <MenuItem href="#/stats/energy">Energy Consumption</MenuItem> 
             </NavDropdown>
             <NavItem href="#/about">About</NavItem>

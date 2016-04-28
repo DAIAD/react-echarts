@@ -12,9 +12,9 @@ var rootReducer = Redux.combineReducers({
 
 var initialState = {
   stats: {
-    consumption: {
+    water: {
       info: {
-        name: 'consumption',
+        name: 'water',
         title: 'Water Consumption',
         description: 'The set of measurements on water consumption',
         unit: 'm3',

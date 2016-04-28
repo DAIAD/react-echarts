@@ -32,7 +32,7 @@ app.post('/api/action/query-stats', function (req, res) {
   var Granularity = require('./granularity.js');
   
   var q = _.extend({}, {
-    source: 'consumption',
+    source: 'water',
     metric: 'avg',
     granularity: 'day',
     timespan: 'week',

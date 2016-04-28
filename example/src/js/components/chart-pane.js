@@ -14,7 +14,7 @@ var echarts = require('./react-echarts');
 var Granularity = require('../granularity');
 
 var propTypes = { 
-  source: PropTypes.oneOf(['consumption', 'energy']),
+  source: PropTypes.oneOf(['water', 'energy']),
   granularity: PropTypes.oneOf(Granularity.names()),
   info: PropTypes.shape({
     name: PropTypes.string,

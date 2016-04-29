@@ -7,6 +7,8 @@ var PropTypes = React.PropTypes;
 var {Nav, Navbar, NavItem, NavDropdown, MenuItem} = ReactBootstrap;
 var {Router, Route, IndexRoute, Link, hashHistory} = ReactRouter;
 
+var sourceMeta = require('../source-metadata');
+
 var ChartPane = require('./chart-pane');
 
 var RootMenu = React.createClass({
@@ -37,7 +39,7 @@ var RootMenu = React.createClass({
 var HomePage = ({}) => (
   <div>
     <h3>An example!</h3>
-    <p>An example using <strong><a href="://github.com/DAIAD/react-echarts.git">DAIAD/react-echarts</a></strong></p>
+    <p>An example using <strong><a href="//github.com/DAIAD/react-echarts.git">DAIAD/react-echarts</a></strong></p>
   </div>
 );
 
@@ -45,15 +47,15 @@ var AboutPage = ({}) => (
   <div><h3>About me</h3><p>This is about me</p></div>
 );
 
-var StatsPage = ({source, title}) => (
+var StatsPage = ({params}) => (
   <div className="stats-page">
-    <h3>Measurements / {title}</h3>
-    <ChartPane.Panel source={source} />
-    <ChartPane.Chart source={source} />
+    <h3>Measurements / {sourceMeta[params.source].title}</h3>
+    <ChartPane.Panel source={params.source} />
+    <ChartPane.Chart source={params.source} />
   </div>
 );
 
-var Root = React.createClass({
+var Root = React.createClass({  
   render: function ()
   {
     return (
@@ -61,26 +63,11 @@ var Root = React.createClass({
         <Route path="/" component={RootMenu}>
           <IndexRoute component={HomePage} />
           <Route path="about" component={AboutPage} />
-          <Route path="stats/:source" 
-            component={
-              ({params}) => ( /* params provided by <Router> */
-                <StatsPage 
-                  source={params.source}
-                  title={this.props.info[params.source].title} />
-              )
-            } 
-           />
+          <Route path="stats/:source" component={StatsPage} />
         </Route>
       </Router>
     );
   }
 });
-
-Root = ReactRedux.connect(
-  (state, ownProps) => ({
-    info: _.mapValues(state.stats, v => v.info),
-  }), 
-  null
-)(Root);
 
 module.exports = Root;

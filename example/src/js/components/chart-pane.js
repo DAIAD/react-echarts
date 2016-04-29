@@ -11,21 +11,20 @@ var PropTypes = React.PropTypes;
 
 var actions = require('../actions');
 var echarts = require('./react-echarts');
+
+var sourceMeta = require('../source-metadata');
 var Granularity = require('../granularity');
 
 var propTypes = { 
   source: PropTypes.oneOf(['water', 'energy']),
   granularity: PropTypes.oneOf(Granularity.names()),
-  info: PropTypes.shape({
-    name: PropTypes.string,
-    title: PropTypes.string,
-    unit: PropTypes.string,
-  }),
   timespan: PropTypes.oneOfType([
-    PropTypes.oneOf(['day', 'week', 'month', 'year']),
+    PropTypes.oneOf(['hour', 'day', 'week', 'month', 'quarter', 'year']),
     (props, propName, componentName) => ( 
       (PropTypes.arrayOf(PropTypes.number)(props, propName, componentName)) ||
-      ((props[propName].length == 2)? (null) : (new Error(propName + ' should be an array of length 2')))
+      ((props[propName].length == 2)? 
+        (null) : (new Error(propName + ' should be an array of length 2'))
+      )
     ),
   ]),
 };
@@ -54,6 +53,17 @@ var Panel = React.createClass({
       },
     },
     
+    filterGranularity: function (r, name) {
+      r = this.computeTimespan(r);
+      var dr = r[1].valueOf() - r[0].valueOf();
+      var dg = Granularity.fromName(name).valueOf();
+      if (dg > dr)
+        return false;
+      if (dg * 1e+3 < dr)
+        return false; // more than 3 orders of magnitude less
+      return true;
+    },
+ 
     computeTimespan: function (val) {
       // Compute the actual timespan as a pair of Epoch timestamps
       var t0, t1;
@@ -83,8 +93,8 @@ var Panel = React.createClass({
             break;
         }
       } else if (_.isArray(val)) {
-        t0 = moment(val[0]); 
-        t1 = moment(val[1]);
+        t0 = _.isNumber(val[0])? moment(val[0]) : val[0]; 
+        t1 = _.isNumber(val[1])? moment(val[1]) : val[1]; 
       }
       return [t0, t1];
     },
@@ -112,7 +122,9 @@ var Panel = React.createClass({
   
   render: function ()
   {
+    var cls = this.constructor;
     var defaults = this.constructor.defaults;
+    
     var datetimeProps = {
       closeOnSelect: true,
       dateFormat: defaults.datetime.dateFormat,
@@ -126,7 +138,7 @@ var Panel = React.createClass({
     
     _.isString(this.props.timespan) && (datetimeProps.inputProps.disabled = 'disabled');
     
-    var filterGranularity = this._filterGranularity.bind(this, [t0, t1]);
+    var filterGranularity = cls.filterGranularity.bind(cls, [t0, t1]);
     var granularityOptions = Granularity.names().map(v => (
       <option key={v} value={v} disabled={filterGranularity(v)? null : true}>{v}</option>
     ));
@@ -148,7 +160,6 @@ var Panel = React.createClass({
 
     return (
       <form className="form-inline chart-panel" id={'panel-' + this.props.source} >
-
         <div className="form-group">
           <label>Time Span:</label>
           &nbsp;
@@ -156,25 +167,19 @@ var Panel = React.createClass({
             className='select-timespan'
             value={_.isString(this.props.timespan)? this.props.timespan : ''}
             options={defaults.timespan.options}
-            onChange={(val) => (
-              this._setTimespan(val? (val) : ([t0.valueOf(), t1.valueOf()]))
-            )} 
+            onChange={(val) => (this._setTimespan(val? (val) : ([t0, t1])))} 
            />
           &nbsp;{/*&nbsp;From:&nbsp;*/}
           <DatetimeInput 
             {...datetimeProps} 
             value={t0.toDate()} 
-            onChange={(val) => (
-              this._setTimespan([val.valueOf(), t1.valueOf()])
-            )} 
+            onChange={(val) => (this._setTimespan([val, t1]))} 
            />
           &nbsp;{/*&nbsp;To:&nbsp;*/}
           <DatetimeInput 
             {...datetimeProps} 
             value={t1.toDate()}
-            onChange={(val) => (
-              this._setTimespan([t0.valueOf(), val.valueOf()])
-            )} 
+            onChange={(val) => (this._setTimespan([t0, val]))} 
            />
         </div>
         <div className="form-group">
@@ -189,37 +194,31 @@ var Panel = React.createClass({
           </Select> 
         </div>
         <div className="form-group">
-          <Button title="Refresh" 
-            onClick={this._refresh}
-           ><Glyphicon glyph="refresh" />&nbsp;Refresh
-          </Button>
+          <Button onClick={this._refresh}><Glyphicon glyph="refresh" />&nbsp;Refresh</Button>
           &nbsp;
-          <Button title="Save as image" 
-            onClick={this._saveAsImage}
-           ><Glyphicon glyph="save"/>&nbsp;Save
-          </Button>
+          <Button onClick={this._saveAsImage}><Glyphicon glyph="save"/>&nbsp;Save as image</Button>
         </div>
         {helpParagraph}
       </form>
     )
   },
   
-  // Helpers
-
-  _filterGranularity: function (r, name) {
-    var dtr = r[1].valueOf() - r[0].valueOf();
-    var dtg = Granularity.fromName(name).valueOf();
-    if (dtg > dtr)
-      return false;
-    if (dtg * 1e+3 < dtr)
-      return false; // more than 3 orders of magnitude less
-    return true;
-  },
-
   // Event handlers
 
   _setTimespan: function (val) {
-    this.props.setTimespan(val);
+    var cls = this.constructor;
+
+    var r = _.isString(val)? val: [val[0].valueOf(), val[1].valueOf()];
+    this.props.setTimespan(r);
+    
+    // Check if granularity needs to be re-assigned along with the timespan
+    var filterGranularity = cls.filterGranularity.bind(cls, val);
+    if (!filterGranularity(this.props.granularity)) {
+      var g = Granularity.names().find(filterGranularity);
+      if (g)
+        this.props.setGranularity(g);
+    }
+
     this.setState({dirty: true});
   },
 
@@ -235,7 +234,6 @@ var Panel = React.createClass({
   },
   
   _saveAsImage: function () {
-    console.info('Save as image ...');
     return false;
   },
 
@@ -266,7 +264,7 @@ var Chart = React.createClass({
   render: function ()
   {
     var defaults = this.constructor.defaults;
-    var info = this.props.info;
+    var {title, unit} = sourceMeta[this.props.source];
     var xf = defaults.xAxis.dateformat[this.props.granularity];
     
     var pilot = (this.props.series || [])[0];
@@ -280,9 +278,9 @@ var Chart = React.createClass({
               formatter: (t) => (moment(t).format(xf)),
             }}
             yAxis={{
-              name: info.title + ((info.unit)?(' (' + info.unit + ')') : ''),
+              name: title + ((unit)?(' (' + unit + ')') : ''),
               numTicks: 4,
-              formatter: (info.unit)? ((y) => (y.toFixed(2) + ' ' + info.unit)) : null,
+              formatter: (unit)? ((y) => (y.toFixed(2) + ' ' + unit)) : null,
             }}
             series={this.props.series}
         />
@@ -297,7 +295,7 @@ var Chart = React.createClass({
 
 Panel = ReactRedux.connect(
   (state, ownProps) => (
-    _.pick(state.stats[ownProps.source], ['granularity', 'timespan', 'info'])
+    _.pick(state.stats[ownProps.source], ['granularity', 'timespan'])
   ), 
   (dispatch, ownProps) => ({
     setGranularity: (g) => (dispatch(actions.setGranularity(ownProps.source, g))),
@@ -308,7 +306,7 @@ Panel = ReactRedux.connect(
 
 Chart = ReactRedux.connect(
   (state, ownProps) => (
-    _.pick(state.stats[ownProps.source], ['granularity', 'timespan', 'info', 'series'])
+    _.pick(state.stats[ownProps.source], ['granularity', 'timespan', 'series'])
   ),
   null
 )(Chart);

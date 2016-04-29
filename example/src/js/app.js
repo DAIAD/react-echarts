@@ -41,19 +41,28 @@ app.post('/api/action/query-stats', function (req, res) {
   var result, t0, t1, dt, granularity;
   
   switch (q.timespan) {
+    case 'hour':
+      // interpret as last hour
+      t1 = moment(), t0 = t1.clone().add(-1, 'hour');
+      break;
     case 'day':
+      // interpret as current day
       t0 = moment().startOf('day'), t1 = t0.clone().add(1, 'day');
       break;
     case 'week':
+      // interpret as current week
       t0 = moment().startOf('isoweek'), t1 = t0.clone().add(7, 'day');
       break;
     case 'month':
+      // interpret as current month
       t0 = moment().startOf('month'), t1 = t0.clone().add(1, 'month');
       break;
     case 'year':
+      // interpret as current year
       t0 = moment().startOf('year'), t1 = t0.clone().add(1, 'year');
       break;
     default:
+      // interpret as a literal range
       t0 = moment(q.timespan[0]), t1 = moment(q.timespan[1]);
       break;
   }
@@ -66,7 +75,7 @@ app.post('/api/action/query-stats', function (req, res) {
     };
   } else if (granularity.valueOf() > dt) {
     result = {
-      error: 'Too narrow timespan (' + dt.humanize() + ') for given granularity (' + q.granularity + ')',
+      error: 'Too narrow timespan (' + moment.duration(dt).humanize() + ') for given granularity (' + q.granularity + ')',
     };
   } else {
     // Slide-down t0 to a closest multiple of granularity unit

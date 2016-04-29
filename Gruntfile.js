@@ -29,9 +29,7 @@ module.exports = function(grunt) {
       },
       vendor: {
         files: {
-          'build/vendor/util.min.js': ['build/vendor/util.js'],
-          'build/vendor/react-with-friends.min.js': ['build/vendor/react-with-friends.js'], 
-          'build/vendor/echarts.min.js': ['build/vendor/echarts.js'],
+          'build/vendor.min.js': ['build/vendor.js'],
         },
       },
     },
@@ -59,9 +57,11 @@ module.exports = function(grunt) {
       },
       vendor: {
         files: {
-          'build/vendor/util.js': ['vendor/js/util.js'],
-          'build/vendor/react-with-friends.js': ['vendor/js/react-with-friends.js'],
-          'build/vendor/echarts.js': ['vendor/js/echarts.js'],
+          'build/vendor.js': [
+            'vendor/js/util.js',
+            'vendor/js/react-with-friends.js',
+            'vendor/js/echarts.js'
+          ],
         },
       },
     },
@@ -76,7 +76,7 @@ module.exports = function(grunt) {
             expand: true,
             filter: 'isFile',
             cwd: 'build/example',
-            src: 'main.js',
+            src: 'main*.js',
             dest: prefix,
           },
           {
@@ -101,7 +101,7 @@ module.exports = function(grunt) {
             expand: true,
             filter: 'isFile',
             cwd: 'build',
-            src: 'vendor/*.js',
+            src: 'vendor*.js',
             dest: prefix,
           },
         ],

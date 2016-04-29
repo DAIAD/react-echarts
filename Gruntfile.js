@@ -47,8 +47,8 @@ module.exports = function(grunt) {
           // Exclude the modules below from being packaged into the main JS file:
           // They will injected in global namespace with their own bundles (build/vendor/*.js).
           exclude: [
-            'isomorphic-fetch', 'lodash', 'rgbcolor',
-            'react', 'react-dom', 'react-router', 'react-bootstrap',
+            'isomorphic-fetch', 'lodash', 'rgbcolor', 'moment',
+            'react', 'react-dom', 'react-router', 'react-bootstrap', 'react-datetime',
             'redux', 'react-redux', 'redux-thunk', 'redux-logger',
             'echarts', 'echarts/index.simple', 'echarts/index.common', 
           ]

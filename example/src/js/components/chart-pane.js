@@ -1,10 +1,14 @@
-var _ = global.lodash || require('lodash');
+'use strict';
 
-var React = global.React || require('react');
-var ReactRedux = global.ReactRedux || require('react-redux');
-var ReactBootstrap = global.ReactBootstrap || require('react-bootstrap');
+var _ = require('lodash');
+var moment = require('moment');
+
+var React = require('react');
+var ReactRedux = require('react-redux');
+var ReactBootstrap = require('react-bootstrap');
 var {Button, Glyphicon} = ReactBootstrap;
-var DatetimeInput = global.ReactDatetime || require('react-datetime');
+var DatetimeInput = require('react-datetime');
+
 var Select = require('react-controls/select-dropdown');
 
 var PropTypes = React.PropTypes;

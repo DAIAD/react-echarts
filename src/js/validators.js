@@ -1,7 +1,7 @@
 'use strict';
 
-var React =  global.React || require('react');
-var _ = global.lodash || require('lodash');
+var React =  require('react');
+var _ = require('lodash');
 
 var PropTypes = React.PropTypes;
 

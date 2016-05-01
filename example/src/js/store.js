@@ -1,6 +1,6 @@
-var Redux = global.Redux || require('redux');
-var ReduxLogger = global.reduxLogger || require('redux-logger');
-var ReduxThunk = global.ReduxThunk || require('redux-thunk');
+var Redux = require('redux');
+var ReduxLogger = require('redux-logger');
+var ReduxThunk = require('redux-thunk');
 
 var reducers = require('./reducers');
 

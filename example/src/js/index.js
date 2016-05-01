@@ -1,6 +1,6 @@
-var React = global.React || require('react');
-var ReactDOM = global.ReactDOM || require('react-dom');
-var ReactRedux = global.ReactRedux || require('react-redux');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var ReactRedux = require('react-redux');
 
 var Root = require('./components/root');
 var actions = require('./actions');

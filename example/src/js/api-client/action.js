@@ -1,4 +1,5 @@
-var _ = global.lodash || require('lodash');
+var _ = require('lodash');
+var fetch = require('fetch');
 
 // A proxy for the action API exposed (under /api/action) by the server.
 // Note that *all* functions return promises.

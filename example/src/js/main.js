@@ -1,3 +1,5 @@
+const develop = !(process.env.NODE_ENV === 'production');
+
 var {renderRoot} = require('./index');
 
 var rootSelector = document.currentScript.getAttribute('data-root') || '#root';
@@ -7,8 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
   renderRoot(rootEl);
 });
 
-// Note: only for debugging purposes
-global.$a = {
-  apiclient: require('./api-client/action'),
-  actions: require('./actions') 
-};
+develop && (global.$a = {
+  apiclient: require('./api-client/action'), actions: require('./actions')
+});

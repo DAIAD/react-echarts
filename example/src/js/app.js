@@ -11,7 +11,7 @@ var docRoot = path.join(__dirname, '..', '..', 'public', 'www');
 
 app.use(logger('combined'));
 
-app.use(express.static(docRoot));
+app.use(express.static(docRoot, {maxAge: '1d'}));
 
 app.use(reqparser.json()); // for parsing application/json
 

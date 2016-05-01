@@ -1,7 +1,7 @@
-var React = global.React || require('react');
-var ReactBootstrap = global.ReactBootstrap || require('react-bootstrap');
-var ReactRouter = global.ReactRouter || require('react-router');
-var ReactRedux = global.ReactRedux || require('react-redux');
+var React = require('react');
+var ReactBootstrap = require('react-bootstrap');
+var ReactRouter = require('react-router');
+var ReactRedux = require('react-redux');
 
 var PropTypes = React.PropTypes;
 var {Nav, Navbar, NavItem, NavDropdown, MenuItem} = ReactBootstrap;

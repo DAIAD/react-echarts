@@ -1,10 +1,10 @@
 'use strict';
 
-var React = global.React || require('react');
-var ReactDOM = global.ReactDOM || require('react-dom');
-var echarts = global.echarts || require('echarts/index.common');
-var _ = global.lodash || require('lodash');
-var rgbcolor = global.rgbcolor || require('rgbcolor');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var echarts = require('echarts');
+var _ = require('lodash');
+var rgbcolor = require('rgbcolor');
 
 var PropTypes = React.PropTypes;
 

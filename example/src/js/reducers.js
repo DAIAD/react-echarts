@@ -1,4 +1,4 @@
-var _ = global.lodash || require('lodash');
+var _ = require('lodash');
 
 var reduceStats = function (state={}, action)
 {

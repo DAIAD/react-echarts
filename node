@@ -1,0 +1,2 @@
+#!/bin/bash
+exec $(which node) --harmony --harmony_destructuring --harmony_arrow_functions ${*}

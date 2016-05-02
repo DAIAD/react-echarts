@@ -4,8 +4,8 @@
   "description": "A collection of React components for ECharts charts",
   "main": "src/js/index.js",
   "scripts": {
-    "test": "node src/js/test.js",
-    "example": "node example/server.js"
+    "test": "./node src/js/test.js",
+    "example": "./node example/server.js"
   },
   "repository": {
     "type": "git",

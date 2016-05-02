@@ -1,6 +1,10 @@
 var _ = require('lodash');
 var fetch = require('fetch');
 
+var sourceMeta = require('../source-metadata');
+
+const sourceNames = _.keys(sourceMeta);
+
 // A proxy for the action API exposed (under /api/action) by the server.
 // Note that *all* functions return promises.
 
@@ -25,11 +29,6 @@ var api = {
   
   queryStats: function (q={})
   { 
-    // Todo Move somewhere else, e.g. to state
-    const sources = [
-      'water', 'energy'
-    ];
-    
     q = _.extend({}, {
       metric: 'avg',
       granularity: 'day',
@@ -38,7 +37,7 @@ var api = {
     
     // Check if q is sane
 
-    if (q.source == null || sources.indexOf(q.source) < 0)
+    if (q.source == null || sourceNames.indexOf(q.source) < 0)
       return Promise.reject('Unknown source: ' + q.source);
     
     // Post!

@@ -5,3 +5,5 @@ dist
 node_modules
 scratch.js
 example/public/www
+example/config.json
+example/config-*.json

@@ -2,10 +2,24 @@ var production = (process.env.NODE_ENV === 'production');
 
 module.exports = function(grunt) {
   
+  // Load external tasks
+  
+  grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-curl');
+  grunt.loadNpmTasks('grunt-browserify');
+
   // A installation prefix for resources needed for the example
+  
   var prefix = grunt.option('prefix') || 'example/public/www';
 
-  // Project configuration.
+  // Project configuration.  
+  
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     
@@ -223,16 +237,6 @@ module.exports = function(grunt) {
       },
     },
   });
-
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-cssmin');
-  grunt.loadNpmTasks('grunt-curl');
-  grunt.loadNpmTasks('grunt-browserify');
 
   // Register new tasks
 

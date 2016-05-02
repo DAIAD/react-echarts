@@ -119,6 +119,36 @@ module.exports = function(grunt) {
       },
     },
 
+    cssmin: {
+      options: {
+        keepBreaks: true,
+      },
+      'example': {
+        files: {
+          'build/example/style.min.css': [
+            'example/assets/style.css'
+          ],
+        },
+      },
+      'vendor': {
+        files: {
+          'build/vendor/stylesheets/react-datetime.min.css': [
+            'build/vendor/stylesheets/react-datetime.css'
+          ],
+        },
+      },
+    },
+
+    curl: {
+      options: {},
+      'build/vendor/stylesheets/react-datetime.css': 
+        'http://rawgit.com/arqex/react-datetime/master/css/react-datetime.css',
+      'build/vendor/stylesheets/bootstrap.min.css': 
+        'http://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css',
+      'build/vendor/stylesheets/bootstrap-theme.min.css':
+        'http://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap-theme.min.css',
+    },
+
     copy: {
       options: {
         mode: '0644',
@@ -142,8 +172,8 @@ module.exports = function(grunt) {
           {
             expand: true,
             filter: 'isFile',
-            cwd: 'example/assets/',
-            src: '**',
+            cwd: 'build/example',
+            src: 'style*.css',
             dest: prefix,
           },
         ],
@@ -155,6 +185,13 @@ module.exports = function(grunt) {
             filter: 'isFile',
             cwd: 'build',
             src: ['vendor*.js', 'vendor/*.js'],
+            dest: prefix,
+          },
+          {
+            expand: true,
+            filter: 'isFile',
+            cwd: 'build',
+            src: 'vendor/stylesheets/*.css',
             dest: prefix,
           },
         ],
@@ -169,9 +206,14 @@ module.exports = function(grunt) {
            'example/src/js/**.js',
            'example/src/js/components/**.js',
            'example/src/html/**.html',
-           'example/assets/style.css'
          ],
          tasks: ['build:example', 'deploy:example'],
+      },
+      'example-stylesheets': {
+        files: [
+          'example/assets/*.css',
+        ],
+        tasks: ['build:example-stylesheets', 'deploy:example'],
       },
       'vendor': {
         files: [
@@ -188,6 +230,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-curl');
   grunt.loadNpmTasks('grunt-browserify');
 
   // Register new tasks
@@ -198,17 +242,32 @@ module.exports = function(grunt) {
     'browserify:vendor-react'
   ]);
   
-  grunt.registerTask('build:example', 'Build example', function () {
+  grunt.registerTask('curl:vendor-stylesheets', [
+    'curl:build/vendor/stylesheets/react-datetime.css',
+    'curl:build/vendor/stylesheets/bootstrap.min.css',
+    'curl:build/vendor/stylesheets/bootstrap-theme.min.css',
+  ]);
+ 
+  grunt.registerTask('build:example', 'Build example application', function () {
     var tasks = ['browserify:example'];
     production && tasks.push('uglify:example');
     grunt.task.run(tasks);
   });
-  grunt.registerTask('build:vendor', 'Build vendor libraries', function () {
+  
+  grunt.registerTask('build:example-stylesheets', ['cssmin:example']);
+ 
+  grunt.registerTask('build:vendor', 'Bundle vendor libraries', function () {
     var tasks = ['browserify:vendor'];
     production && tasks.push('uglify:vendor');
     grunt.task.run(tasks);
   });
-  grunt.registerTask('build', ['build:vendor', 'build:example']);
+  
+  grunt.registerTask('build:vendor-stylesheets', ['curl:vendor-stylesheets', 'cssmin:vendor']);
+  
+  grunt.registerTask('build', [
+    'build:vendor-stylesheets', 'build:vendor', 
+    'build:example-stylesheets', 'build:example',
+  ]);
   
   grunt.registerTask('deploy:example', ['copy:example']);
   grunt.registerTask('deploy:vendor', ['copy:vendor']);

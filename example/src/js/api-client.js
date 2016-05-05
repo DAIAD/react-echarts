@@ -1,9 +1,7 @@
 var _ = require('lodash');
 var fetch = require('fetch');
 
-var sourceMeta = require('../source-metadata');
-
-const sourceNames = _.keys(sourceMeta);
+var config = require('./config-reports');
 
 // A proxy for the action API exposed (under /api/action) by the server.
 // Note that *all* functions return promises.
@@ -29,20 +27,13 @@ var api = {
   
   queryStats: function (q={})
   { 
-    q = _.extend({}, {
-      metric: 'avg',
-      granularity: 'day',
-      time: 'week',
-    }, q);
-    
-    // Check if q is sane
-
-    if (q.source == null || sourceNames.indexOf(q.source) < 0)
-      return Promise.reject('Unknown source: ' + q.source);
-    
-    // Post!
     return invokeAction('query-stats', q);
-  }
+  },
+  
+  queryMeasurements: function (q={})
+  { 
+    return invokeAction('query-measurements', q);
+  },
 };
 
 module.exports = api;

@@ -5,6 +5,17 @@
   },
   
   "app": {
-    "docRoot": ["public/www"]
+    "docRoot": ["public/www"],
+    "backend": {
+      "apiUrl": "https://app.dev.daiad.eu/api/v1/data/query",
+      "credentials": {
+        "username": "someone@daiad.eu",
+        "password": "secret"
+      },
+      "utility": {
+        "name": "Daiad",
+        "id": "<uuid>"
+      }
+    }
   }
 }

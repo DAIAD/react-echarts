@@ -26,6 +26,15 @@ form.chart-panel.form-inline .form-group {
   */
 }
 
+.reports h3 {
+  margin: 8px 0px;
+}
+
+.reports h3 span.delimiter {
+  font-weight: bolder;
+  font-size: 1.4em;
+}
+
 .chart-panel .dropdown.select-timespan button > span.text {
   width: 5.5em;
 }

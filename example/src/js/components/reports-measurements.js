@@ -2,7 +2,6 @@
 
 var _ = require('lodash');
 var moment = require('moment');
-
 var React = require('react');
 var ReactRedux = require('react-redux');
 var ReactBootstrap = require('react-bootstrap');
@@ -11,17 +10,15 @@ var DatetimeInput = require('react-datetime');
 
 var Select = require('react-controls/select-dropdown');
 
-var PropTypes = React.PropTypes;
-
-var actions = require('../actions');
 var echarts = require('./react-echarts');
-
-var sourceMeta = require('../source-metadata');
+var config = require('../config-reports');
 var Granularity = require('../granularity');
 
+var PropTypes = React.PropTypes;
 var propTypes = { 
-  source: PropTypes.oneOf(['water', 'energy']),
-  granularity: PropTypes.oneOf(Granularity.names()),
+  field: PropTypes.oneOf(_.keys(config.reports.measurements.fields)),
+  level: PropTypes.oneOf(_.keys(config.reports.measurements.levels)),
+  reportName: PropTypes.string,
   timespan: PropTypes.oneOfType([
     PropTypes.oneOf(['hour', 'day', 'week', 'month', 'quarter', 'year']),
     (props, propName, componentName) => ( 
@@ -39,6 +36,12 @@ var Panel = React.createClass({
   
   statics: {
     
+    messages: {
+      INVALID_TIMESPAN: 'The given timespan is invalid. Please, fix it.',
+      REFRESH_CHANGED: 'Your parameters have changed. Refresh to redraw data!',
+      REFRESH: 'Refresh to redraw data',
+    },
+  
     defaults: {
       datetime: {
         dateFormat: 'DD/MM/YYYY',
@@ -57,14 +60,14 @@ var Panel = React.createClass({
       },
     },
     
-    filterGranularity: function (r, name) {
+    filterLevel: function (r, level) {
       r = this.computeTimespan(r);
       var dr = r[1].valueOf() - r[0].valueOf();
-      var dg = Granularity.fromName(name).valueOf();
+      var dg = Granularity.fromName(level).valueOf();
       if (dg > dr)
         return false;
       if (dg * 1e+3 < dr)
-        return false; // more than 3 orders of magnitude less
+        return false; // more than 3 orders of magnitude
       return true;
     },
  
@@ -117,60 +120,73 @@ var Panel = React.createClass({
   },
 
   getDefaultProps: function () {
-    return {};
+    return {
+      timespan: 'month',
+    };
   },
   
   componentDidMount: function () {
+    this.props.initialize();
     this.props.refreshData();
   },
-  
+ 
+  componentDidUpdate: function (prevProps) {
+    // Note:
+    // The following will not lead to an infinite loop since these specific
+    // (injected) function props are supposed to be idemponent.
+    
+    // If moved to another report: reset state, initialize report and refresh data
+    if (
+      (prevProps.field != this.props.field) || 
+      (prevProps.level != this.props.level) ||
+      (prevProps.reportName != this.props.reportName)
+    ) {
+      this.setState({dirty: false});
+      this.props.initialize();
+      this.props.refreshData();
+    }
+  },
+
   render: function ()
   {
     var cls = this.constructor;
-    var defaults = this.constructor.defaults;
     
     var datetimeProps = {
       closeOnSelect: true,
-      dateFormat: defaults.datetime.dateFormat,
-      timeFormat: defaults.datetime.timeFormat,
+      dateFormat: cls.defaults.datetime.dateFormat,
+      timeFormat: cls.defaults.datetime.timeFormat,
       inputProps: {
-        size: defaults.datetime.inputSize,
+        size: cls.defaults.datetime.inputSize,
       },
     };
-    
-    var [t0, t1] = this.constructor.computeTimespan(this.props.timespan);
+    var {field, level, reportName} = this.props;
+    var [t0, t1] = cls.computeTimespan(this.props.timespan);
     
     _.isString(this.props.timespan) && (datetimeProps.inputProps.disabled = 'disabled');
-    
-    var filterGranularity = cls.filterGranularity.bind(cls, [t0, t1]);
-    var granularityOptions = Granularity.names().map(v => (
-      <option key={v} value={v} disabled={filterGranularity(v)? null : true}>{v}</option>
-    ));
 
     var helpParagraph;
     if (t1 < t0) {
-      helpParagraph = (
-        <p className="help text-danger">The given timespan is invalid. Please, fix it.</p> 
-      );
+      helpParagraph = (<p className="help text-danger">{cls.messages.INVALID_TIMESPAN}</p>);
     } else if (this.state.dirty) {
-      helpParagraph = (
-        <p className="help text-warning">Your parameters have changed. Press <i>Refresh</i> to redraw data!</p> 
-      ); 
+      helpParagraph = (<p className="help text-warning">{cls.messages.REFRESH_CHANGED}</p>); 
     } else {
-      helpParagraph = (
-        <p className="help text-muted">Press <i>Refresh</i> to redraw data</p>
-      );
+      helpParagraph = (<p className="help text-muted">{cls.messages.REFRESH}</p>);
     }
+    
+    // Todo: Filter timespan options by either level or consolidation level 
 
     return (
-      <form className="form-inline chart-panel" id={'panel-' + this.props.source} >
+      <form 
+        className="form-inline chart-panel"
+        id={'panel--' + [field, level, reportName].join('-')} 
+       >
         <div className="form-group">
           <label>Time Span:</label>
           &nbsp;
           <Select
             className='select-timespan'
             value={_.isString(this.props.timespan)? this.props.timespan : ''}
-            options={defaults.timespan.options}
+            options={cls.defaults.timespan.options}
             onChange={(val) => (this._setTimespan(val? (val) : ([t0, t1])))} 
            />
           &nbsp;{/*&nbsp;From:&nbsp;*/}
@@ -186,48 +202,34 @@ var Panel = React.createClass({
             onChange={(val) => (this._setTimespan([t0, val]))} 
            />
         </div>
+        {/* Todo
         <div className="form-group">
-          <label>Granularity:</label> 
+          <label>Group By:</label> 
           &nbsp;
           <Select
-            className='select-granularity'
-            value={this.props.granularity}
-            onChange={this._setGranularity}
+            className='select-groupby'
+            value={this.props.groupby}
+            onChange={this._setPopulation}
            >
-            {granularityOptions}
+            {groupbyOptions}
           </Select> 
         </div>
+        */}
         <div className="form-group">
           <Button onClick={this._refresh}><Glyphicon glyph="refresh" />&nbsp;Refresh</Button>
-          &nbsp;
-          <Button onClick={this._saveAsImage}><Glyphicon glyph="save"/>&nbsp;Save as image</Button>
         </div>
         {helpParagraph}
       </form>
     )
   },
   
+  // Helpers
+
   // Event handlers
 
   _setTimespan: function (val) {
-    var cls = this.constructor;
-
     var r = _.isString(val)? val: [val[0].valueOf(), val[1].valueOf()];
     this.props.setTimespan(r);
-    
-    // Check if granularity needs to be re-assigned along with the timespan
-    var filterGranularity = cls.filterGranularity.bind(cls, val);
-    if (!filterGranularity(this.props.granularity)) {
-      var g = Granularity.names().find(filterGranularity);
-      if (g)
-        this.props.setGranularity(g);
-    }
-
-    this.setState({dirty: true});
-  },
-
-  _setGranularity: function (val) {
-    this.props.setGranularity(val);
     this.setState({dirty: true});
   },
 
@@ -236,16 +238,12 @@ var Panel = React.createClass({
     this.setState({dirty: false});
     return false;
   },
-  
-  _saveAsImage: function () {
-    return false;
-  },
-
 }); 
 
 var Chart = React.createClass({
   
   statics: {
+    
     defaults: {
       xAxis: {
         dateformat: {
@@ -262,21 +260,42 @@ var Chart = React.createClass({
   }, 
 
   propTypes: _.extend({}, propTypes, {
-    series: PropTypes.array,
+    width: PropTypes.number,
+    height: PropTypes.number,
+    series: PropTypes.arrayOf(PropTypes.shape({
+      label: PropTypes.string,
+      metric: PropTypes.oneOf(['MIN', 'MAX', 'AVERAGE', 'SUM', 'COUNT']),
+      source: PropTypes.oneOf(['METER', 'DEVICE']),
+      data: PropTypes.arrayOf(
+        PropTypes.arrayOf(PropTypes.number)
+      ),
+    })),
   }), 
+  
+  getDefaultProps: function () {
+    return {
+      width: 800,
+      height: 350,
+      timespan: 'month',
+      series: [],
+    };
+  },
 
   render: function ()
   {
-    var defaults = this.constructor.defaults;
-    var {title, unit} = sourceMeta[this.props.source];
-    var xf = defaults.xAxis.dateformat[this.props.granularity];
+    var cls = this.constructor;
+    var _config = config.reports.measurements;
+    var {field, level, reportName, series} = this.props;
+
+    var {title, unit} = _config.fields[field];
+    var xf = cls.defaults.xAxis.dateformat[level]; // Fixme at consolidation level
     
-    var pilot = (this.props.series || [])[0];
+    var pilot = _.first(series);
     return (
-       <div id={'chart-' + this.props.source}>
+       <div id={'chart--' + [field, level, reportName].join('--')}>
          <echarts.LineChart 
-            width={750}
-            height={340}
+            width={this.props.width}
+            height={this.props.height}
             xAxis={{
               numTicks: pilot? Math.min(6, pilot.data.length) : 0,
               formatter: (t) => (moment(t).format(xf)),
@@ -284,9 +303,12 @@ var Chart = React.createClass({
             yAxis={{
               name: title + ((unit)?(' (' + unit + ')') : ''),
               numTicks: 4,
-              formatter: (unit)? ((y) => (y.toFixed(2) + ' ' + unit)) : null,
+              formatter: (unit)? ((y) => (y.toFixed(1) + ' ' + unit)) : null,
             }}
-            series={this.props.series}
+            series={series.map(s => ({
+              name: s.metric + ' of ' + s.label,
+              data: s.data,
+            }))}
         />
       </div>
     );
@@ -297,21 +319,45 @@ var Chart = React.createClass({
 
 // Container components
 
+var actions = require('../actions/reports-measurements');
+
 Panel = ReactRedux.connect(
-  (state, ownProps) => (
-    _.pick(state.stats[ownProps.source], ['granularity', 'timespan'])
-  ), 
-  (dispatch, ownProps) => ({
-    setGranularity: (g) => (dispatch(actions.setGranularity(ownProps.source, g))),
-    setTimespan: (ts) => (dispatch(actions.setTimespan(ownProps.source, ts))),
-    refreshData: () => (dispatch(actions.refreshData(ownProps.source))) 
-  })
+  (state, ownProps) => {
+    var _config = config.reports.measurements;
+    var {field, level, reportName} = ownProps;
+    var key = _config.getKey(field, level, reportName); 
+    var _state = state.reports.measurements[key];
+
+    return !_state? {} : {
+      timespan: _state.timespan,
+    };
+  }, 
+  (dispatch, ownProps) => {
+    var {field, level, reportName} = ownProps;
+    
+    return {
+      initialize: () => (
+        dispatch(actions.initialize(field, level, reportName))),
+      setTimespan: (ts) => (
+        dispatch(actions.setTimespan(field, level, reportName, ts))),
+      refreshData: () => (
+        dispatch(actions.refreshData(field, level, reportName))), 
+    };
+  }
 )(Panel);
 
 Chart = ReactRedux.connect(
-  (state, ownProps) => (
-    _.pick(state.stats[ownProps.source], ['granularity', 'timespan', 'series'])
-  ),
+  (state, ownProps) => {
+    var _config = config.reports.measurements;
+    var {field, level, reportName} = ownProps;
+    var key = _config.getKey(field, level, reportName); 
+    var _state = state.reports.measurements[key];
+    
+    return !_state? {} : {
+      timespan: _state.timespan,
+      series: _state.series || [],
+    };
+  },
   null
 )(Chart);
 

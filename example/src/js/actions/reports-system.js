@@ -1,0 +1,74 @@
+'use strict';
+
+var api = require('../api-client');
+var Granularity = require('../granularity');
+
+// Define actions
+
+var actions = {
+  
+  // Constants
+
+  PREFIX: 'SYSTEM',
+
+  // Plain actions
+  
+  initialize: (level, reportName) => ({
+    type: actions.PREFIX + '/' + 'INITIALIZE',
+    level,
+    reportName,
+  }),
+ 
+  requestData: (level, reportName, t=null) => ({
+    type: actions.PREFIX + '/' + 'REQUEST_DATA',
+    level,
+    reportName,
+    timestamp: (t || new Date()).getTime(),
+  }),
+  
+  setData: (level, reportName, data, t=null) => ({
+    type: actions.PREFIX + '/' + 'SET_DATA',
+    level,
+    reportName,
+    data,
+    timestamp: (t || new Date()).getTime(), 
+  }),
+  
+  setTimespan: (level, reportName, timespan) => ({
+    type: actions.PREFIX + '/' + 'SET_TIMESPAN',
+    level,
+    reportName,
+    timespan: timespan,
+  }),
+
+  // Complex actions: functions processed by thunk middleware
+  
+  refreshData: (level, reportName) => (dispatch, getState) => {
+    var state = getState();
+    
+    var _config = config.reports.system.levels[level].reports[reportName];
+    var key = config.reports.system.getKey(level, reportName);
+    var _state = state.reports.system[key];
+    
+    if (_state == null || _state.timespan) {
+      console.warn('The state for report ' + key + ' is empty!');
+      return;
+    }
+
+    dispatch(actions.requestData(level, reportName, new Date()));
+    
+    // Todo
+
+    api.queryStats({
+      timespan: _state.timespan,
+    }).then(res => {
+      if (!res.error) {
+        dispatch(actions.setData(level, reportName, res.result.series, new Date()));
+      } else {
+        // Do something on a failed api request
+      }
+    })
+  },
+};
+
+module.exports = actions;

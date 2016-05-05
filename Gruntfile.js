@@ -219,6 +219,8 @@ module.exports = function(grunt) {
            'src/js/components/**.js',
            'example/src/js/**.js',
            'example/src/js/components/**.js',
+           'example/src/js/actions/**.js',
+           'example/src/js/reducers/**.js',
            'example/src/html/**.html',
          ],
          tasks: ['build:example', 'deploy:example'],

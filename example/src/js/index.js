@@ -3,7 +3,7 @@ var ReactDOM = require('react-dom');
 var ReactRedux = require('react-redux');
 
 var Root = require('./components/root');
-var actions = require('./actions');
+var actions = require('./actions/index');
 var store = require('./store');
 
 var Provider = ReactRedux.Provider;

@@ -3,14 +3,78 @@
 var _ = require('lodash');
 var moment = require('moment');
 var path = require('path');
+var sprintf = require('sprintf');
+var fetch = require('isomorphic-fetch'); 
 var express = require('express');
 var logger = require('morgan');
 var reqparser = require('body-parser');
+
+var makeApiProxy = function (options) {
+  var {apiUrl, credentials, utility} = options;
+  
+  return {
+    queryMeasurements: function (granularity, timespan) {
+      
+      // Assume timespan ia a pair of moment instances
+      var [t0, t1] = timespan;
+
+      // Build request
+      
+      var headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      };
+      
+      var payload = {
+        credentials,
+        query: {
+          time: {
+            start: t0.valueOf(),
+            end: t1.valueOf(),
+            granularity: granularity
+          },
+          // This always post queries in the scope of the current utility
+          // Todo: allow (sub)groups inside this utility
+          population: [
+            {
+              "type": "UTILITY",
+              "label": "UTILITY:" + utility.name,
+              "utility": utility.id,
+            }
+          ],
+          source: 'METER', // METER/DEVICE
+          metrics: ["SUM", "COUNT", "MIN", "MAX", "AVERAGE"],
+        }, 
+      };
+      
+      // Send request and return a promise
+
+      var p = fetch(apiUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload),
+      });
+
+      debugger; 
+      
+      return p.then(
+        res => (res.json()),
+        res => (undefined)
+      );
+    },
+  }
+};
 
 var makeApp = function (appconfig) {
 
   var app = express();
   var docRoot = appconfig.docRoot;
+  
+  // Create a proxy that sends API requests to backend
+  
+  var apiProxy = makeApiProxy(appconfig.backend);
+ 
+  // Define middleware
 
   app.use(logger('combined'));
 
@@ -19,11 +83,13 @@ var makeApp = function (appconfig) {
   });
 
   app.use(reqparser.json()); // for parsing application/json
-
+  
+  // Define routes
+  
   app.get('/', function (req, res) {
     res.sendFile(path.join(docRoot[0], 'index.html'));
   });
-
+  
   app.get('/api/action/echo', function (req, res) {
     res.json({message: (req.query.message || null)});
   });
@@ -33,17 +99,16 @@ var makeApp = function (appconfig) {
   });
 
   app.post('/api/action/query-stats', function (req, res) {
+    res.json({errors: ['Not implemented']}); // Todo
+  });
+  
+  app.post('/api/action/query-measurements', function (req, res) {
     var Granularity = require('./granularity.js');
+
+    var q = _.extend({}, {granularity: 'day', timespan: 'week'}, req.body);
     
-    var q = _.extend({}, {
-      source: 'water',
-      metric: 'avg',
-      granularity: 'day',
-      timespan: 'week',
-    }, req.body);
-    
-    var result, t0, t1, dt, granularity;
-    
+    var t0, t1, dt, granularity;
+
     switch (q.timespan) {
       case 'hour':
         // interpret as last hour
@@ -72,59 +137,32 @@ var makeApp = function (appconfig) {
     }
     dt = t1 - t0; // millis
 
-    granularity = Granularity.fromName(q.granularity);
+    granularity = Granularity.fromName(q.granularity.toLowerCase());
     if (granularity == null) {
-      result = {
-        error: 'No such granularity: ' + q.granularity
-      };
+      res.json({
+        errors: [sprintf('No such granularity: %s', q.granularity)
+      ]
+      });
     } else if (granularity.valueOf() > dt) {
-      result = {
-        error: 'Too narrow timespan (' + moment.duration(dt).humanize() + ') for given granularity (' + q.granularity + ')',
-      };
+      res.json({
+        errors: [
+          sprintf('Too narrow timespan (%s) for given granularity (%s)',
+            moment.duration(dt).humanize(), q.granularity)
+        ],
+      });
     } else {
-      // Slide-down t0 to a closest multiple of granularity unit
-      t0 = t0.startOf(granularity.unit)
-      // Slide-up t1 to the closest multiple of granularity unit
-      t1 = t1.endOf(granularity.unit).add(1, 'ms');
-      // Compute number of data points
-      dt = t1 - t0;
-      let n = Math.ceil(dt / granularity.valueOf());
-      let zeros = (new Array(n)).fill(0); 
-      // Generate result!
-      result = {
-        error: null,
-        request: {
-          timespan: q.timespan,
-          granularity: q.granularity,
-        },
-        result: {
-          timespan: [t0.valueOf(), t1.valueOf()],
-          granularity: q.granularity,
-          // Mock an API response
-          series: [
-            {
-              name: 'Group A',
-              data: zeros.map((_zero, i) => (
-                [
-                  t0.clone().add(i * granularity.quantity, granularity.unit).valueOf(),
-                  1.8 * i + 0.2 * i * i + (Math.random() - 0.5) * 1.5 + 15.0,
-                ]
-              )),
-            },
-            {
-              name: 'Group B', 
-              data: zeros.map((_zero, i) => (
-                [
-                  t0.clone().add(i * granularity.quantity, granularity.unit).valueOf(),
-                  1.21 * i + 0.15 * i * i + (Math.random() - 0.5) * 1.5 + 8.2,
-                ]
-              )),
-            }
-          ],
-        },
-      };
+      apiProxy.queryMeasurements(q.granularity, [t0, t1]).then(
+        (r1) => {
+          if (r1 == null) {
+            res.json({
+              errors: ['Unexpected error from backend'],
+            });
+          } else {
+            res.json(r1);
+          }
+        }
+      );
     }
-    res.json(result);
   });
   
   return app;

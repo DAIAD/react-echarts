@@ -53,8 +53,9 @@ var actions = {
   refreshData: (field, level, reportName) => (dispatch, getState) => {
     var state = getState();
     
-    var _config = config.reports.measurements.levels[level].reports[reportName];
-    var key = config.reports.measurements.getKey(field, level, reportName);
+    var _config = config.reports.measurements;
+    var report = _config.levels[level].reports[reportName];
+    var key = _config.computeKey(field, level, reportName);
     var _state = state.reports.measurements[key];
     
     var requestedAt = new Date();
@@ -67,7 +68,7 @@ var actions = {
 
     dispatch(actions.requestData(field, level, reportName, requestedAt));
     
-    var granularity = _config.queryParams.time.granularity;
+    var granularity = report.queryParams.time.granularity;
     var timespan = _.isString(_state.timespan)? 
       TimeSpan.fromName(_state.timespan).toRange(true) : _state.timespan;
     
@@ -76,7 +77,7 @@ var actions = {
       if (!res.errors.length) {
         var data = _.flatten(_.zip(['METER', 'DEVICE'], [res.meters, res.devices]).map(
           _.spread((source, rs) => (
-            !rs? [] : _.flatten(_config.metrics.map(metric => (
+            !rs? [] : _.flatten(report.metrics.map(metric => (
               rs.map(r => ({
                 granularity,
                 metric,

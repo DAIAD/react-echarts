@@ -349,7 +349,7 @@ Panel = ReactRedux.connect(
   (state, ownProps) => {
     var _config = config.reports.measurements;
     var {field, level, reportName} = ownProps;
-    var key = _config.getKey(field, level, reportName); 
+    var key = _config.computeKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
     return !_state? {} : _.pick(_state, ['timespan']);
   }, 
@@ -370,7 +370,7 @@ Chart = ReactRedux.connect(
   (state, ownProps) => {
     var _config = config.reports.measurements;
     var {field, level, reportName} = ownProps;
-    var key = _config.getKey(field, level, reportName); 
+    var key = _config.computeKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
     return !_state? {} : _.pick(_state, ['series', 'finished']);
   },

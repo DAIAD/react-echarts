@@ -46,14 +46,10 @@ var actions = {
   refreshData: (level, reportName) => (dispatch, getState) => {
     var state = getState();
     
-    var _config = config.reports.system.levels[level].reports[reportName];
-    var key = config.reports.system.getKey(level, reportName);
+    var _config = config.reports.system;
+    var report = _config.levels[level].reports[reportName];
+    var key = _config.computeKey(level, reportName);
     var _state = state.reports.system[key];
-    
-    if (_state == null || _state.timespan) {
-      console.warn('The state for report ' + key + ' is empty!');
-      return;
-    }
 
     dispatch(actions.requestData(level, reportName, new Date()));
     

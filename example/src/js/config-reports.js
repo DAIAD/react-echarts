@@ -41,7 +41,7 @@ module.exports = {
       info: {
         title: 'Measurements',
       },
-      getKey: (field, level, reportName) => ([field, level, reportName].join('/')),
+      computeKey: (field, level, reportName) => ([field, level, reportName].join('/')),
       // What physical quantities are being measured
       fields: {
         'volume': {
@@ -137,7 +137,7 @@ module.exports = {
       info: {
         title: 'System Utilization',
       },
-      getKey: (level, reportName) => ([level, reportName].join('/')),
+      computeKey: (level, reportName) => ([level, reportName].join('/')),
       levels: {
         'week': {
           info: {

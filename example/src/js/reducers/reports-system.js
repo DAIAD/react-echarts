@@ -20,7 +20,7 @@ var reduce = function (state={}, action) {
   if (level == null || reportName == null)
     return state; // malformed action; dont touch state
 
-  var r = null, key = config.getKey(level, reportName);
+  var r = null, key = config.computeKey(level, reportName);
   if (key in state) {
     // Clone existing state for (level, reportName)
     r = _.extend({}, state[key]);

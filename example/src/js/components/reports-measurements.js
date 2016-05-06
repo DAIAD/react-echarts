@@ -51,15 +51,16 @@ var Panel = React.createClass({
         inputSize: 13, 
       },  
       
-      timespanOptions: [].concat(
-        Array.from(TimeSpan.common.entries()).map(_.spread((name, u) => (
-          {value: name, text: u.title}
-        ))),
-        [
-          {value: '', text: 'Custom...'}
-        ]
-      ),
     },
+    
+    timespanOptions: [].concat(
+      Array.from(TimeSpan.common.entries()).map(_.spread(
+        (name, u) => ({value: name, text: u.title})
+      )),
+      [
+        {value: '', text: 'Custom...'}
+      ]
+    ),
 
     checkTimespan: function (val, level, N=4) {
       var errors = this.errors;
@@ -139,24 +140,21 @@ var Panel = React.createClass({
 
   render: function () {
     var cls = this.constructor;
-    
+    var {field, level, reportName} = this.props;
+    var {timespan, dirty, error, errorMessage} = this.state;
+    var [t0, t1] = cls.computeTimespan(timespan);
+   
     var datetimeProps = {
       closeOnSelect: true,
       dateFormat: cls.defaults.datetime.dateFormat,
       timeFormat: cls.defaults.datetime.timeFormat,
       inputProps: {
         size: cls.defaults.datetime.inputSize,
+        disabled: _.isString(timespan)? 'disabled' : null, 
       },
     };
     
-    var {field, level, reportName} = this.props;
-    var {timespan, dirty, error, errorMessage} = this.state;
-
-    var [t0, t1] = cls.computeTimespan(timespan);
-    
-    _.isString(timespan) && (datetimeProps.inputProps.disabled = 'disabled');
-
-    var timespanOptions = cls.defaults.timespanOptions.filter(o => (
+    var timespanOptions = cls.timespanOptions.filter(o => (
       !o.value || cls.checkTimespan(o.value, level) >= 0
     ));
 
@@ -183,15 +181,13 @@ var Panel = React.createClass({
            >
             {timespanOptions.map(o => (<option value={o.value} key={o.value}>{o.text}</option>))}
           </Select>
-          &nbsp;{/*&nbsp;From:&nbsp;*/}
-          <DatetimeInput 
-            {...datetimeProps} 
+          &nbsp;
+          <DatetimeInput {...datetimeProps} 
             value={t0.toDate()} 
             onChange={(val) => (this._setTimespan([val, t1]))} 
            />
-          &nbsp;{/*&nbsp;To:&nbsp;*/}
-          <DatetimeInput 
-            {...datetimeProps} 
+          &nbsp;
+          <DatetimeInput {...datetimeProps} 
             value={t1.toDate()}
             onChange={(val) => (this._setTimespan([t0, val]))} 
            />

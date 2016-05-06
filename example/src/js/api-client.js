@@ -32,6 +32,9 @@ var api = {
   
   queryMeasurements: function (q={})
   { 
+    q = _.extend({
+      metrics: ['SUM', 'COUNT', 'AVERAGE', 'MIN', 'MAX']
+    }, q);
     return invokeAction('query-measurements', q);
   },
 };

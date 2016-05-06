@@ -1,10 +1,10 @@
+'use strict';
+
 var moment = require('moment');
 
 var Granularity = function (name, quantity, unit)
 {
-  // This unit should be something understood by Moment.js
-  // see http://momentjs.com/docs/#/manipulating/add/
-  this.unit = unit;
+  this.unit = unit; // same as in Moment.js
   this.quantity = quantity;
   this.name = name;
 }

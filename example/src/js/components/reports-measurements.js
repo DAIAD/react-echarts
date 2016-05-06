@@ -13,6 +13,7 @@ var Select = require('react-controls/select-dropdown');
 var echarts = require('./react-echarts');
 var config = require('../config-reports');
 var Granularity = require('../granularity');
+var TimeSpan = require('../timespan');
 
 var PropTypes = React.PropTypes;
 var propTypes = { 
@@ -20,7 +21,7 @@ var propTypes = {
   level: PropTypes.oneOf(_.keys(config.reports.measurements.levels)),
   reportName: PropTypes.string,
   timespan: PropTypes.oneOfType([
-    PropTypes.oneOf(['hour', 'day', 'week', 'month', 'quarter', 'year']),
+    PropTypes.oneOf(TimeSpan.commonNames()),
     (props, propName, componentName) => ( 
       (PropTypes.arrayOf(PropTypes.number)(props, propName, componentName)) ||
       ((props[propName].length == 2)? 
@@ -36,119 +37,107 @@ var Panel = React.createClass({
   
   statics: {
     
-    messages: {
-      INVALID_TIMESPAN: 'The given timespan is invalid. Please, fix it.',
-      REFRESH_CHANGED: 'Your parameters have changed. Refresh to redraw data!',
-      REFRESH: 'Refresh to redraw data',
+    errors: {
+      TIMESPAN_INVALID: -1,
+      TIMESPAN_TOO_NARROW: -2,
+      TIMESPAN_TOO_WIDE: -3,
     },
   
     defaults: {
+      
       datetime: {
         dateFormat: 'DD/MM/YYYY',
         timeFormat: 'HH:mm', 
         inputSize: 13, 
       },  
-      timespan: {
-        options: new Map([
-          ['hour', 'This hour'],
-          ['day', 'This day'],
-          ['week', 'This week'],
-          ['month', 'This month'],
-          ['year', 'This year'],
-          ['', 'Custom...'],
-        ]),
-      },
+      
+      timespanOptions: [].concat(
+        Array.from(TimeSpan.common.entries()).map(_.spread((name, u) => (
+          {value: name, text: u.title}
+        ))),
+        [
+          {value: '', text: 'Custom...'}
+        ]
+      ),
     },
-    
-    filterLevel: function (r, level) {
-      r = this.computeTimespan(r);
-      var dr = r[1].valueOf() - r[0].valueOf();
-      var dg = Granularity.fromName(level).valueOf();
-      if (dg > dr)
-        return false;
-      if (dg * 1e+3 < dr)
-        return false; // more than 3 orders of magnitude
-      return true;
+
+    checkTimespan: function (val, level, N=4) {
+      var errors = this.errors;
+      var [t0, t1] = this.computeTimespan(val);
+      
+      var dt = t1.valueOf() - t0.valueOf();
+      if (dt <= 0)
+        return errors.TIMESPAN_INVALID;
+      
+      var dl = Granularity.fromName(level).valueOf();
+      if (dl >= dt)
+        return errors.TIMESPAN_TOO_NARROW;
+      
+      if (dl * Math.pow(10, N) < dt)
+        return errors.TIMESPAN_TOO_WIDE; // N orders of magnitude bigger than dl
+      
+      return 0;
     },
  
     computeTimespan: function (val) {
-      // Compute the actual timespan as a pair of Epoch timestamps
-      var t0, t1;
+      // Convert to a pair of moment instances
       if (_.isString(val)) {
-        // Translate a symbolic name to a timespan
-        switch (val) {
-          case 'hour':
-            t0 = moment().startOf('hour');
-            t1 = t0.clone().add(1, 'hour');
-            break;
-          default:
-          case 'day':
-            t0 = moment().startOf('day');
-            t1 = t0.clone().add(1, 'day');
-            break;
-          case 'week':
-            t0 = moment().startOf('isoweek');
-            t1 = t0.clone().add(1, 'week');
-            break;
-          case 'month':
-            t0 = moment().startOf('month');
-            t1 = t0.clone().add(1, 'month');
-            break;
-          case 'year':
-            t0 = moment().startOf('year');
-            t1 = t0.clone().add(1, 'year');
-            break;
-        }
+        return TimeSpan.fromName(val).toRange();
       } else if (_.isArray(val)) {
-        t0 = _.isNumber(val[0])? moment(val[0]) : val[0]; 
-        t1 = _.isNumber(val[1])? moment(val[1]) : val[1]; 
+        var t0 = _.isNumber(val[0])? moment(val[0]) : val[0]; 
+        var t1 = _.isNumber(val[1])? moment(val[1]) : val[1]; 
+        return [t0, t1];
       }
-      return [t0, t1];
     },
   },
   
   propTypes: _.extend({}, propTypes, {
-    /* more props */
+    population: PropTypes.string, // Todo!
   }),
   
   // Lifecycle
 
   getInitialState: function () {
     return {
-      dirty: false
+      dirty: false,
+      error: null,
+      errorMessage: null,
+      timespan: this.props.timespan,
     };
   },
 
   getDefaultProps: function () {
     return {
       timespan: 'month',
+      population: null,
     };
   },
   
   componentDidMount: function () {
-    this.props.initialize();
+    this.props.initializeReport();
     this.props.refreshData();
   },
  
-  componentDidUpdate: function (prevProps) {
-    // Note:
-    // The following will not lead to an infinite loop since these specific
-    // (injected) function props are supposed to be idemponent.
-    
-    // If moved to another report: reset state, initialize report and refresh data
+  componentWillReceiveProps: function (nextProps) {
+
+    // Check if moving to another report
     if (
-      (prevProps.field != this.props.field) || 
-      (prevProps.level != this.props.level) ||
-      (prevProps.reportName != this.props.reportName)
+      (nextProps.field != this.props.field) || 
+      (nextProps.level != this.props.level) ||
+      (nextProps.reportName != this.props.reportName)
     ) {
-      this.setState({dirty: false});
-      this.props.initialize();
-      this.props.refreshData();
+      this.setState({dirty: false, error: null, errorMessage: null});
+      nextProps.initializeReport();
+      setTimeout(nextProps.refreshData, 500);
+    }
+    
+    // Reset timespan
+    if (nextProps.timespan != this.props.timespan) {
+      this.setState({timespan: nextProps.timespan});
     }
   },
 
-  render: function ()
-  {
+  render: function () {
     var cls = this.constructor;
     
     var datetimeProps = {
@@ -159,36 +148,41 @@ var Panel = React.createClass({
         size: cls.defaults.datetime.inputSize,
       },
     };
-    var {field, level, reportName} = this.props;
-    var [t0, t1] = cls.computeTimespan(this.props.timespan);
     
-    _.isString(this.props.timespan) && (datetimeProps.inputProps.disabled = 'disabled');
+    var {field, level, reportName} = this.props;
+    var {timespan, dirty, error, errorMessage} = this.state;
+
+    var [t0, t1] = cls.computeTimespan(timespan);
+    
+    _.isString(timespan) && (datetimeProps.inputProps.disabled = 'disabled');
+
+    var timespanOptions = cls.defaults.timespanOptions.filter(o => (
+      !o.value || cls.checkTimespan(o.value, level) >= 0
+    ));
 
     var helpParagraph;
-    if (t1 < t0) {
-      helpParagraph = (<p className="help text-danger">{cls.messages.INVALID_TIMESPAN}</p>);
-    } else if (this.state.dirty) {
-      helpParagraph = (<p className="help text-warning">{cls.messages.REFRESH_CHANGED}</p>); 
+    if (errorMessage) {
+      helpParagraph = (<p className="help text-danger">{errorMessage}</p>);
+    } else if (dirty) {
+      helpParagraph = (<p className="help text-info">Parameters have changed. Refresh to redraw data!</p>); 
     } else {
-      helpParagraph = (<p className="help text-muted">{cls.messages.REFRESH}</p>);
+      helpParagraph = (<p className="help text-muted">Refresh to redraw data.</p>);
     }
-    
-    // Todo: Filter timespan options by either level or consolidation level 
 
     return (
-      <form 
-        className="form-inline chart-panel"
-        id={'panel--' + [field, level, reportName].join('-')} 
+      <form className="form-inline chart-panel" 
+        id={['panel', field, level, reportName].join('--')} 
        >
         <div className="form-group">
           <label>Time Span:</label>
           &nbsp;
           <Select
             className='select-timespan'
-            value={_.isString(this.props.timespan)? this.props.timespan : ''}
-            options={cls.defaults.timespan.options}
+            value={_.isString(timespan)? timespan : ''}
             onChange={(val) => (this._setTimespan(val? (val) : ([t0, t1])))} 
-           />
+           >
+            {timespanOptions.map(o => (<option value={o.value} key={o.value}>{o.text}</option>))}
+          </Select>
           &nbsp;{/*&nbsp;From:&nbsp;*/}
           <DatetimeInput 
             {...datetimeProps} 
@@ -216,7 +210,9 @@ var Panel = React.createClass({
         </div>
         */}
         <div className="form-group">
-          <Button onClick={this._refresh}><Glyphicon glyph="refresh" />&nbsp;Refresh</Button>
+          <Button onClick={this._refresh} disabled={!!error}>
+            <Glyphicon glyph="refresh" />&nbsp;Refresh
+          </Button>
         </div>
         {helpParagraph}
       </form>
@@ -228,9 +224,42 @@ var Panel = React.createClass({
   // Event handlers
 
   _setTimespan: function (val) {
-    var r = _.isString(val)? val: [val[0].valueOf(), val[1].valueOf()];
-    this.props.setTimespan(r);
-    this.setState({dirty: true});
+    var cls = this.constructor;
+    var errors = cls.errors;
+    var error = null, errorMessage = null, ts = null;
+    
+    // Validate
+    if (_.isString(val)) {
+      // Assume a symbolic name is always valid
+      ts = val;
+    } else if (_.isArray(val)) {
+      // Check if given timespan is a valid range 
+      console.assert(val.length == 2 && val.every(t => moment.isMoment(t)), 
+        'Expected a pair of moment instances');
+      error = cls.checkTimespan(val, this.props.level);
+      switch (error) {
+        case errors.TIMESPAN_INVALID:
+          errorMessage = 'The given timespan is invalid.'
+          break;
+        case errors.TIMESPAN_TOO_NARROW:
+          errorMessage = 'The given timespan is too narrow.'
+          break;
+        case errors.TIMESPAN_TOO_WIDE: 
+          errorMessage = 'The given timespan is too wide.'
+          break;
+        case 0:
+        default:
+          ts = [val[0].valueOf(), val[1].valueOf()];
+          break;
+      }
+    }
+    
+    // Set state and decide if must setTimespan()
+    if (ts != null) {
+      // The input is valid
+      this.props.setTimespan(ts);
+    }
+    this.setState({dirty: true, timespan: val, error, errorMessage});
   },
 
   _refresh: function () {
@@ -292,7 +321,7 @@ var Chart = React.createClass({
     
     var pilot = _.first(series);
     return (
-       <div id={'chart--' + [field, level, reportName].join('--')}>
+       <div id={['chart', field, level, reportName].join('--')}>
          <echarts.LineChart 
             width={this.props.width}
             height={this.props.height}
@@ -327,16 +356,12 @@ Panel = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var key = _config.getKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
-
-    return !_state? {} : {
-      timespan: _state.timespan,
-    };
+    return !_state? {} : _.pick(_state, ['timespan']);
   }, 
   (dispatch, ownProps) => {
     var {field, level, reportName} = ownProps;
-    
     return {
-      initialize: () => (
+      initializeReport: () => (
         dispatch(actions.initialize(field, level, reportName))),
       setTimespan: (ts) => (
         dispatch(actions.setTimespan(field, level, reportName, ts))),
@@ -352,11 +377,7 @@ Chart = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var key = _config.getKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
-    
-    return !_state? {} : {
-      timespan: _state.timespan,
-      series: _state.series || [],
-    };
+    return !_state? {} : _.pick(_state, ['timespan', 'series']);
   },
   null
 )(Chart);

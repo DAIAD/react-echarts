@@ -76,7 +76,7 @@ module.exports = {
                 },
                 metrics: ['COUNT', 'SUM', 'AVERAGE']
               },
-              timespan: 'month', // default
+              timespan: 'quarter', // default
               metrics: ['AVERAGE'],
               consolidate: 'AVERAGE',
               groupBy: ['start-date', 'family-size', 'income'],
@@ -90,7 +90,7 @@ module.exports = {
                 },
                 metrics: ['COUNT', 'SUM', 'MIN', 'MAX']
               },
-              timespan: 'month', // default
+              timespan: 'quarter', // default
               metrics: ['MIN', 'MAX'],
               consolidate: 'AVERAGE',
               groupBy: ['start-date', 'family-size', 'income'],
@@ -112,7 +112,7 @@ module.exports = {
                 },
                 metrics: ['COUNT', 'SUM', 'MIN', 'MAX', 'AVERAGE'],
               },
-              timespan: 'month', // default
+              timespan: 'quarter', // default
               metrics: null, // n/a
               consolidate: null, // n/a
             }

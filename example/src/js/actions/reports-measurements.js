@@ -4,6 +4,7 @@ var _ = require('lodash');
 
 var config = require('../config-reports');
 var api = require('../api-client');
+var TimeSpan = require('../timespan');
 
 // Define actions
 
@@ -60,33 +61,37 @@ var actions = {
     if (_state.requested && (requestedAt.getTime() - _state.requested < 1e+3)) {
       console.info('Skipping refresh requests arriving too fast...');
       return;
+    } else {
+      console.info('About to refresh data for report ' + key);
     }
 
     dispatch(actions.requestData(field, level, reportName, requestedAt));
     
-    api.queryMeasurements({
-      granularity: _config.queryParams.time.granularity,
-      metrics: _config.queryParams.metrics,
-      timespan: _state.timespan,
-    }).then(res => {
+    var granularity = _config.queryParams.time.granularity;
+    var timespan = _.isString(_state.timespan)? 
+      TimeSpan.fromName(_state.timespan).toRange(true) : _state.timespan;
+    
+    api.queryMeasurements({timespan, granularity}).then(res => {
       var receivedAt = new Date();
       if (!res.errors.length) {
-        var data = _.flatten(_.zip(['METER', 'DEVICE'], [res.meters, res.devices]).map(u => {
-          var [source, rs] = u, metrics = _config.metrics;
-          return !rs? [] : _.flatten(metrics.map(metric => (
-            rs.map(r => ({
-              metric,
-              source,
-              label: r.label,
-              data: r.points.map(p => ([p.timestamp, p[field][metric]]))
-            }))
-          )));
-        }));
+        var data = _.flatten(_.zip(['METER', 'DEVICE'], [res.meters, res.devices]).map(
+          _.spread((source, rs) => (
+            !rs? [] : _.flatten(_config.metrics.map(metric => (
+              rs.map(r => ({
+                granularity,
+                metric,
+                source,
+                label: r.label,
+                data: r.points.map(p => ([p.timestamp, p[field][metric]]))
+              }))
+            ))))
+          )
+        ));
         dispatch(actions.setData(field, level, reportName, data, receivedAt));
       } else {
         console.error('Failed to refresh data for ' + key + ':', res.errors);
       }
-    })
+    });
   },
 };
 

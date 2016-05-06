@@ -33,13 +33,9 @@ Property callbacks:
 
 | Name | Required | Type | Description | Example |
 | ---- | -------- | ---- | ----------- | --------|
-| `refreshData` | No | `function()`` | A callback that can be invoked by the component to explicitly request fresh data |  |
+| `refreshData` | No | `function()`` | A callback that can be invoked by the component to explicitly request fresh data | `()=>(dispatch(refreshData("Foo")))` |
 
 Properties for the chart (a simplified subset of those supported by ECharts):
-
-| Name | Required | Type | Description | Example |
-| ---- | -------- | ---- | ----------- | --------|
-| `refreshData` | No | `()=>()` | A callback that can be invoked by the component to explicitly request fresh data |  `()=>(dispatch(refreshData("Foo")))`|
 
 | Name | Required | Type | Description | Example |
 | ---- | -------- | ---- | ----------- | --------|
@@ -75,6 +71,12 @@ The `series` property is an array that provides the actual data to be plotted:
 | `series.0.lineWidth` | No | `Number` | The width (pixels) for this line | `false` |
 | `series.0.mark.points` | No | `Object` | Describe marker points | `[{type: "max", name: "Max Temperature"}]` |
 | `series.0.mark.lines` | No | `Object` | Describe marker lines | `[{type: "min", name: "Min Temperature"}]` |
+
+Properties for the status of plotted data: 
+
+| Name | Required | Type | Description | Example |
+| ---- | -------- | ---- | ----------- | --------|
+| `loading`| No | `Object` or `Boolean` | Provide a progress visual feedback (spinner, progressbar) | `{text: "Loading data...", progress: 0.7}` |
 
 #### Example - LineChart
 

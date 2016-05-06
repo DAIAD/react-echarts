@@ -6,6 +6,8 @@ var echarts = require('echarts');
 var _ = require('lodash');
 var rgbcolor = require('rgbcolor');
 
+const development = !(process.env.NODE_ENV == 'production');
+
 var PropTypes = React.PropTypes;
 
 var {randomString} = require('../util');
@@ -19,8 +21,7 @@ var Chart = React.createClass({
       numSeries: 8, // per chart
     },
     defaults: {
-      // Provide class-level defaults for props (a simplifying subset
-      // of the underlying chart options).
+      // Provide class-level defaults for props (simplified subset of ECharts options)
       // Note: This part feeds getDefaultProps() method needed for React.
       props: {
         grid: {
@@ -71,6 +72,9 @@ var Chart = React.createClass({
       templates: {
         pointTooltip: '<%= seriesName %> <br/><%= x %>: <%= y %>',
         lineTooltip: '<%= seriesName %> <br/><%= name %>: <%= y %',
+      },
+      messages: {
+        loadingText: 'Loading data...',
       },
     },
 
@@ -217,6 +221,21 @@ var Chart = React.createClass({
       return data;
     },
 
+    propsToLoadingOptions: function (props) 
+    {
+      var opts = null;
+      if (
+        _.isEmpty(props.series) || // no data present
+        _.isObject(props.loading)  // or explicitly received 'loading' prop
+      ) {
+        var text = props.loading? props.loading.text : null;
+        opts = {
+          effect: 'spin',
+          text: text || this.defaults.messages.loadingText,
+        };
+      }
+      return opts;
+    },
   },
 
   propTypes: {
@@ -228,8 +247,9 @@ var Chart = React.createClass({
     // Properties injected from parent for callbacks
     refreshData: PropTypes.func,
     // Properties for various chart options:
-    // This is a (simpified) subset of the options provided by ECharts
+    // This is a (simplified) subset of the options provided by ECharts
     theme: PropTypes.string,
+    loading: PropTypes.shape({text: PropTypes.string}),
     xAxis: PropTypes.shape({
       data: PropTypes.array,
       formatter: PropTypes.func,
@@ -282,14 +302,13 @@ var Chart = React.createClass({
   
   getDefaultProps: function ()
   {
-    // Note:
-    // getDefaultProps() is not an instance method but a class method
-    // for this component (so `this` is the component class)!
+    // Note: getDefaultProps is a class method (`this` is the component class)
 
     return _.extend(
       {
         prefix: 'chart',
         theme: 'default',
+        loading: false,
       },
       // Provide class-level defaults
       this.defaults.props, 
@@ -323,29 +342,28 @@ var Chart = React.createClass({
 
   componentWillMount: function ()
   {
-    console.info('About to mount <Chart>...');
+    development && console.debug('About to mount <Chart>...');
     if (!this.props.id)
       this._id = (this.props.id)? 
-        (this.props.id):
-        (this.props.prefix + '-' + randomString());
+        (this.props.id) : (this.props.prefix + '-' + randomString());
   },
 
   componentDidMount: function ()
   {
     this._el = ReactDOM.findDOMNode(this);
-    this.initializeChart();
+    this._initializeChart();
   },
   
   componentWillUnmount: function ()
   {
-    this.destroyChart();
+    this._destroyChart();
     this._el = null;
   },
 
   componentWillReceiveProps: function (nextProps)
   {
-    console.info('Received new props for <Chart>...')
-    this.redrawChart(nextProps);
+    development && console.debug('Received new props for <Chart>...')
+    this._redrawChart(nextProps);
   },
 
   shouldComponentUpdate: function ()
@@ -360,13 +378,10 @@ var Chart = React.createClass({
 
   render: function ()
   {
-    console.info('Rendering <Chart>...');
+    development && console.debug('Rendering <Chart>...');
     return (
-      <div 
-        id={this._id}
-        className={
-          ['portal', this.props.prefix].join(' ')
-        }
+      <div id={this._id}
+        className={['portal', this.props.prefix].join(' ')}
         style={{
           width: this.props.width,
           height: this.props.height
@@ -375,32 +390,44 @@ var Chart = React.createClass({
       </div>
     );
   },
+  
+  // Internal methods: lifecycle of ECharts instance
 
-  // Helpers
-
-  initializeChart: function ()
+  _initializeChart: function ()
   {
-    console.assert(this._chart == null, 
-      'Expected a non-initialized EChart instance');
+    console.assert(this._chart == null, 'Expected an empty EChart instance');
     this._chart = echarts.init(this._el, this.props.theme);
     
-    // If capable of, fire a request for fresh series data.
-    // Otherwise, try to draw chart based on current props.
     if (_.isFunction(this.props.refreshData)) {
+      // Can refresh itself: fire a request for fresh series data.
       this.props.refreshData();
-    } else if (_.isArray(this.props.series) && this.props.series.length > 0) {
-      this.redrawChart(this.props);
     }
+    
+    // Regardless of data, draw chart based on current props.
+    this._redrawChart(this.props);
   },
   
-  redrawChart: function (nextProps)
+  _redrawChart: function (nextProps)
   { 
-    console.info('Redrawing <Chart>...')
-    var opts = this.constructor.propsToOptions(nextProps);
-    this._chart.setOption(opts, true);
+    var cls = this.constructor;
+    var options = null;
+    
+    development && console.info('Redrawing <Chart> from nextProps...')
+    
+    // Reset chart from received props
+    options = cls.propsToOptions(nextProps);
+    this._chart.setOption(options, true);
+    
+    // Reset loading status
+    options = cls.propsToLoadingOptions(nextProps);
+    if (!options) {
+      this._chart.hideLoading();
+    } else {
+      this._chart.showLoading(options);
+    }
   },
 
-  destroyChart: function ()
+  _destroyChart: function ()
   {
     this._chart.dispose();
     this._chart = null;

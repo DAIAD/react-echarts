@@ -20,15 +20,6 @@ var propTypes = {
   field: PropTypes.oneOf(_.keys(config.reports.measurements.fields)),
   level: PropTypes.oneOf(_.keys(config.reports.measurements.levels)),
   reportName: PropTypes.string,
-  timespan: PropTypes.oneOfType([
-    PropTypes.oneOf(TimeSpan.commonNames()),
-    (props, propName, componentName) => ( 
-      (PropTypes.arrayOf(PropTypes.number)(props, propName, componentName)) ||
-      ((props[propName].length == 2)? 
-        (null) : (new Error(propName + ' should be an array of length 2'))
-      )
-    ),
-  ]),
 };
 
 // Presentational components
@@ -93,7 +84,14 @@ var Panel = React.createClass({
   },
   
   propTypes: _.extend({}, propTypes, {
-    population: PropTypes.string, // Todo!
+    timespan: PropTypes.oneOfType([
+      PropTypes.oneOf(TimeSpan.commonNames()),
+      (props, propName, componentName) => ( 
+        (PropTypes.arrayOf(PropTypes.number)(props, propName, componentName)) ||
+        ((props[propName].length == 2)? null : (new Error(propName + ' should be an array of length 2')))
+      ),
+    ]),
+    population: PropTypes.string, // Todo
   }),
   
   // Lifecycle
@@ -129,7 +127,7 @@ var Panel = React.createClass({
     ) {
       this.setState({dirty: false, error: null, errorMessage: null});
       nextProps.initializeReport();
-      setTimeout(nextProps.refreshData, 500);
+      setTimeout(nextProps.refreshData, 100);
     }
     
     // Reset timespan
@@ -295,32 +293,33 @@ var Chart = React.createClass({
         PropTypes.arrayOf(PropTypes.number)
       ),
     })),
+    finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number])
   }), 
   
   getDefaultProps: function () {
     return {
       width: 800,
       height: 350,
-      timespan: 'month',
       series: [],
+      finished: true,
     };
   },
 
-  render: function ()
-  {
+  render: function () {
     var cls = this.constructor;
     var _config = config.reports.measurements;
-    var {field, level, reportName, series} = this.props;
+    var {field, level, reportName, series, finished} = this.props;
 
     var {title, unit} = _config.fields[field];
     var xf = cls.defaults.xAxis.dateformat[level]; // Fixme at consolidation level
-    
+
     var pilot = _.first(series);
     return (
        <div id={['chart', field, level, reportName].join('--')}>
-         <echarts.LineChart 
+         <echarts.LineChart
             width={this.props.width}
             height={this.props.height}
+            loading={finished? false : {text: 'Processing data...'}}
             xAxis={{
               numTicks: pilot? Math.min(6, pilot.data.length) : 0,
               formatter: (t) => (moment(t).format(xf)),
@@ -330,7 +329,7 @@ var Chart = React.createClass({
               numTicks: 4,
               formatter: (unit)? ((y) => (y.toFixed(1) + ' ' + unit)) : null,
             }}
-            series={series.map(s => ({
+            series={(series || []).map(s => ({
               name: s.metric + ' of ' + s.label,
               data: s.data,
             }))}
@@ -373,7 +372,7 @@ Chart = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var key = _config.getKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
-    return !_state? {} : _.pick(_state, ['timespan', 'series']);
+    return !_state? {} : _.pick(_state, ['series', 'finished']);
   },
   null
 )(Chart);

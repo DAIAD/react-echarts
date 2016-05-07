@@ -1,3 +1,4 @@
+var _ = require('lodash');
 
 module.exports = {
   
@@ -36,12 +37,35 @@ module.exports = {
     },
   },
   
+  consolidateFn: {
+    'AVERAGE': (a) => (_.sum(a)/a.length),
+    'MIN': (a) => (_.min(a)),
+    'MAX': (a) => (_.max(a)),
+  },
+
+  levels: {
+    'day': {
+      bucket: 'day',
+      duration: [1, 'd']
+    },
+    'week': {
+      bucket: 'isoweek',
+      duration: [1, 'w'],
+    },
+    'month': {
+      bucket: 'month',
+      duration: [1, 'M'],
+    },
+  },
+
   reports: {
     measurements: {
       info: {
         title: 'Measurements',
       },
-      computeKey: (field, level, reportName) => ([field, level, reportName].join('/')),
+      computeKey: (field, level, reportName) => (
+        [field, level, reportName].join('/')
+      ),
       // What physical quantities are being measured
       fields: {
         'volume': {
@@ -137,7 +161,9 @@ module.exports = {
       info: {
         title: 'System Utilization',
       },
-      computeKey: (level, reportName) => ([level, reportName].join('/')),
+      computeKey: (level, reportName) => (
+        [level, reportName].join('/')
+      ),
       levels: {
         'week': {
           info: {

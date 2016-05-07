@@ -15,10 +15,12 @@ var config = require('../config-reports');
 var Granularity = require('../granularity');
 var TimeSpan = require('../timespan');
 
+var _config = config.reports.measurements;
+
 var PropTypes = React.PropTypes;
 var propTypes = { 
-  field: PropTypes.oneOf(_.keys(config.reports.measurements.fields)),
-  level: PropTypes.oneOf(_.keys(config.reports.measurements.levels)),
+  field: PropTypes.oneOf(_.keys(_config.fields)),
+  level: PropTypes.oneOf(_.keys(_config.levels)),
   reportName: PropTypes.string,
 };
 
@@ -306,39 +308,99 @@ var Chart = React.createClass({
   },
 
   render: function () {
-    var cls = this.constructor;
-    var _config = config.reports.measurements;
-    var {field, level, reportName, series, finished} = this.props;
-
+    var defaults = this.constructor.defaults;
+    var {field, level, reportName} = this.props;
+    
     var {title, unit} = _config.fields[field];
-    var xf = cls.defaults.xAxis.dateformat[level]; // Fixme at consolidation level
+    
+    var {xaxisData, series} = this._consolidateData();
+    var xf = defaults.xAxis.dateformat[level];
 
-    var pilot = _.first(series);
     return (
        <div id={['chart', field, level, reportName].join('--')}>
          <echarts.LineChart
             width={this.props.width}
             height={this.props.height}
-            loading={finished? false : {text: 'Processing data...'}}
+            loading={this.props.finished? null : {text: 'Processing data...'}}
             xAxis={{
-              numTicks: pilot? Math.min(6, pilot.data.length) : 0,
+              data: xaxisData || [],
               formatter: (t) => (moment(t).format(xf)),
             }}
             yAxis={{
-              name: title + ((unit)?(' (' + unit + ')') : ''),
+              name: title + (unit? (' (' + unit + ')') : ''),
               numTicks: 4,
-              formatter: (unit)? ((y) => (y.toFixed(1) + ' ' + unit)) : null,
+              formatter: unit? ((y) => (y.toFixed(1) + ' ' + unit)) : null,
             }}
-            series={(series || []).map(s => ({
-              name: s.metric + ' of ' + s.label,
-              data: s.data,
-            }))}
+            series={series || []}
         />
       </div>
     );
   },
 
   // Helpers
+
+  _consolidateData: function () {
+    var result = {xaxisData: null, series: null};
+    var {field, level, reportName, series} = this.props;
+    
+    if (!series || !series.length || series.every(s => !s.data.length))
+      return result; // no data available
+ 
+    var report = config.reports.measurements.levels[level].reports[reportName];
+    var {bucket, duration} = config.levels[level];
+    var d = moment.duration(...duration);
+
+    // Find time span (assume data points already sorted at time!)
+    
+    var start = _.min(series.map(s => s.data[0][0]));
+    var end = _.max(series.map(s => s.data[s.data.length -1][0]));
+    var startx = moment(start).startOf(bucket);
+    var endx = moment(end).endOf(bucket);
+    
+    // Generate x-axis data, collect points in level-wide buckets
+    
+    result.xaxisData = [];
+
+    result.series = series.map(s => ({
+      source: s.source,
+      label: s.label,
+      metric: s.metric,
+      name: s.metric + ' of ' + s.label, // Todo as a template
+      data: []
+    }))
+
+    var curs = (new Array(series.length)).fill(0); // indices for each one of series
+    var m = startx, m1 = null, t1 = null, i = 0;
+    while (m < endx) {
+      // Compute start of next bucket
+      m1 = m.clone().add(d); 
+      t1 = m1.valueOf();
+      // Create another bucket in x-axis
+      result.xaxisData.push(t1); 
+      // Collect data points falling into this bucket
+      for (let k in series) {
+        let s = series[k], rs = result.series[k];
+        let i1 = rs.data.push([]); // create i-th bucket
+        let j = curs[k]; // resume cursor for k-th data series
+        while (j < s.data.length && s.data[j][0] < t1) {
+           rs.data[i].push(s.data[j][1]);
+           j++;
+        }
+        curs[k] = j; // save cursor for k-th data series
+      }
+      // Move to next bucket
+      m = m1;
+      i++;
+    }
+
+    // Consolidate
+    
+    var cf = config.consolidateFn[report.consolidate]; 
+    result.series.forEach(rs => {rs.data = rs.data.map(cf)});
+    
+    return result;
+  },
+
 });
 
 // Container components
@@ -347,7 +409,6 @@ var actions = require('../actions/reports-measurements');
 
 Panel = ReactRedux.connect(
   (state, ownProps) => {
-    var _config = config.reports.measurements;
     var {field, level, reportName} = ownProps;
     var key = _config.computeKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
@@ -368,11 +429,18 @@ Panel = ReactRedux.connect(
 
 Chart = ReactRedux.connect(
   (state, ownProps) => {
-    var _config = config.reports.measurements;
     var {field, level, reportName} = ownProps;
     var key = _config.computeKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
-    return !_state? {} : _.pick(_state, ['series', 'finished']);
+    return !_state? {} : {
+      finished: _state.finished,
+      series: (_state.series || []).map(s => (
+        _.extend({}, s, {
+          // Provide a sorted (by timestamp) copy of state data
+          data: s.data.slice(0).sort((a,b) => (a[0] - b[0]))
+        })
+      )),
+    };
   },
   null
 )(Chart);

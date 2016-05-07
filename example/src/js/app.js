@@ -54,13 +54,8 @@ var makeApiProxy = function (options) {
         headers: headers,
         body: JSON.stringify(payload),
       });
-
-      debugger; 
       
-      return p.then(
-        res => (res.json()),
-        res => (undefined)
-      );
+      return p.then(res => (res.json()), res => (undefined));
     },
   }
 };

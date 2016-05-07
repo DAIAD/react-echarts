@@ -79,6 +79,7 @@ var actions = {
           _.spread((source, rs) => (
             !rs? [] : _.flatten(report.metrics.map(metric => (
               rs.map(r => ({
+                timespan,
                 granularity,
                 metric,
                 source,

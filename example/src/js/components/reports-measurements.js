@@ -278,7 +278,7 @@ var Chart = React.createClass({
           'minute': 'HH:MM',
           'hour': 'HH:00',
           'day': 'DD/MM',
-          'week': 'dd DD/MM',
+          'week': '[W]W/YY', //'dd DD/MM/YYYY',
           'month': 'MM/YYYY',
           'quarter': 'Qo YYYY',
           'year': 'YYYY',
@@ -298,7 +298,8 @@ var Chart = React.createClass({
         PropTypes.arrayOf(PropTypes.number)
       ),
     })),
-    finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number])
+    finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    scaleXAxis: PropTypes.bool,
   }), 
   
   getDefaultProps: function () {
@@ -307,6 +308,7 @@ var Chart = React.createClass({
       height: 350,
       series: [],
       finished: true,
+      scaleXAxis: false,
     };
   },
 
@@ -317,13 +319,11 @@ var Chart = React.createClass({
     var {title, unit} = _config.fields[field];
     
     var {xaxisData, series} = this._consolidateData();
-    
     xaxisData || (xaxisData = []);
-    
     series = (series || []).map(s => ({
       name: defaults.legend.title(s),
+      symbolSize: 0,
       data: s.data,
-      mark: {lines: [{type: 'max', name: 'Max Consumption'}]},
     }));
 
     var xf = defaults.xAxis.dateformat[level];
@@ -334,6 +334,8 @@ var Chart = React.createClass({
             width={this.props.width}
             height={this.props.height}
             loading={this.props.finished? null : {text: 'Processing data...'}}
+            tooltip={false}
+            lineWidth={1}
             xAxis={{
               data: xaxisData,
               formatter: (t) => (moment(t).format(xf)),
@@ -353,14 +355,15 @@ var Chart = React.createClass({
 
   _consolidateData: function () {
     var result = {xaxisData: null, series: null};
-    var {field, level, reportName, series} = this.props;
+    var {field, level, reportName, series, scaleXAxis} = this.props;
     
     if (!series || !series.length || series.every(s => !s.data.length))
       return result; // no data available
  
     var report = config.reports.measurements.levels[level].reports[reportName];
     var {bucket, duration} = config.levels[level];
-    var d = moment.duration(...duration);
+    var [d, durationUnit] = duration;
+    var d = moment.duration(d, durationUnit);
 
     // Use a sorted (by timestamp t) copy of series data [t,y]
     
@@ -370,8 +373,15 @@ var Chart = React.createClass({
 
     // Find time span
     
-    var start = _.min(series.map(s => s.data[0][0]));
-    var end = _.max(series.map(s => s.data[s.data.length -1][0]));
+    var start, end;
+    if (scaleXAxis) {
+      start = _.min(series.map(s => s.data[0][0]));
+      end = _.max(series.map(s => s.data[s.data.length -1][0]));
+    } else {
+      start = _.min(series.map(s => s.timespan[0]));
+      end = _.max(series.map(s => s.timespan[1]));
+    }
+    
     var startx = moment(start).startOf(bucket);
     var endx = moment(end).endOf(bucket);
     

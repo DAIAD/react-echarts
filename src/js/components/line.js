@@ -70,8 +70,8 @@ var Chart = React.createClass({
       },
       // Provide class-level defaults for messages, titles etc (lodash templates).
       templates: {
-        pointTooltip: '<%= seriesName %> <br/><%= x %>: <%= y %>',
-        lineTooltip: '<%= seriesName %> <br/><%= name %>: <%= y %',
+        pointTooltip: _.template('<%= seriesName %> <br/><%= x %>: <%= y %>'),
+        valueTooltip: _.template('<%= seriesName %> <br/><%= name %>: <%= y %>'),
       },
       messages: {
         loadingText: 'Loading data...',
@@ -136,8 +136,8 @@ var Chart = React.createClass({
       
       var fx = props.xAxis.formatter || (x => x.toString());
       var fy = props.yAxis.formatter || (y => y.toString());
-      var markupForPoint = _.template(defaults.templates.pointTooltip);
-      var markupForLine = _.template(defaults.templates.lineTooltip);
+      var markupForPoint = defaults.templates.pointTooltip;
+      var markupForValue = defaults.templates.valueTooltip;
       
       opts.formatter = (p) => {
         if (_.isArray(p.value)) {
@@ -148,10 +148,11 @@ var Chart = React.createClass({
             y: fy(p.value[1]),
           })
         } else {
-          // Tooltip for a line (?)
-          return markupForLine({
+          // Tooltip for a named value.
+          // (a mark line or y value of a category chart)
+          return markupForValue({
             seriesName: p.seriesName,
-            name: p.name,
+            name: _.isNumber(p.name)? fx(p.name) : p.name,
             y: fy(p.value)
           })
         } 
@@ -193,12 +194,12 @@ var Chart = React.createClass({
                 }
               },
               data: data,
-              markPoint: (y.mark && y.mark.points)? y.mark.points.map(y1 => ({
-                name: y1.name, type: y1.type,
-              })) : null,
-              markLine: (y.mark && y.mark.lines)? y.mark.lines.map(y1 => ({
-                name: y1.name, type: y1.type, 
-              })) : null,
+              markPoint: (y.mark && y.mark.points)? {
+                data: y.mark.points.map(y1 => ({name: y1.name, type: y1.type,})
+              )} : null,
+              markLine: (y.mark && y.mark.lines)? {
+                data: y.mark.lines.map(y1 => ({name: y1.name, type: y1.type, })
+              )} : null,
             } : null; // return null if data is invalid
         })
         .filter(y => y), // omit malformed series (mapped to null)

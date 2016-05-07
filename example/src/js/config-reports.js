@@ -38,7 +38,7 @@ module.exports = {
   },
   
   consolidateFn: {
-    'AVERAGE': (a) => (_.sum(a)/a.length),
+    'AVERAGE': (a) => (a.length? (_.sum(a)/a.length) : null),
     'MIN': (a) => (_.min(a)),
     'MAX': (a) => (_.max(a)),
   },

@@ -270,12 +270,15 @@ var Chart = React.createClass({
   statics: {
     
     defaults: {
+      legend: {
+        title: _.template('<%=metric%> of <%=label%>'),
+      },
       xAxis: {
         dateformat: {
           'minute': 'HH:MM',
           'hour': 'HH:00',
-          'day': 'DD/MM/YYYY',
-          'week': 'DD/MM/YYYY',
+          'day': 'DD/MM',
+          'week': 'dd DD/MM',
           'month': 'MM/YYYY',
           'quarter': 'Qo YYYY',
           'year': 'YYYY',
@@ -300,7 +303,7 @@ var Chart = React.createClass({
   
   getDefaultProps: function () {
     return {
-      width: 800,
+      width: 850,
       height: 350,
       series: [],
       finished: true,
@@ -314,6 +317,15 @@ var Chart = React.createClass({
     var {title, unit} = _config.fields[field];
     
     var {xaxisData, series} = this._consolidateData();
+    
+    xaxisData || (xaxisData = []);
+    
+    series = (series || []).map(s => ({
+      name: defaults.legend.title(s),
+      data: s.data,
+      mark: {lines: [{type: 'max', name: 'Max Consumption'}]},
+    }));
+
     var xf = defaults.xAxis.dateformat[level];
 
     return (
@@ -323,7 +335,7 @@ var Chart = React.createClass({
             height={this.props.height}
             loading={this.props.finished? null : {text: 'Processing data...'}}
             xAxis={{
-              data: xaxisData || [],
+              data: xaxisData,
               formatter: (t) => (moment(t).format(xf)),
             }}
             yAxis={{
@@ -331,7 +343,7 @@ var Chart = React.createClass({
               numTicks: 4,
               formatter: unit? ((y) => (y.toFixed(1) + ' ' + unit)) : null,
             }}
-            series={series || []}
+            series={series}
         />
       </div>
     );
@@ -350,53 +362,52 @@ var Chart = React.createClass({
     var {bucket, duration} = config.levels[level];
     var d = moment.duration(...duration);
 
-    // Find time span (assume data points already sorted at time!)
+    // Use a sorted (by timestamp t) copy of series data [t,y]
+    
+    series = series.map(s => (_.extend({}, s, {
+      data: s.data.slice(0).sort((p1, p2) => (p1[0] - p2[0])),
+    })));
+
+    // Find time span
     
     var start = _.min(series.map(s => s.data[0][0]));
     var end = _.max(series.map(s => s.data[s.data.length -1][0]));
     var startx = moment(start).startOf(bucket);
     var endx = moment(end).endOf(bucket);
     
-    // Generate x-axis data, collect points in level-wide buckets
+    // Generate x-axis data,
     
     result.xaxisData = [];
-
-    result.series = series.map(s => ({
-      source: s.source,
-      label: s.label,
-      metric: s.metric,
-      name: s.metric + ' of ' + s.label, // Todo as a template
-      data: []
-    }))
-
-    var curs = (new Array(series.length)).fill(0); // indices for each one of series
-    var m = startx, m1 = null, t1 = null, i = 0;
-    while (m < endx) {
-      // Compute start of next bucket
-      m1 = m.clone().add(d); 
-      t1 = m1.valueOf();
-      // Create another bucket in x-axis
-      result.xaxisData.push(t1); 
-      // Collect data points falling into this bucket
-      for (let k in series) {
-        let s = series[k], rs = result.series[k];
-        let i1 = rs.data.push([]); // create i-th bucket
-        let j = curs[k]; // resume cursor for k-th data series
-        while (j < s.data.length && s.data[j][0] < t1) {
-           rs.data[i].push(s.data[j][1]);
-           j++;
-        }
-        curs[k] = j; // save cursor for k-th data series
-      }
-      // Move to next bucket
-      m = m1;
-      i++;
+    for (let m = startx; m < endx; m.add(d)) {
+      result.xaxisData.push(m.valueOf());
     }
 
-    // Consolidate
+    // Collect points in level-wide buckets, then consolidate
     
+    var groupInBuckets = (data, boundaries) => {
+      // Group y values into buckets defined by x-axis boundaries:
+      var N = boundaries.length;
+      // For i=0..N-2 all y with (b[i] <= y < b[i+1]) fall into bucket #i ((i+1)-th)
+      var by = []; // hold buckets of y values
+      for (var i = 1, j = 0; i < N; i++) {
+        by.push([]);
+        while (j < data.length && data[j][0] < boundaries[i]) {
+          by[i - 1].push(data[j][1]);
+          j++;
+        }
+      }
+      // The last (N-th) bucket will always be empty
+      by.push([]);
+      return by;
+    };
+
     var cf = config.consolidateFn[report.consolidate]; 
-    result.series.forEach(rs => {rs.data = rs.data.map(cf)});
+    
+    result.series = series.map(s => (
+      _.extend({}, s, {
+        data: groupInBuckets(s.data, result.xaxisData).map(cf),
+      })
+    ));
     
     return result;
   },
@@ -412,7 +423,9 @@ Panel = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var key = _config.computeKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
-    return !_state? {} : _.pick(_state, ['timespan']);
+    return !_state? {} : {
+      timespan: _state.timespan,
+    };
   }, 
   (dispatch, ownProps) => {
     var {field, level, reportName} = ownProps;
@@ -434,12 +447,7 @@ Chart = ReactRedux.connect(
     var _state = state.reports.measurements[key];
     return !_state? {} : {
       finished: _state.finished,
-      series: (_state.series || []).map(s => (
-        _.extend({}, s, {
-          // Provide a sorted (by timestamp) copy of state data
-          data: s.data.slice(0).sort((a,b) => (a[0] - b[0]))
-        })
-      )),
+      series: _state.series,
     };
   },
   null

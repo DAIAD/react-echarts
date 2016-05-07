@@ -33,7 +33,7 @@ Property callbacks:
 
 | Name | Required | Type | Description | Example |
 | ---- | -------- | ---- | ----------- | --------|
-| `refreshData` | No | `function()`` | A callback that can be invoked by the component to explicitly request fresh data | `()=>(dispatch(refreshData("Foo")))` |
+| `refreshData` | No | `function()` | A callback that can be invoked by the component to explicitly request fresh data | `()=>(dispatch(refreshData("Foo")))` |
 
 Properties for the chart (a simplified subset of those supported by ECharts):
 

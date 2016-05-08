@@ -38,15 +38,19 @@ TimeSpan.common = new Map([
     getArgs: () => ([moment().startOf('hour'), +1, 'hour']),
   }],
   ['hour-1', {
-    title: 'Last hour',
+    title: 'Last 1 hour',
     getArgs: () => ([moment(), -1, 'hour']),
   }],
-  ['day', {
-    title: 'This day',
+  ['today', {
+    title: 'Today',
     getArgs: () => ([moment().startOf('day'), +1, 'day']),
   }],
+  ['yesterday', {
+    title: 'Yesterday',
+    getArgs: () => ([moment().startOf('day'), -1, 'day']),
+  }],
   ['day-1', {
-    title: 'Last day',
+    title: 'Last 24 hours',
     getArgs: () => ([moment(), -1, 'day']),
   }],
   ['week', {

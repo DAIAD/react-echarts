@@ -338,6 +338,7 @@ var Chart = React.createClass({
             lineWidth={1}
             xAxis={{
               data: xaxisData,
+              boundaryGap: true, 
               formatter: (t) => (moment(t).format(xf)),
             }}
             yAxis={{

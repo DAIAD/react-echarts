@@ -28,7 +28,7 @@ var Chart = React.createClass({
           x: '12%', 
           y: '10%', 
           y2: '10%', 
-          x2: '12%',
+          x2: '8%',
         },
         color: [
           '#C23531', '#2F4554', '#61A0A8', '#ECA63F', '#41B024', 
@@ -37,6 +37,7 @@ var Chart = React.createClass({
         tooltip: true,
         xAxis: {
           numTicks: 10,
+          boundaryGap: false,
         },
         yAxis: {
           numTicks: 5,
@@ -99,7 +100,8 @@ var Chart = React.createClass({
         xAxis: [{
           name: props.xAxis.name, 
           type: props.xAxis.data? 'category' : 'value',
-          boundaryGap: defaults.xAxis.boundaryGap,
+          boundaryGap: (props.xAxis.boundaryGap == null)? 
+            defaults.xAxis.boundaryGap : props.xAxis.boundaryGap,
           data: props.xAxis.data,
           splitNumber: props.xAxis.data? null : ((props.xAxis.numTicks == null)? 
             defaults.xAxis.splitNumber : props.xAxis.numTicks),
@@ -254,6 +256,7 @@ var Chart = React.createClass({
     xAxis: PropTypes.shape({
       data: PropTypes.array,
       formatter: PropTypes.func,
+      boundaryGap: PropTypes.bool,
       numTicks: PropTypes.number,
       min: PropTypes.number,
       max: PropTypes.number,

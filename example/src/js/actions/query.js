@@ -3,9 +3,12 @@
 var _ = require('lodash');
 var sprintf = require('sprintf');
 
+var population = require('../population');
 var config = require('../config-reports');
 var api = require('./api');
   
+var utility = new population.Utility(config.utility.name, config.utility.id); 
+
 var queryStats = function (timespan, granularity) { 
   
   // Todo build query
@@ -23,16 +26,11 @@ var queryMeasurements = function (field, metrics, timespan, granularity, ranking
   var [start, end] = timespan;
 
   // Build query
-
   var q = {
     time: {start, end, granularity},
     population: [
-      {
-        type: 'UTILITY',
-        label: "UTILITY:" + config.utility.name, // Fixme generate as label
-        utility: config.utility.id,
-      },
-      // Todo Allow groups (i.e. clusters) inside our utility.
+      utility.toJSON(),
+      // Todo Allow groups (i.e. cluster groups) inside our utility.
     ],
     source: 'METER',
     metrics: ['SUM', 'COUNT', 'AVERAGE', 'MIN', 'MAX'],
@@ -41,19 +39,16 @@ var queryMeasurements = function (field, metrics, timespan, granularity, ranking
   if (ranking) {
     console.assert(_.isArray(ranking) && ranking.length, 
       'Expected an array describing a ranking');
-    q.population = _.flatten(q.population.map(p => (
-      ranking.map(r => (
-        _.extend({}, p, {
-          // Todo change label also!
-          ranking: {
-            type: r.type,
-            limit: r.limit || 3,
-            metric: r.metric || 'AVERAGE',
-            field,
-          }
-        })
-      ))
-    )));
+    q.population = _.flatten(q.population.map(p => {
+      var g = population.Group.fromString(p.label);
+      return ranking.map(r => {
+        var r1 = _.extend({limit: 3}, r, {field}); 
+        return _.extend({}, p, {
+          label: [g, new population.Ranking(r1)].join('/'),
+          ranking: r1,
+        });
+      })
+    }));
   }
 
   // Send query, shape result

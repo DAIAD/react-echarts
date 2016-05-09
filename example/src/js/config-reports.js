@@ -1,7 +1,5 @@
 var _ = require('lodash');
 
-var population = require('./population');
-
 module.exports = {
   
   utility: {
@@ -10,14 +8,6 @@ module.exports = {
   },
  
   population: {
-    
-    types: {
-      // The whole population
-      'UTILITY': population.Utility,
-      // A group (usually belongs to a named cluster)
-      'GROUP': population.Group,
-    },
-    
     // Todo Configure each grouping and define groups (i.e clusters)
     // Todo Discover the followings groups at initialization time
     clusters: {
@@ -50,18 +40,6 @@ module.exports = {
         /* Todo */
       },
     },
-
-    labels: {
-      // Generate labels for population groups
-      'UTILITY': {
-      },
-
-      'CLUSTER': {
-        // Todo
-        generate: null,
-        parse: null,
-      }
-    }
   },
   
   consolidateFn: {

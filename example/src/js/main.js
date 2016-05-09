@@ -10,6 +10,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 develop && (global.$a = {
-  api: require('./api-client'),
+  query: require('./actions/query'),
   actions: require('./actions/index')
 });

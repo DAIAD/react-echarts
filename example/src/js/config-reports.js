@@ -1,15 +1,27 @@
 var _ = require('lodash');
 
+var population = require('./population');
+
 module.exports = {
   
+  utility: {
+    name: 'Daiad', 
+    id: '80de55eb-9bde-4477-a97a-b6048a1fcc9a',
+  },
+ 
   population: {
-    // Todo Configure each grouping and define its groups (i.e clusters) that
-    // is made of (UUIDs, titles etc.)
-    groupBy: {
-      'start-date': {
-        /* Todo */
-      },
-      'family-size': {
+    
+    types: {
+      // The whole population
+      'UTILITY': population.Utility,
+      // A group (usually belongs to a named cluster)
+      'GROUP': population.Group,
+    },
+    
+    // Todo Configure each grouping and define groups (i.e clusters)
+    // Todo Discover the followings groups at initialization time
+    clusters: {
+      'Household Size': {
         '1': {
           name: '1',
           title: 'single',
@@ -31,10 +43,25 @@ module.exports = {
           id: '1234',
         },
       },
-      'income': {
+      'Income': {
+        /* Todo */
+      },
+      'Age': {
         /* Todo */
       },
     },
+
+    labels: {
+      // Generate labels for population groups
+      'UTILITY': {
+      },
+
+      'CLUSTER': {
+        // Todo
+        generate: null,
+        parse: null,
+      }
+    }
   },
   
   consolidateFn: {
@@ -98,12 +125,13 @@ module.exports = {
                 time: {
                   granularity: 'DAY'
                 },
-                metrics: ['COUNT', 'SUM', 'AVERAGE']
+                population: {
+                },
               },
               timespan: 'quarter', // default
               metrics: ['AVERAGE'],
               consolidate: 'AVERAGE',
-              groupBy: ['start-date', 'family-size', 'income'],
+              clusters: ['Income', 'Age', 'Household Size'],
             },
             'avg-daily-limits': {
               title: 'Extrema of daily consumption',
@@ -112,12 +140,13 @@ module.exports = {
                 time: {
                   granularity: 'DAY'
                 },
-                metrics: ['COUNT', 'SUM', 'MIN', 'MAX']
+                population: {
+                },
               },
               timespan: 'quarter', // default
               metrics: ['MIN', 'MAX'],
               consolidate: 'AVERAGE',
-              groupBy: ['start-date', 'family-size', 'income'],
+              clusters: ['Income', 'Age', 'Household Size'],
             },
             'top-3': {
               title: 'Top 3 consumers',
@@ -127,14 +156,20 @@ module.exports = {
                   granularity: 'WEEK'
                 },
                 population: {
-                  ranking: {
-                    type: ['TOP', 'BOTTOM'],
-                    metric: 'AVERAGE',
-                    field: 'VOLUME',
-                    limit: 3,
-                  },
+                  // Rank members for each population group
+                  ranking: [
+                    {
+                      type: 'TOP',
+                      metric: 'AVERAGE',
+                      limit: 3,
+                    },
+                    {
+                      type: 'BOTTOM',
+                      metric: 'AVERAGE',
+                      limit: 3,
+                    },
+                  ],
                 },
-                metrics: ['COUNT', 'SUM', 'MIN', 'MAX', 'AVERAGE'],
               },
               timespan: 'quarter', // default
               metrics: null, // n/a

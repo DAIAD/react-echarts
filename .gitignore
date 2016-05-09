@@ -3,7 +3,7 @@
 build
 dist
 node_modules
-scratch.js
+scratch*.js
 example/public/www
 example/config.json
 example/config-*.json

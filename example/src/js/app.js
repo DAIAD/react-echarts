@@ -13,46 +13,15 @@ var makeApiProxy = function (options) {
   var {apiUrl, credentials, utility} = options;
   
   return {
-    queryMeasurements: function (granularity, timespan) {
+    queryMeasurements: function (query) {
       
-      // Assume timespan ia a pair of moment instances
-      var [t0, t1] = timespan;
-
-      // Build request
-      
-      var headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      };
-      
-      var payload = {
-        credentials,
-        query: {
-          time: {
-            start: t0.valueOf(),
-            end: t1.valueOf(),
-            granularity: granularity
-          },
-          // This always post queries in the scope of the current utility
-          // Todo: allow (sub)groups inside this utility
-          population: [
-            {
-              "type": "UTILITY",
-              "label": "UTILITY:" + utility.name,
-              "utility": utility.id,
-            }
-          ],
-          source: 'METER', // METER/DEVICE
-          metrics: ["SUM", "COUNT", "MIN", "MAX", "AVERAGE"],
-        }, 
-      };
-      
-      // Send request and return a promise
-
       var p = fetch(apiUrl, {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify(payload),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({credentials, query}),
       });
       
       return p.then(res => (res.json()), res => (undefined));
@@ -100,39 +69,10 @@ var makeApp = function (appconfig) {
   app.post('/api/action/query-measurements', function (req, res) {
     var Granularity = require('./granularity.js');
 
-    var q = _.extend({}, {granularity: 'day', timespan: 'week'}, req.body);
-    
-    var t0, t1, dt, granularity;
+    var q = req.body;
+    var t0 = q.time.start, t1 = q.time.end, dt = t1 - t0; 
 
-    switch (q.timespan) {
-      case 'hour':
-        // interpret as last hour
-        t1 = moment(), t0 = t1.clone().add(-1, 'hour');
-        break;
-      case 'day':
-        // interpret as current day
-        t0 = moment().startOf('day'), t1 = t0.clone().add(1, 'day');
-        break;
-      case 'week':
-        // interpret as current week
-        t0 = moment().startOf('isoweek'), t1 = t0.clone().add(7, 'day');
-        break;
-      case 'month':
-        // interpret as current month
-        t0 = moment().startOf('month'), t1 = t0.clone().add(1, 'month');
-        break;
-      case 'year':
-        // interpret as current year
-        t0 = moment().startOf('year'), t1 = t0.clone().add(1, 'year');
-        break;
-      default:
-        // interpret as a literal range
-        t0 = moment(q.timespan[0]), t1 = moment(q.timespan[1]);
-        break;
-    }
-    dt = t1 - t0; // millis
-
-    granularity = Granularity.fromName(q.granularity.toLowerCase());
+    var granularity = Granularity.fromName(q.time.granularity.toLowerCase());
     if (granularity == null) {
       res.json({
         errors: [sprintf('No such granularity: %s', q.granularity)
@@ -146,7 +86,7 @@ var makeApp = function (appconfig) {
         ],
       });
     } else {
-      apiProxy.queryMeasurements(q.granularity, [t0, t1]).then(
+      apiProxy.queryMeasurements(q).then(
         (r1) => {
           if (r1 == null) {
             res.json({

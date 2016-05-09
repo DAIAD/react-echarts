@@ -323,6 +323,7 @@ var Chart = React.createClass({
     series = (series || []).map(s => ({
       name: defaults.legend.title(s),
       symbolSize: 0,
+      smooth: false,
       data: s.data,
     }));
 
@@ -333,9 +334,8 @@ var Chart = React.createClass({
          <echarts.LineChart
             width={this.props.width}
             height={this.props.height}
-            loading={this.props.finished? null : {text: 'Processing data...'}}
+            loading={this.props.finished? null : {text: 'Loading data...'}}
             tooltip={false}
-            lineWidth={1}
             xAxis={{
               data: xaxisData,
               boundaryGap: true, 

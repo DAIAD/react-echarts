@@ -11,10 +11,6 @@
       "credentials": {
         "username": "someone@daiad.eu",
         "password": "secret"
-      },
-      "utility": {
-        "name": "Daiad",
-        "id": "<uuid>"
       }
     }
   }

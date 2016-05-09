@@ -1,7 +1,7 @@
 'use strict';
 
-var api = require('../api-client');
 var Granularity = require('../granularity');
+var api = require('./api');
 
 // Define actions
 

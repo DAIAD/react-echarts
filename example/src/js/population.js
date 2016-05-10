@@ -32,6 +32,11 @@ class Ranking {
       'RANK', this.field, this.metric, this.type, this.limit.toString(), 
     ].join('/');
   }
+
+  get comparator () {
+    return (this.type == 'BOTTOM')?
+      ((a, b) => (a - b)) : ((a, b) => (b - a));
+  }
 };
 
 Ranking.fromString = function (label) {
@@ -53,7 +58,7 @@ class Group {
     return {
       type: this.type,
       label: this.toString(),
-      id: this.id || this.name,
+      group: this.id || this.name,
     }
   }
 
@@ -66,6 +71,14 @@ class Utility extends Group {
   
   constructor (name, id=null) {
     super('UTILITY', name, id);
+  }
+  
+  toJSON () {
+    return {
+      type: 'UTILITY',
+      label: this.toString(),
+      utility: this.id || this.name,
+    }
   }
 };
 

@@ -42,8 +42,9 @@ module.exports = {
     },
   },
   
+  // Fixme Move to a separate module
   consolidateFn: {
-    'AVERAGE': (a) => (a.length? (_.sum(a)/a.length) : null),
+    'AVERAGE': (a) => (a.length? ((a.length > 1)? (_.sum(a)/a.length) : (a[0])) : null),
     'MIN': (a) => (_.min(a)),
     'MAX': (a) => (_.max(a)),
   },
@@ -139,19 +140,19 @@ module.exports = {
                     {
                       type: 'TOP',
                       metric: 'AVERAGE',
-                      limit: 3,
+                      limit: 2,
                     },
                     {
                       type: 'BOTTOM',
                       metric: 'AVERAGE',
-                      limit: 3,
+                      limit: 2,
                     },
                   ],
                 },
               },
               timespan: 'quarter', // default
               metrics: null, // n/a
-              consolidate: null, // n/a
+              consolidate: 'AVERAGE', // n/a
             }
           },
         },

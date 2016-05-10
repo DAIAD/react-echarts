@@ -23,22 +23,20 @@ var queryStats = function (timespan, granularity) {
 };
 
 var queryMeasurements = function (field, metrics, timespan, granularity, ranking) {
+  var defaults = queryMeasurements.defaults;
   var [start, end] = timespan;
-
+  
   // Build query
-  var q = {
+  
+  var q = _.extend({}, defaults.queryParams, {
     time: {start, end, granularity},
     population: [
       utility.toJSON(),
       // Todo Allow groups (i.e. cluster groups) inside our utility.
     ],
-    source: 'METER',
-    metrics: ['SUM', 'COUNT', 'AVERAGE', 'MIN', 'MAX'],
-  };
+  });
  
   if (ranking) {
-    console.assert(_.isArray(ranking) && ranking.length, 
-      'Expected an array describing a ranking');
     q.population = _.flatten(q.population.map(p => {
       var g = population.Group.fromString(p.label);
       return ranking.map(r => {
@@ -55,45 +53,55 @@ var queryMeasurements = function (field, metrics, timespan, granularity, ranking
 
   return api.invokeAction('query-measurements', q).then(
     res => {
-      if (res.errors.length) {
-        var reason = _.first(res.errors).description;
-        throw sprintf('The request is rejected: %s', reason); 
-      }
+      if (res.errors.length) 
+        throw 'The request is rejected: ' + res.errors[0].description; 
       
+      var params = {timespan, granularity}; // common for all series
+
       // Shape result for all sources
       var res1 = _.mapValues(
-        {
-          'METER': (res.meters || []), 
-          'DEVICE': (res.devices || []),
-        }, 
-        (rs, source) => {
-          var rs1;
-          if (ranking) {
-            // Todo
-            rs1 = null;
-          } else {
-            rs1 = metrics.map(metric => (
-              rs.map(r => ({
-                timespan,
-                granularity,
-                metric,
-                source,
-                label: r.label,
-                data: r.points.map(p => (
-                  [p.timestamp, p[field][metric]]
-                )),
-              }))
-            ));
-            rs1 = _.flatten(rs1);
+        {'METER': res.meters, 'DEVICE': res.devices}, 
+        (resultSets, source) => _.flatten((resultSets || []).map(rs => {
+          var [g, rr] = population.fromString(rs.label);
+          console.assert((ranking && rr) || (!ranking && !rr), 'Check ranking descriptor');
+          if (rr) {
+            // Shape a result with ranking on users
+            var points = rs.points.map(p => ({
+              timestamp: p.timestamp,
+              values: p.users.map(u => u[rr.field][rr.metric]).sort(rr.comparator),
+            }));
+            return _.times(rr.limit, (i) => ({
+              ...params,
+              source,
+              metric: rr.metric,
+              label: g.toString(),
+              ranking: {...rr.toJSON(), index: i},
+              data: points.map(p => ([p.timestamp, p.values[i] || null])),
+            }));
+          } else {   
+            // Shape a normal timerseries result on metrics
+            return metrics.map(metric => ({
+              ...params,
+              source,
+              metric,
+              label: g.toString(),
+              data: rs.points.map(p => ([p.timestamp, p[field][metric]])),
+            }));
           }
-          return rs1;
-        }
+        }))
       );
-      
       // Flatten 
       return _.flatten(_.values(res1));
     }
   );
+};
+
+queryMeasurements.defaults = {
+  queryParams: {
+    source: 'METER',
+    metrics: ['SUM', 'COUNT', 'AVERAGE', 'MIN', 'MAX'],
+  },
+  
 };
 
 module.exports = {queryStats, queryMeasurements};

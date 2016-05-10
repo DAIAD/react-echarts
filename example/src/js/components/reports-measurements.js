@@ -270,8 +270,9 @@ var Chart = React.createClass({
   statics: {
     
     defaults: {
-      legend: {
-        title: _.template('<%=metric%> of <%=label%>'),
+      nameTemplates: {
+        'default': _.template('<%= metric %> of <%= label %>'),
+        'ranking': _.template('<%= ranking.type %>-<%= ranking.index + 1 %>'),
       },
       xAxis: {
         dateformat: {
@@ -285,6 +286,10 @@ var Chart = React.createClass({
         },
       }
     },
+
+    nameForSeries: function (s) {
+      return (this.defaults.nameTemplates[s.ranking? 'ranking' : 'default'])(s);
+    }
   }, 
 
   propTypes: _.extend({}, propTypes, {
@@ -313,7 +318,8 @@ var Chart = React.createClass({
   },
 
   render: function () {
-    var defaults = this.constructor.defaults;
+    var cls = this.constructor;
+    var defaults = cls.defaults;
     var {field, level, reportName} = this.props;
     
     var {title, unit} = _config.fields[field];
@@ -321,7 +327,7 @@ var Chart = React.createClass({
     var {xaxisData, series} = this._consolidateData();
     xaxisData || (xaxisData = []);
     series = (series || []).map(s => ({
-      name: defaults.legend.title(s),
+      name: cls.nameForSeries(s),
       symbolSize: 0,
       smooth: false,
       data: s.data,
@@ -336,6 +342,7 @@ var Chart = React.createClass({
             height={this.props.height}
             loading={this.props.finished? null : {text: 'Loading data...'}}
             tooltip={false}
+            lineWidth={1}
             xAxis={{
               data: xaxisData,
               boundaryGap: true, 
@@ -396,27 +403,28 @@ var Chart = React.createClass({
     // Collect points in level-wide buckets, then consolidate
     
     var groupInBuckets = (data, boundaries) => {
-      // Group y values into buckets defined by x-axis boundaries:
+      // Group y values into buckets defined yb x-axis boundaries:
       var N = boundaries.length;
       // For i=0..N-2 all y with (b[i] <= y < b[i+1]) fall into bucket #i ((i+1)-th)
-      var by = []; // hold buckets of y values
+      var yb = []; // hold buckets of y values
       for (var i = 1, j = 0; i < N; i++) {
-        by.push([]);
+        yb.push([]);
         while (j < data.length && data[j][0] < boundaries[i]) {
-          by[i - 1].push(data[j][1]);
+          var y = data[j][1];
+          (y != null) && yb[i - 1].push(y);
           j++;
         }
       }
       // The last (N-th) bucket will always be empty
-      by.push([]);
-      return by;
+      yb.push([]);
+      return yb;
     };
 
     var cf = config.consolidateFn[report.consolidate]; 
     
     result.series = series.map(s => (
       _.extend({}, s, {
-        data: groupInBuckets(s.data, result.xaxisData).map(cf),
+        data: groupInBuckets(s.data, result.xaxisData).map(cf)
       })
     ));
     

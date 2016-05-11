@@ -25,7 +25,7 @@ var RootMenu = React.createClass({
               <MenuItem href="#/reports/measurements/volume/week/avg-daily-avg">
                 Average of daily consumption
               </MenuItem> 
-              <MenuItem href="#/reports/measurements/volume/week/avg-daily-limits">
+              <MenuItem href="#/reports/measurements/volume/week/avg-daily-extrema">
                 Extrema of daily consumption
               </MenuItem> 
               <MenuItem href="#/reports/measurements/volume/week/top-3">

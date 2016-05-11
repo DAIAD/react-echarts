@@ -31,6 +31,7 @@ var reduce = function (state={}, action) {
       // Initialize parameters for report (field, level, reportName)
       if (r == null) {
         r = { // new entry
+          source: 'meter',  // as default
           timespan: config.levels[level].reports[reportName].timespan,  // as default
           population: null, // target population (Todo)
           series: null,     // collection of data points
@@ -58,13 +59,18 @@ var reduce = function (state={}, action) {
         series: action.data, // Todo: re-shape result?
       });
       break;
+    case 'SET_SOURCE':
+      assertInitialized(r, key);
+      if (r.source != action.source) {
+       _.extend(r, {source: action.source, invalid: true});
+      } else {
+        r = null;
+      }
+      break;
     case 'SET_TIMESPAN':
       assertInitialized(r, key);
       if (r.timespan != action.timespan) {
-        _.extend(r, {
-          timespan: action.timespan,
-          invalid: true,
-        });
+        _.extend(r, {timespan: action.timespan, invalid: true});
       } else {
         r = null; // unchanged; dont touch state
       }

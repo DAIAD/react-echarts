@@ -48,7 +48,15 @@ var actions = {
     field,
     level,
     reportName,
-    timespan: timespan,
+    timespan,
+  }),
+  
+  setSource: (field, level, reportName, source) => ({
+    type: actions.PREFIX + '/' + 'SET_SOURCE',
+    field,
+    level,
+    reportName,
+    source,
   }),
 
   // Complex actions: functions processed by thunk middleware
@@ -67,6 +75,7 @@ var actions = {
 
     dispatch(actions.requestData(field, level, reportName, requestedAt));
     
+    var source = _state.source;
     var q = {
       granularity: report.queryParams.time.granularity,
       timespan: _.isString(_state.timespan)? 
@@ -74,8 +83,7 @@ var actions = {
       metrics: report.metrics,
       ranking: report.queryParams.population.ranking,
     };
-    // Fixme source is hardcoded
-    queryMeasurements('METER', field, q).then(
+    queryMeasurements(source, field, q).then(
       (data) => {
         if (data) {
           var receivedAt = new Date();

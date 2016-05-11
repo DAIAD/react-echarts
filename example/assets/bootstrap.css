@@ -6,7 +6,7 @@
   border-radius: 1px;
   height: 32px;
   line-height: 1.25em;
-  padding: 2px 9px;
+  padding: 2px 8px;
   border: solid 1px #ccc;
 }
 
@@ -20,7 +20,8 @@
 
 .btn {
   border-radius: 1px;
-  /*padding: 5px 10px;*/
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .glyphicon {

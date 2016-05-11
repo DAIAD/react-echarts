@@ -41,8 +41,8 @@ var Panel = React.createClass({
       
       datetime: {
         dateFormat: 'DD/MM/YYYY',
-        timeFormat: 'HH:mm', 
-        inputSize: 13, 
+        timeFormat: null, 
+        inputSize: 8, 
       },  
       
     },
@@ -87,6 +87,7 @@ var Panel = React.createClass({
   },
   
   propTypes: _.extend({}, propTypes, {
+    source: PropTypes.oneOf(['meter', 'device']),
     timespan: PropTypes.oneOfType([
       PropTypes.oneOf(TimeSpan.commonNames()),
       (props, propName, componentName) => ( 
@@ -110,6 +111,7 @@ var Panel = React.createClass({
 
   getDefaultProps: function () {
     return {
+      source: 'meter',
       timespan: 'month',
       population: null,
     };
@@ -141,7 +143,7 @@ var Panel = React.createClass({
 
   render: function () {
     var cls = this.constructor;
-    var {field, level, reportName} = this.props;
+    var {field, level, reportName, source} = this.props;
     var {timespan, dirty, error, errorMessage} = this.state;
     var [t0, t1] = cls.computeTimespan(timespan);
    
@@ -173,10 +175,22 @@ var Panel = React.createClass({
         id={['panel', field, level, reportName].join('--')} 
        >
         <div className="form-group">
-          <label>Time Span:</label>
+          <label>Source:</label>
           &nbsp;
           <Select
-            className='select-timespan'
+            className="select-source"
+            value={source}
+            onChange={(val) => (this._setSource(val))}
+           >
+            <option key="meter" value="meter" >Meter</option> 
+            <option key="device" value="device" >Device</option> 
+          </Select>
+        </div>
+        <div className="form-group">
+          <label>Time:</label>
+          &nbsp;
+          <Select
+            className="select-timespan"
             value={_.isString(timespan)? timespan : ''}
             onChange={(val) => (this._setTimespan(val? (val) : ([t0, t1])))} 
            >
@@ -215,8 +229,6 @@ var Panel = React.createClass({
       </form>
     )
   },
-  
-  // Helpers
 
   // Event handlers
 
@@ -257,6 +269,13 @@ var Panel = React.createClass({
       this.props.setTimespan(ts);
     }
     this.setState({dirty: true, timespan: val, error, errorMessage});
+    return false;
+  },
+
+  _setSource: function (val) {
+    this.props.setSource(val);
+    this.setState({dirty: true});
+    return false;
   },
 
   _refresh: function () {
@@ -330,7 +349,7 @@ var Chart = React.createClass({
     series = (series || []).map(s => ({
       name: cls.nameForSeries(s),
       symbolSize: 0,
-      smooth: false,
+      smooth: true,
       data: s.data,
     }));
 
@@ -443,6 +462,7 @@ Panel = ReactRedux.connect(
     var key = _config.computeKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
     return !_state? {} : {
+      source: _state.source,
       timespan: _state.timespan,
     };
   }, 
@@ -451,6 +471,8 @@ Panel = ReactRedux.connect(
     return {
       initializeReport: () => (
         dispatch(actions.initialize(field, level, reportName))),
+      setSource: (source) => (
+        dispatch(actions.setSource(field, level, reportName, source))),
       setTimespan: (ts) => (
         dispatch(actions.setTimespan(field, level, reportName, ts))),
       refreshData: () => (

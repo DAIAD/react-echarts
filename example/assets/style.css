@@ -19,7 +19,7 @@ form.chart-panel p.help {
 }
 
 form.chart-panel.form-inline .form-group {
-  margin: 8px 16px 8px 0px;
+  margin: 8px 12px 8px 0px;
   /*
   display: block;
   float: left;
@@ -33,6 +33,10 @@ form.chart-panel.form-inline .form-group {
 .reports h3 span.delimiter {
   font-weight: bolder;
   font-size: 1.4em;
+}
+
+.chart-panel .dropdown.select-source button > span.text {
+  width: 3.2em;
 }
 
 .chart-panel .dropdown.select-timespan button > span.text {

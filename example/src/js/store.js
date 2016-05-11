@@ -11,6 +11,7 @@ var initialState = {
     measurements: {
       // "<field>/<level>/<reportName>": {
       //   timespan,
+      //   source,     // source of measurements, i.e 'meter' or 'device'
       //   population, // target population
       //   series,     // collection of data points
       //   invalid,    // flag data that need to be refreshed
@@ -20,6 +21,7 @@ var initialState = {
     },
     system: {
       // "<level>/<reportName>": {
+      //   source,
       //   timespan,
       //   series,
       //   invalid,

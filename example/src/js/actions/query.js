@@ -13,6 +13,9 @@ var utility = new population.Utility(config.utility.name, config.utility.id);
 var queryStats = function (source, q={}) { 
   
   // Todo Build query to target Action API
+  
+  source = source.toUpperCase();
+  
   var q1 = {};
   
   return api.invokeAction('query-stats', q1).then(
@@ -32,6 +35,8 @@ var queryMeasurements = function (source, field, q={}) {
 
   // Build query to target Action API
   // Todo Allow groups (i.e. cluster groups) inside our utility.
+  
+  source = source.toUpperCase();
   
   var q1 = {
     ...defaults.api.queryParams ,

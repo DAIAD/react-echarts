@@ -1,7 +1,34 @@
-var _ = require('lodash');
 
 module.exports = {
+   
+  sources: {
+    'meter': {
+      name: 'meter',
+      title: 'Meter',
+    },
+    'device': {
+      name: 'device',
+      title: 'Device',
+    },
+  },
+
+  metrics: ['SUM', 'COUNT', 'AVERAGE', 'MIN', 'MAX'],
   
+  levels: {
+    'day': {
+      bucket: 'day',
+      duration: [1, 'd']
+    },
+    'week': {
+      bucket: 'isoweek',
+      duration: [1, 'w'],
+    },
+    'month': {
+      bucket: 'month',
+      duration: [1, 'M'],
+    },
+  },
+ 
   utility: {
     name: 'Daiad', 
     id: '80de55eb-9bde-4477-a97a-b6048a1fcc9a',
@@ -42,24 +69,6 @@ module.exports = {
     },
   },
 
-  // Known metrics
-  metrics: ['SUM', 'COUNT', 'AVERAGE', 'MIN', 'MAX'],
-  
-  levels: {
-    'day': {
-      bucket: 'day',
-      duration: [1, 'd']
-    },
-    'week': {
-      bucket: 'isoweek',
-      duration: [1, 'w'],
-    },
-    'month': {
-      bucket: 'month',
-      duration: [1, 'M'],
-    },
-  },
-
   reports: {
     measurements: {
       info: {
@@ -74,13 +83,13 @@ module.exports = {
           name: 'volume',
           title: 'Water Consumption',
           unit: 'm\u00B3', // m^3
-          sources: ['METER', 'DEVICE'],
+          sources: ['meter', 'device'],
         },
         'energy': {
           name: 'energy',
           title: 'Energy Consumption',
           unit: 'kWh',
-          sources: ['DEVICE'],
+          sources: ['device'],
         },
       },
       // Report on different levels of detail 
@@ -108,7 +117,7 @@ module.exports = {
               consolidate: 'AVERAGE',
               clusters: ['Income', 'Age', 'Household Size'],
             },
-            'avg-daily-limits': {
+            'avg-daily-extrema': {
               title: 'Extrema of daily consumption',
               description: 'The weekly average of the daily min/max consumption',
               queryParams: {

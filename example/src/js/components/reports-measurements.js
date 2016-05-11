@@ -14,6 +14,7 @@ var echarts = require('./react-echarts');
 var config = require('../config-reports');
 var Granularity = require('../granularity');
 var TimeSpan = require('../timespan');
+var consolidateFn = require('../consolidate');
 
 var _config = config.reports.measurements;
 
@@ -420,8 +421,7 @@ var Chart = React.createClass({
       return yb;
     };
 
-    var cf = config.consolidateFn[report.consolidate]; 
-    
+    var cf = consolidateFn[report.consolidate]; 
     result.series = series.map(s => (
       _.extend({}, s, {
         data: groupInBuckets(s.data, result.xaxisData).map(cf)

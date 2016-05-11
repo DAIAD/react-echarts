@@ -67,13 +67,15 @@ var actions = {
 
     dispatch(actions.requestData(field, level, reportName, requestedAt));
     
-    var granularity = report.queryParams.time.granularity;
-    var timespan = _.isString(_state.timespan)? 
-      TimeSpan.fromName(_state.timespan).toRange(true) : _state.timespan;
-    var metrics = report.metrics;
-    var rank = report.queryParams.population.ranking;
-
-    queryMeasurements(field, metrics, timespan, granularity, rank).then(
+    var q = {
+      granularity: report.queryParams.time.granularity,
+      timespan: _.isString(_state.timespan)? 
+        TimeSpan.fromName(_state.timespan).toRange(true) : _state.timespan,
+      metrics: report.metrics,
+      ranking: report.queryParams.population.ranking,
+    };
+    // Fixme source is hardcoded
+    queryMeasurements('METER', field, q).then(
       (data) => {
         if (data) {
           var receivedAt = new Date();

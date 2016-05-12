@@ -42,7 +42,16 @@ var actions = {
     data,
     timestamp: (t || new Date()).getTime(),
   }),
-  
+
+  setError: (field, level, reportName, errors, t=null) => ({
+    type: actions.PREFIX + '/' + 'SET_ERROR',
+    field,
+    level,
+    reportName,
+    errors,
+    timestamp: (t || new Date()).getTime(),
+  }),
+
   setTimespan: (field, level, reportName, timespan) => ({
     type: actions.PREFIX + '/' + 'SET_TIMESPAN',
     field,
@@ -85,15 +94,11 @@ var actions = {
     };
     queryMeasurements(source, field, q).then(
       (data) => {
-        if (data) {
-          var receivedAt = new Date();
-          dispatch(actions.setData(field, level, reportName, data, receivedAt));
-        }
+        dispatch(actions.setData(field, level, reportName, data));
       },
       (reason) => {
-        console.error(sprintf(
-          'Cannot refresh data for report %s: %s', key, reason
-        ));
+        console.error(sprintf('Cannot refresh data for %s: %s', key, reason));
+        dispatch(actions.setError(field, level, reportName, [reason]));
       }
     );
   },

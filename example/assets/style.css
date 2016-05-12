@@ -7,18 +7,23 @@ div.stats-page {
   width: 100%;
 }
 
-form.chart-panel {
+form.report-panel {
   margin: 4px 0px;
   padding: 4px 0px;
   width: 100%;
 }
 
-form.chart-panel p.help {
-  margin: 0px 0px;
-  font-size: 0.85em;
+.report-info {
+  margin: 8px 0px;
 }
 
-form.chart-panel.form-inline .form-group {
+.report-info p.help,
+.report-panel p.help {
+  margin: 0px 0px;
+  font-size: 0.9em;
+}
+
+form.report-panel.form-inline .form-group {
   margin: 8px 12px 8px 0px;
   /*
   display: block;
@@ -35,23 +40,27 @@ form.chart-panel.form-inline .form-group {
   font-size: 1.4em;
 }
 
-.chart-panel .dropdown.select-source button > span.text {
+.report-panel .dropdown.select-source button > span.text {
   width: 3.2em;
 }
 
-.chart-panel .dropdown.select-timespan button > span.text {
+.report-panel .dropdown.select-timespan button > span.text {
   width: 5.5em;
 }
 
-.chart-panel .dropdown.select-granularity button > span.text {
+.report-panel .dropdown.select-granularity button > span.text {
+  width: 5em;
+}
+
+.report-panel .dropdown.select-cluster button > span.text {
+  width: 7em;
+}
+
+.report-panel .dropdown.select-cluster-group button > span.text {
   width: 5em;
 }
 
 .chart.portal {
-  /*
-  width: 550px;
-  height: 300px;
-  */
   margin: 5px 0px;
   padding: 5px 0px;
   background-color: #fff;

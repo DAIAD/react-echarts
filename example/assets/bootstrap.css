@@ -6,7 +6,7 @@
   border-radius: 1px;
   height: 32px;
   line-height: 1.25em;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border: solid 1px #ccc;
 }
 
@@ -20,8 +20,8 @@
 
 .btn {
   border-radius: 1px;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .glyphicon {
@@ -30,7 +30,7 @@
 
 .form-group select {
   line-height: 1.25em;
-  padding: 4px 9px;
+  padding: 4px 7px;
 }
 
 .horizontal-form legend {

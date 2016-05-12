@@ -29,15 +29,18 @@ var reduce = function (state={}, action) {
   switch (type[1]) {
     case 'INITIALIZE':
       // Initialize parameters for report (field, level, reportName)
+      // See more on the meaning of each field at store.js.
       if (r == null) {
         r = { // new entry
           source: 'meter',  // as default
           timespan: config.levels[level].reports[reportName].timespan,  // as default
-          population: null, // target population (Todo)
-          series: null,     // collection of data points
-          invalid: true,    // data that needs to be refreshed?
-          requested: null,  // time of last successfull attempt to fetch series
-          finished: null,   // time of last successfull update of series
+          population: null, 
+          series: null,
+          invalid: true,
+          requested: null,
+          requests: 0,
+          finished: null,
+          errors: null,
         };
       } else {
         r = null; // already initialized; dont touch state
@@ -49,6 +52,7 @@ var reduce = function (state={}, action) {
       _.extend(r, {
         finished: false,
         requested: action.timestamp,
+        requests: r.requests + 1,
       });
       break;
     case 'SET_DATA':
@@ -56,7 +60,17 @@ var reduce = function (state={}, action) {
       _.extend(r, {
         finished: action.timestamp,
         invalid: false,
-        series: action.data, // Todo: re-shape result?
+        series: action.data,
+        errors: null,
+      });
+      break;
+    case 'SET_ERROR':
+      assertInitialized(r, key);
+      _.extend(r, {
+        finished: action.timestamp,
+        invalid: false,
+        series: null,
+        errors: action.errors,
       });
       break;
     case 'SET_SOURCE':

@@ -15,8 +15,10 @@ var initialState = {
       //   population, // target population
       //   series,     // collection of data points
       //   invalid,    // flag data that need to be refreshed
-      //   requested,  // timestamp of last successfull attempt to fetch series data
-      //   finished    // timestamp of last successfull update of series data 
+      //   requested,  // timestamp of last attempt to fetch series data
+      //   requests,   // the number of requests, so far
+      //   finished,   // timestamp of last fullfilled (successfull/failed) attempt, or false if pending
+      //   errors,     // errors during last attempt to fetch series data
       // }
     },
     system: {
@@ -26,7 +28,9 @@ var initialState = {
       //   series,
       //   invalid,
       //   requested,
-      //   finished
+      //   requests,
+      //   finished,
+      //   errors,
       // }
     },
   }

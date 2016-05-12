@@ -25,6 +25,10 @@ var propTypes = {
   reportName: PropTypes.string,
 };
 
+var toOptionElement = ({value, text}) => (
+  <option value={value} key={value}>{text}</option>
+);
+
 // Presentational components
 
 var Panel = React.createClass({
@@ -46,7 +50,11 @@ var Panel = React.createClass({
       },  
       
     },
-    
+   
+    sourceOptions: _.values(_.mapValues(config.sources, 
+      (source, k) => ({value: k, text: source.title})
+    )),
+
     timespanOptions: [].concat(
       Array.from(TimeSpan.common.entries()).map(_.spread(
         (name, u) => ({value: name, text: u.title})
@@ -157,9 +165,18 @@ var Panel = React.createClass({
       },
     };
     
+    var sourceOptions = cls.sourceOptions.filter(o => (
+      _config.fields[field].sources.indexOf(o.value) >= 0
+    ));
+
     var timespanOptions = cls.timespanOptions.filter(o => (
       !o.value || cls.checkTimespan(o.value, level) >= 0
     ));
+
+    var groupbyOptions = [
+      {value: 'income', text: 'Income'},
+      {value: 'household-size', text: 'Household Size'},
+    ];
 
     var helpParagraph;
     if (errorMessage) {
@@ -171,7 +188,7 @@ var Panel = React.createClass({
     }
 
     return (
-      <form className="form-inline chart-panel" 
+      <form className="form-inline report-panel" 
         id={['panel', field, level, reportName].join('--')} 
        >
         <div className="form-group">
@@ -180,10 +197,9 @@ var Panel = React.createClass({
           <Select
             className="select-source"
             value={source}
-            onChange={(val) => (this._setSource(val))}
+            onChange={this._setSource}
            >
-            <option key="meter" value="meter" >Meter</option> 
-            <option key="device" value="device" >Device</option> 
+            {sourceOptions.map(toOptionElement)}
           </Select>
         </div>
         <div className="form-group">
@@ -194,7 +210,7 @@ var Panel = React.createClass({
             value={_.isString(timespan)? timespan : ''}
             onChange={(val) => (this._setTimespan(val? (val) : ([t0, t1])))} 
            >
-            {timespanOptions.map(o => (<option value={o.value} key={o.value}>{o.text}</option>))}
+            {timespanOptions.map(toOptionElement)}
           </Select>
           &nbsp;
           <DatetimeInput {...datetimeProps} 
@@ -207,22 +223,34 @@ var Panel = React.createClass({
             onChange={(val) => (this._setTimespan([t0, val]))} 
            />
         </div>
-        {/* Todo
         <div className="form-group">
-          <label>Group By:</label> 
+          <label>Cluster:</label> 
           &nbsp;
           <Select
-            className='select-groupby'
-            value={this.props.groupby}
+            className='select-cluster'
+            value={'household-size' || this.props.groupby}
             onChange={this._setPopulation}
            >
-            {groupbyOptions}
-          </Select> 
+            {groupbyOptions.map(toOptionElement)}
+          </Select>
+          &nbsp;
+          <Select
+            className='select-cluster-group'
+            value={'all'}
+           >
+            <optgroup label="All groups">
+              <option value='all' key='all'>All</option>
+            </optgroup>
+            <optgroup label="Pick a specific group">
+              <option value='1' key='1'>{'Single'}</option>
+              <option value='2' key='2'>{'2+ people'}</option>
+            </optgroup>
+          </Select>
         </div>
-        */}
         <div className="form-group">
-          <Button onClick={this._refresh} disabled={!!error}>
-            <Glyphicon glyph="refresh" />&nbsp;Refresh
+          <Button onClick={this._refresh} bsStyle="primary" disabled={!!error} title="Refresh">
+            {/*<Glyphicon glyph="repeat" />*/}
+            Refresh
           </Button>
         </div>
         {helpParagraph}
@@ -272,6 +300,11 @@ var Panel = React.createClass({
     return false;
   },
 
+  _setPopulation: function (val) {
+    // Todo
+    return false;
+  },
+
   _setSource: function (val) {
     this.props.setSource(val);
     this.setState({dirty: true});
@@ -296,7 +329,7 @@ var Chart = React.createClass({
       },
       xAxis: {
         dateformat: {
-          'minute': 'HH:MM',
+          'minute': 'HH:mm',
           'hour': 'HH:00',
           'day': 'DD/MM',
           'week': '[W]W/YY', //'dd DD/MM/YYYY',
@@ -356,7 +389,7 @@ var Chart = React.createClass({
     var xf = defaults.xAxis.dateformat[level];
 
     return (
-       <div id={['chart', field, level, reportName].join('--')}>
+       <div id={['chart', field, level, reportName].join('--')} className="report-chart">
          <echarts.LineChart
             width={this.props.width}
             height={this.props.height}
@@ -449,7 +482,59 @@ var Chart = React.createClass({
     
     return result;
   },
+});
 
+var Info = React.createClass({
+  
+  statics: {
+    
+  },
+
+  propTypes: _.extend({}, propTypes, {
+    requested: PropTypes.number,
+    finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    errors: PropTypes.arrayOf(PropTypes.string),
+    series: PropTypes.number,
+    requests: PropTypes.number,
+  }),
+  
+  getDefaultProps: function () {
+    return {
+      requested: null,
+      finished: null,
+    };
+  },
+
+  shouldComponentUpdate: function (nextProps) {
+    return _.isNumber(nextProps.finished);
+  },
+
+  render: function () {
+    var {field, level, reportName} = this.props;
+    var {errors, series, requests, requested, finished} = this.props;
+    var paragraph, message;
+
+    if (errors) {
+      message = _.first(errors);
+      paragraph = (<p className="help text-danger">{message}</p>);
+    } else if (!series) {
+      message = _.isNumber(finished)? 
+        ('No data received! Last attempt was at ' + moment(finished).format('HH:mm:ss')):
+        ('No data!');
+      paragraph = (<p className="help text-warning">{message}</p>);
+    } else {
+      message = 'Everything is fine. Updated at ' + moment(finished).format('HH:mm:ss');
+      paragraph = ( <p className="help text-muted">{message}</p>);
+    }
+
+    return (
+      <div className="report-info"
+        id={['info', field, level, reportName].join('--')}
+       >
+        {paragraph}
+      </div>
+    );
+  },
 });
 
 // Container components
@@ -461,10 +546,7 @@ Panel = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var key = _config.computeKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
-    return !_state? {} : {
-      source: _state.source,
-      timespan: _state.timespan,
-    };
+    return !_state? {} : _.pick(_state, ['source', 'timespan']);
   }, 
   (dispatch, ownProps) => {
     var {field, level, reportName} = ownProps;
@@ -486,14 +568,28 @@ Chart = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var key = _config.computeKey(field, level, reportName); 
     var _state = state.reports.measurements[key];
-    return !_state? {} : {
-      finished: _state.finished,
-      series: _state.series,
-    };
+    return !_state? {} : _.pick(_state, ['finished', 'series']);
   },
   null
 )(Chart);
 
+Info = ReactRedux.connect(
+  (state, ownProps) => {
+    var {field, level, reportName} = ownProps;
+    var key = _config.computeKey(field, level, reportName); 
+    var _state = state.reports.measurements[key];
+    return !_state? {} : {
+      requested: _state.requested,
+      finished: _state.finished,
+      requests: _state.requests,
+      errors: _state.errors,
+      series: !_state.series? 
+        null : _state.series.filter(s => (s.data.length > 0)).length,
+    };
+  },
+  null
+)(Info);
+
 // Export
 
-module.exports = {Panel, Chart};
+module.exports = {Panel, Chart, Info};

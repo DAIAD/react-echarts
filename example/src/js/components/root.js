@@ -75,7 +75,7 @@ var MeasurementReportsPage = React.createClass({
   },
 
   render: function () {
-    var {Panel, Chart} = require('./reports-measurements');
+    var {Panel, Chart, Info} = require('./reports-measurements');
     
     var {field, level, reportName} = this.props.params; 
     var _config = config.reports.measurements;
@@ -95,6 +95,7 @@ var MeasurementReportsPage = React.createClass({
         {heading}
         <Panel field={field} level={level} reportName={reportName} />
         <Chart field={field} level={level} reportName={reportName} />
+        <Info field={field} level={level} reportName={reportName} />
       </div>
     );
   },

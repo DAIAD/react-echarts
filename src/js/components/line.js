@@ -226,12 +226,10 @@ var Chart = React.createClass({
 
     propsToLoadingOptions: function (props) 
     {
+      // Consider as loading only if received 'loading' prop
       var opts = null;
-      if (
-        _.isEmpty(props.series) || // no data present
-        _.isObject(props.loading)  // or explicitly received 'loading' prop
-      ) {
-        var text = props.loading? props.loading.text : null;
+      if (_.isObject(props.loading)) {
+        var text = props.loading.text;
         opts = {
           effect: 'spin',
           text: text || this.defaults.messages.loadingText,

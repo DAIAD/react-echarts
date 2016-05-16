@@ -29,14 +29,14 @@ var makeApiProxy = function (options) {
   }
 };
 
-var makeApp = function (appconfig) {
+var makeApp = function (config) {
 
   var app = express();
-  var docRoot = appconfig.docRoot;
+  var docRoot = config.docRoot;
   
-  // Create a proxy that sends API requests to backend
+  // Create a proxy that forwards API requests to backend
   
-  var apiProxy = makeApiProxy(appconfig.backend);
+  var apiProxy = makeApiProxy(config.backend);
  
   // Define middleware
 
@@ -54,6 +54,16 @@ var makeApp = function (appconfig) {
     res.sendFile(path.join(docRoot[0], 'index.html'));
   });
   
+  app.get('/api/configuration/utility', function (req, res) {
+    // In reality, this would be retreived from the database
+    var utility = require('./config/utility.json');
+    res.json({errors: null, utility});
+  });
+  
+  app.post('/api/action/query-stats', function (req, res) {
+    res.json({errors: ['Not implemented']}); // Todo
+  });
+  
   app.get('/api/action/echo', function (req, res) {
     res.json({message: (req.query.message || null)});
   });
@@ -61,13 +71,9 @@ var makeApp = function (appconfig) {
   app.post('/api/action/echo', function (req, res) {
     res.json({message: (req.body.message || null)});
   });
-
-  app.post('/api/action/query-stats', function (req, res) {
-    res.json({errors: ['Not implemented']}); // Todo
-  });
-  
+ 
   app.post('/api/action/query-measurements', function (req, res) {
-    var Granularity = require('./granularity.js');
+    var Granularity = require('./src/js/granularity.js');
 
     var q = req.body;
     var t0 = q.time.start, t1 = q.time.end, dt = t1 - t0; 

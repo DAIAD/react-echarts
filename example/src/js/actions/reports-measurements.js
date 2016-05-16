@@ -3,31 +3,27 @@
 var _ = require('lodash');
 var sprintf = require('sprintf');
 
-var config = require('../config-reports');
+var ActionTypes = require('../action-types');
 var TimeSpan = require('../timespan');
-var {queryStats, queryMeasurements} = require('./query');
-
-var _config = config.reports.measurements;
+var population = require('../population');
+var {queryMeasurements} = require('../query');
 
 // Define actions
 
 var actions = {
 
-  // Constants
-
-  PREFIX: 'MEASUREMENTS',
-
   // Plain actions
   
-  initialize: (field, level, reportName) => ({
-    type: actions.PREFIX + '/' + 'INITIALIZE',
+  initialize: (field, level, reportName, defaults) => ({
+    type: ActionTypes.reports.measurements.INITIALIZE,
     field,
     level,
     reportName,
+    timespan: defaults.timespan,
   }),
   
   requestData: (field, level, reportName, t=null) => ({
-    type: actions.PREFIX + '/' + 'REQUEST_DATA',
+    type: ActionTypes.reports.measurements.REQUEST_DATA,
     field,
     level,
     reportName,
@@ -35,7 +31,7 @@ var actions = {
   }),
   
   setData: (field, level, reportName, data, t=null) => ({
-    type: actions.PREFIX + '/' + 'SET_DATA',
+    type: ActionTypes.reports.measurements.SET_DATA,
     field,
     level,
     reportName,
@@ -43,8 +39,8 @@ var actions = {
     timestamp: (t || new Date()).getTime(),
   }),
 
-  setError: (field, level, reportName, errors, t=null) => ({
-    type: actions.PREFIX + '/' + 'SET_ERROR',
+  setDataError: (field, level, reportName, errors, t=null) => ({
+    type: ActionTypes.reports.measurements.SET_DATA,
     field,
     level,
     reportName,
@@ -53,7 +49,7 @@ var actions = {
   }),
 
   setTimespan: (field, level, reportName, timespan) => ({
-    type: actions.PREFIX + '/' + 'SET_TIMESPAN',
+    type: ActionTypes.reports.measurements.SET_TIMESPAN,
     field,
     level,
     reportName,
@@ -61,7 +57,7 @@ var actions = {
   }),
   
   setSource: (field, level, reportName, source) => ({
-    type: actions.PREFIX + '/' + 'SET_SOURCE',
+    type: ActionTypes.reports.measurements.SET_SOURCE,
     field,
     level,
     reportName,
@@ -72,34 +68,42 @@ var actions = {
   
   refreshData: (field, level, reportName) => (dispatch, getState) => {
     var state = getState();
+    
+    var _state = state.reports.measurements;
+    
+    var {config} = state;
+    var _config = config.reports.byType.measurements;
+    
+    var key = _state._computeKey(field, level, reportName);
     var report = _config.levels[level].reports[reportName];
-    var key = _config.computeKey(field, level, reportName);
-    var _state = state.reports.measurements[key];
     
-    var requestedAt = new Date();
-    if (_state.requested && (requestedAt.getTime() - _state.requested < 1e+3)) {
+    var {timespan, source, requested} = _state[key];
+    
+    var now = new Date();
+    if (requested && (now.getTime() - requested < 1e+3)) {
       console.info('Skipping refresh requests arriving too fast...');
-      return;
+      return Promise.resolve();
     } 
-
-    dispatch(actions.requestData(field, level, reportName, requestedAt));
+    dispatch(actions.requestData(field, level, reportName, now));
     
-    var source = _state.source;
     var q = {
       granularity: report.queryParams.time.granularity,
-      timespan: _.isString(_state.timespan)? 
-        TimeSpan.fromName(_state.timespan).toRange(true) : _state.timespan,
+      timespan: _.isString(timespan)? TimeSpan.fromName(timespan).toRange(true) : timespan,
       metrics: report.metrics,
       ranking: report.queryParams.population.ranking,
+      population: [
+        new population.Utility(config.utility.name, config.utility.id),
+      ],
     };
-    queryMeasurements(source, field, q).then(
-      (data) => {
-        dispatch(actions.setData(field, level, reportName, data));
-      },
-      (reason) => {
-        console.error(sprintf('Cannot refresh data for %s: %s', key, reason));
-        dispatch(actions.setError(field, level, reportName, [reason]));
-      }
+
+    return queryMeasurements(source, field, q, _config).then(
+      (data) => (
+        dispatch(actions.setData(field, level, reportName, data))
+      ),
+      (reason) => (
+        console.error(sprintf('Cannot refresh data for %s: %s', key, reason)),
+        dispatch(actions.setDataError(field, level, reportName, [reason]))
+      )
     );
   },
 };

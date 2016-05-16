@@ -11,17 +11,14 @@ var DatetimeInput = require('react-datetime');
 var Select = require('react-controls/select-dropdown');
 
 var echarts = require('./react-echarts');
-var config = require('../config-reports');
 var Granularity = require('../granularity');
 var TimeSpan = require('../timespan');
 var consolidateFn = require('../consolidate');
 
-var _config = config.reports.measurements;
-
 var PropTypes = React.PropTypes;
 var propTypes = { 
-  field: PropTypes.oneOf(_.keys(_config.fields)),
-  level: PropTypes.oneOf(_.keys(_config.levels)),
+  field: PropTypes.string,
+  level: PropTypes.string,
   reportName: PropTypes.string,
 };
 
@@ -42,26 +39,18 @@ var Panel = React.createClass({
     },
   
     defaults: {
-      
       datetime: {
         dateFormat: 'DD/MM/YYYY',
         timeFormat: null, 
         inputSize: 8, 
       },  
-      
     },
-   
-    sourceOptions: _.values(_.mapValues(config.sources, 
-      (source, k) => ({value: k, text: source.title})
-    )),
-
+    
     timespanOptions: [].concat(
       Array.from(TimeSpan.common.entries()).map(_.spread(
         (name, u) => ({value: name, text: u.title})
       )),
-      [
-        {value: '', text: 'Custom...'}
-      ]
+      [{value: '', text: 'Custom...'}]
     ),
 
     checkTimespan: function (val, level, N=4) {
@@ -100,12 +89,17 @@ var Panel = React.createClass({
       PropTypes.oneOf(TimeSpan.commonNames()),
       (props, propName, componentName) => ( 
         (PropTypes.arrayOf(PropTypes.number)(props, propName, componentName)) ||
-        ((props[propName].length == 2)? null : (new Error(propName + ' should be an array of length 2')))
+        ((props[propName].length == 2)? null : (
+          new Error(propName + ' should be an array of length 2')))
       ),
     ]),
     population: PropTypes.string, // Todo
   }),
-  
+
+  contextTypes: {
+    config: PropTypes.object,
+  },
+
   // Lifecycle
 
   getInitialState: function () {
@@ -126,11 +120,16 @@ var Panel = React.createClass({
   },
   
   componentDidMount: function () {
-    this.props.initializeReport();
+    var {level, reportName} = this.props;
+    
+    var _config = this.context.config.reports.byType.measurements; 
+    var report = _config.levels[level].reports[reportName];
+
+    this.props.initializeReport({timespan: report.timespan});
     this.props.refreshData();
   },
  
-  componentWillReceiveProps: function (nextProps) {
+  componentWillReceiveProps: function (nextProps, nextContext) {
 
     // Check if moving to another report
     if (
@@ -138,8 +137,13 @@ var Panel = React.createClass({
       (nextProps.level != this.props.level) ||
       (nextProps.reportName != this.props.reportName)
     ) {
+      console.assert(nextContext.config == this.context.config, 
+        'Unexpected change for configuration in context!');
+      var _config = nextContext.config.reports.byType.measurements;
+      var report = _config.levels[nextProps.level].reports[nextProps.reportName];
+
       this.setState({dirty: false, error: null, errorMessage: null});
-      nextProps.initializeReport();
+      nextProps.initializeReport({timespan: report.timespan});
       setTimeout(nextProps.refreshData, 100);
     }
     
@@ -151,10 +155,13 @@ var Panel = React.createClass({
 
   render: function () {
     var cls = this.constructor;
+    var {config} = this.context;
     var {field, level, reportName, source} = this.props;
     var {timespan, dirty, error, errorMessage} = this.state;
+    
+    var _config = config.reports.byType.measurements;
     var [t0, t1] = cls.computeTimespan(timespan);
-   
+
     var datetimeProps = {
       closeOnSelect: true,
       dateFormat: cls.defaults.datetime.dateFormat,
@@ -165,9 +172,9 @@ var Panel = React.createClass({
       },
     };
     
-    var sourceOptions = cls.sourceOptions.filter(o => (
-      _config.fields[field].sources.indexOf(o.value) >= 0
-    ));
+    var sourceOptions = _config.fields[field].sources.map(
+      k => ({value: k, text: _config.sources[k].title})
+    );
 
     var timespanOptions = cls.timespanOptions.filter(o => (
       !o.value || cls.checkTimespan(o.value, level) >= 0
@@ -316,6 +323,8 @@ var Panel = React.createClass({
     this.setState({dirty: false});
     return false;
   },
+  
+  // Helpers
 }); 
 
 var Chart = React.createClass({
@@ -350,23 +359,27 @@ var Chart = React.createClass({
     height: PropTypes.number,
     series: PropTypes.arrayOf(PropTypes.shape({
       label: PropTypes.string,
-      metric: PropTypes.oneOf(['MIN', 'MAX', 'AVERAGE', 'SUM', 'COUNT']),
-      source: PropTypes.oneOf(['METER', 'DEVICE']),
+      metric: PropTypes.string,
+      source: PropTypes.string,
       data: PropTypes.arrayOf(
         PropTypes.arrayOf(PropTypes.number)
       ),
     })),
     finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
-    scaleXAxis: PropTypes.bool,
+    scaleTimeAxis: PropTypes.bool,
   }), 
   
+  contextTypes: {
+    config: PropTypes.object,
+  },
+
   getDefaultProps: function () {
     return {
       width: 850,
       height: 350,
       series: [],
       finished: true,
-      scaleXAxis: false,
+      scaleTimeAxis: false,
     };
   },
 
@@ -374,6 +387,9 @@ var Chart = React.createClass({
     var cls = this.constructor;
     var defaults = cls.defaults;
     var {field, level, reportName} = this.props;
+    
+    var {config} = this.context;
+    var _config = config.reports.byType.measurements;
     
     var {title, unit} = _config.fields[field];
     
@@ -389,7 +405,9 @@ var Chart = React.createClass({
     var xf = defaults.xAxis.dateformat[level];
 
     return (
-       <div id={['chart', field, level, reportName].join('--')} className="report-chart">
+      <div className="report-chart"
+        id={['chart', field, level, reportName].join('--')}
+       >
          <echarts.LineChart
             width={this.props.width}
             height={this.props.height}
@@ -416,13 +434,16 @@ var Chart = React.createClass({
 
   _consolidateData: function () {
     var result = {xaxisData: null, series: null};
-    var {field, level, reportName, series, scaleXAxis} = this.props;
+    var {field, level, reportName, series, scaleTimeAxis} = this.props;
     
+    var {config} = this.context;
+    var _config = config.reports.byType.measurements;
+
     if (!series || !series.length || series.every(s => !s.data.length))
       return result; // no data available
- 
-    var report = config.reports.measurements.levels[level].reports[reportName];
-    var {bucket, duration} = config.levels[level];
+    
+    var report = _config.levels[level].reports[reportName];
+    var {bucket, duration} = config.reports.levels[level];
     var [d, durationUnit] = duration;
     var d = moment.duration(d, durationUnit);
 
@@ -435,7 +456,7 @@ var Chart = React.createClass({
     // Find time span
     
     var start, end;
-    if (scaleXAxis) {
+    if (scaleTimeAxis) {
       start = _.min(series.map(s => s.data[0][0]));
       end = _.max(series.map(s => s.data[s.data.length -1][0]));
     } else {
@@ -494,7 +515,9 @@ var Info = React.createClass({
     requested: PropTypes.number,
     finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     errors: PropTypes.arrayOf(PropTypes.string),
-    series: PropTypes.number,
+    series: PropTypes.arrayOf(PropTypes.shape({
+      data: PropTypes.array,
+    })),
     requests: PropTypes.number,
   }),
   
@@ -513,11 +536,13 @@ var Info = React.createClass({
     var {field, level, reportName} = this.props;
     var {errors, series, requests, requested, finished} = this.props;
     var paragraph, message;
-
+    
+    var n = !series? 0 : series.filter(s => (s.data.length > 0)).length; 
+    
     if (errors) {
       message = _.first(errors);
       paragraph = (<p className="help text-danger">{message}</p>);
-    } else if (!series) {
+    } else if (!n) {
       message = _.isNumber(finished)? 
         ('No data received! Last attempt was at ' + moment(finished).format('HH:mm:ss')):
         ('No data!');
@@ -544,15 +569,15 @@ var actions = require('../actions/reports-measurements');
 Panel = ReactRedux.connect(
   (state, ownProps) => {
     var {field, level, reportName} = ownProps;
-    var key = _config.computeKey(field, level, reportName); 
-    var _state = state.reports.measurements[key];
-    return !_state? {} : _.pick(_state, ['source', 'timespan']);
+    var _state = state.reports.measurements;
+    var key = _state._computeKey(field, level, reportName); 
+    return !(key in _state)? {} : _.pick(_state[key], ['source', 'timespan']);
   }, 
   (dispatch, ownProps) => {
     var {field, level, reportName} = ownProps;
     return {
-      initializeReport: () => (
-        dispatch(actions.initialize(field, level, reportName))),
+      initializeReport: (defaults) => (
+        dispatch(actions.initialize(field, level, reportName, defaults))),
       setSource: (source) => (
         dispatch(actions.setSource(field, level, reportName, source))),
       setTimespan: (ts) => (
@@ -566,9 +591,9 @@ Panel = ReactRedux.connect(
 Chart = ReactRedux.connect(
   (state, ownProps) => {
     var {field, level, reportName} = ownProps;
-    var key = _config.computeKey(field, level, reportName); 
-    var _state = state.reports.measurements[key];
-    return !_state? {} : _.pick(_state, ['finished', 'series']);
+    var _state = state.reports.measurements;
+    var key = _state._computeKey(field, level, reportName); 
+    return !(key in _state)? {} : _.pick(_state[key], ['finished', 'series']);
   },
   null
 )(Chart);
@@ -576,16 +601,11 @@ Chart = ReactRedux.connect(
 Info = ReactRedux.connect(
   (state, ownProps) => {
     var {field, level, reportName} = ownProps;
-    var key = _config.computeKey(field, level, reportName); 
-    var _state = state.reports.measurements[key];
-    return !_state? {} : {
-      requested: _state.requested,
-      finished: _state.finished,
-      requests: _state.requests,
-      errors: _state.errors,
-      series: !_state.series? 
-        null : _state.series.filter(s => (s.data.length > 0)).length,
-    };
+    var _state = state.reports.measurements;
+    var key = _state._computeKey(field, level, reportName); 
+    return !(key in _state)? {} : _.pick(
+      _state[key], ['requested', 'finished', 'requests', 'errors', 'series']
+    );
   },
   null
 )(Info);

@@ -9,11 +9,27 @@ var sprintf = require('sprintf');
 var defaults = {
   requestHeaders: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
   },
 };
 
+var getConfiguration = function (entityName) {
+  var p = fetch('/api/configuration/' + entityName, {
+    headers: defaults.requestHeaders,
+  });
+  return p.then(
+    res => (res.json()),
+    reason => {
+      throw sprintf(
+        'Cannot fetch configuration for "%s": %s', entityName, reason);
+    }
+  );
+};
+
 var invokeAction = function (actionName, data, headers={}) {
+  var headers = {
+    ...defaults.requestHeaders,
+    'Content-Type': 'application/json',
+  };
   var p = fetch('/api/action/' + actionName, {
     method: 'POST',
     headers: _.extend({}, defaults.requestHeaders, headers),
@@ -22,9 +38,10 @@ var invokeAction = function (actionName, data, headers={}) {
   return p.then(
     res => (res.json()), 
     reason => {
-      throw sprintf('Cannot fetch: %s', reason); // propagate this error
+      throw sprintf(
+        'Cannot invoke action "%s": %s', actionName, reason);
     }
   );
 }
 
-module.exports = {invokeAction};
+module.exports = {getConfiguration, invokeAction};

@@ -1,33 +1,29 @@
 'use strict';
 
-var Granularity = require('../granularity');
-var api = require('./api');
+var ActionTypes = require('../action-types');
+var {queryStats} = require('../query');
 
 // Define actions
 
 var actions = {
-  
-  // Constants
-
-  PREFIX: 'SYSTEM',
 
   // Plain actions
   
   initialize: (level, reportName) => ({
-    type: actions.PREFIX + '/' + 'INITIALIZE',
+    type: ActionTypes.reports.system.INITIALIZE,
     level,
     reportName,
   }),
  
   requestData: (level, reportName, t=null) => ({
-    type: actions.PREFIX + '/' + 'REQUEST_DATA',
+    type: ActionTypes.reports.system.REQUEST_DATA,
     level,
     reportName,
     timestamp: (t || new Date()).getTime(),
   }),
   
   setData: (level, reportName, data, t=null) => ({
-    type: actions.PREFIX + '/' + 'SET_DATA',
+    type: ActionTypes.reports.system.SET_DATA,
     level,
     reportName,
     data,
@@ -35,7 +31,7 @@ var actions = {
   }),
   
   setTimespan: (level, reportName, timespan) => ({
-    type: actions.PREFIX + '/' + 'SET_TIMESPAN',
+    type: ActionTypes.reports.system.SET_TIMESPAN,
     level,
     reportName,
     timespan: timespan,
@@ -45,25 +41,8 @@ var actions = {
   
   refreshData: (level, reportName) => (dispatch, getState) => {
     var state = getState();
-    
-    var _config = config.reports.system;
-    var report = _config.levels[level].reports[reportName];
-    var key = _config.computeKey(level, reportName);
-    var _state = state.reports.system[key];
-
-    dispatch(actions.requestData(level, reportName, new Date()));
-    
     // Todo
-
-    api.queryStats({
-      timespan: _state.timespan,
-    }).then(res => {
-      if (!res.error) {
-        dispatch(actions.setData(level, reportName, res.result.series, new Date()));
-      } else {
-        // Do something on a failed api request
-      }
-    })
+    return Promise.reject('Todo')
   },
 };
 

@@ -3,14 +3,11 @@
 var _ = require('lodash');
 var sprintf = require('sprintf');
 
-var population = require('../population');
-var config = require('../config-reports');
-var Granularity = require('../granularity'); 
+var population = require('./population');
+var Granularity = require('./granularity'); 
 var api = require('./api');
   
-var utility = new population.Utility(config.utility.name, config.utility.id); 
-
-var queryStats = function (source, q={}) { 
+var queryStats = function (source, q, config) { 
   
   // Todo Build query to target Action API
   
@@ -26,12 +23,12 @@ var queryStats = function (source, q={}) {
   );
 };
 
-var queryMeasurements = function (source, field, q={}) {
+var queryMeasurements = function (source, field, q, config={}) {
   var defaults = queryMeasurements.defaults;
-   
+  
   // Validate parameters
 
-  q = queryMeasurements.validate(q);
+  q = queryMeasurements.validate(q, config);
 
   // Build query to target Action API
   // Todo Allow groups (i.e. cluster groups) inside our utility.
@@ -39,16 +36,14 @@ var queryMeasurements = function (source, field, q={}) {
   source = source.toUpperCase();
   
   var q1 = {
-    ...defaults.api.queryParams ,
+    ...defaults.api.queryParams,
     source,
     time: {
       start: q.timespan[0], 
       end: q.timespan[1], 
       granularity: q.granularity,
     },
-    population: [
-      utility.toJSON(),
-    ],
+    population: q.population.map(p => p.toJSON()),
   };
  
   if (q.ranking) {
@@ -116,39 +111,42 @@ queryMeasurements.defaults = {
   },
 };
 
-queryMeasurements.validators = {
-  granularity: (granularity, q) => (
-    Granularity.fromName(granularity.toLowerCase())?
-      null : (new Error('Unknown granularity'))
-  ),
-  timespan: ([t0, t1], q) => ( 
-    (_.isNumber(t0) && _.isNumber(t1))?
-      null : (new Error('Cannot read timespan'))
-  ),
-  metrics: (metrics, q) => {
-    if (q.ranking) {
-      return null; // a metric is n/a when a ranking is requested
-    }
-    if (!metrics || !_.isArray(metrics) || !metrics.length) {
-      return new Error('A metric must be specified');
-    }
-    var metric1 = metrics.find(m => (config.metrics.indexOf(m) < 0));
-    return !metric1? null : (new Error(sprintf('Unknown metric (%s)', metric1)));
-  },
-  ranking: (ranking, q) => (
-    (!ranking || (_.isArray(ranking) && 
-        ranking.every(r => (r.type && (config.metrics.indexOf(r.metric || '') >= 0)))
-      )
-    )? null : (new Error('Expected a ranking as an array of {type, metric}'))
-  ),
-  population: (p, q) => (null),
+queryMeasurements.getValidators = function (q, config) {
+  return {
+    granularity: (granularity) => (
+      Granularity.fromName(granularity.toLowerCase())?
+        null : (new Error('Unknown granularity'))
+    ),
+    timespan: ([t0, t1]) => ( 
+      (_.isNumber(t0) && _.isNumber(t1))?
+        null : (new Error('Cannot read timespan'))
+    ),
+    metrics: (metrics) => {
+      if (q.ranking) {
+        return null; // a metric is n/a when a ranking is requested
+      }
+      if (!metrics || !_.isArray(metrics) || !metrics.length) {
+        return new Error('A metric must be specified');
+      }
+      var metric1 = metrics.find(m => (config.metrics.indexOf(m) < 0));
+      return !metric1? null : (new Error(sprintf('Unknown metric (%s)', metric1)));
+    },
+    ranking: (ranking) => (
+      (!ranking || (_.isArray(ranking) && 
+          ranking.every(r => (r.type && (config.metrics.indexOf(r.metric || '') >= 0)))
+        )
+      )? null : (new Error('Expected a ranking as an array of {type, metric}'))
+    ),
+    population: (p) => (null),
+  };
 };
 
-queryMeasurements.validate = function (q) {
+queryMeasurements.validate = function (q, config) {
   
   var err = null;
-  _.forEach(queryMeasurements.validators, (validator, paramName) => (
-    err = validator.call(undefined, q[paramName], q),
+  var validators = queryMeasurements.getValidators(q, config);
+  _.forEach(validators, (validator, paramName) => (
+    err = validator(q[paramName]),
     err && console.error(err.message, q[paramName]),
     !err // break on error
   ));

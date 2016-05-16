@@ -1,0 +1,32 @@
+{
+  "name": "Daiad",
+  "id": "80de55eb-9bde-4477-a97a-b6048a1fcc9a",
+  "clusters": {
+     "INCOME": {
+    },
+    "HOUSEHOLD_SIZE": {
+      "1": {
+        "name": "1",
+        "title": "single",
+        "id": "1234"
+      },
+      "2": {
+        "name": "2",
+        "title": "2 members",
+        "id": "1234"
+      },
+      "3": {
+        "name": "3",
+        "title": "3 members",
+        "id": "1234"
+      },
+      "4-plus": {
+        "name": "4+",
+        "title": "More than 3 members",
+        "id": "1234"
+      }
+    },
+    "AGE": {
+    }
+  }
+}

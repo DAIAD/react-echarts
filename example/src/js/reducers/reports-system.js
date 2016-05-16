@@ -2,33 +2,35 @@
 
 var _ = require('lodash');
 
-var config = require('../config-reports').reports.system;
-
-var actions = require('../actions/reports-system');
+var ActionTypes = require('../action-types');
 
 var assertInitialized = (r, key) => (
-  console.assert(_.isObject(r), 'Expected an initialized entry for report: ' + key)
+  console.assert(_.isObject(r), 
+    'Expected an initialized entry for report: ' + key)
 );
 
 var reduce = function (state={}, action) {
-
-  var type = action.type.split('/');
-  if (type.length < 2 || type[0] != actions.PREFIX)
-    return state; // not interested in this action
+ 
+  var type = _.find(ActionTypes.reports.system, v => (v == action.type));
+  
+  if (!type)
+    return state; // not interested
 
   var {level, reportName} = action;
   if (level == null || reportName == null)
     return state; // malformed action; dont touch state
 
-  var r = null, key = config.computeKey(level, reportName);
+  var key = state._computeKey(level, reportName);
+  var r = null; 
   if (key in state) {
     // Clone existing state for (level, reportName)
     r = _.extend({}, state[key]);
   } 
-   
-  switch (type[1]) {
+
+  switch (type) {
     case 'INITIALIZE':
-      // Initialize parameters for report (field, level, reportName)
+      // Initialize parameters for report (level, reportName)
+      // See more on the meaning of each field at store.js.
       if (r == null) {
         r = { // new entry
           timespan: config.levels[level].reports[reportName].timespan,  // as default

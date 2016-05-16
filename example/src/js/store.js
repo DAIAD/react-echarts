@@ -2,13 +2,16 @@ var Redux = require('redux');
 var ReduxLogger = require('redux-logger');
 var ReduxThunk = require('redux-thunk');
 
-var config = require('./config-reports');
-
 // Create and configure store
 
 var initialState = {
+  config: {
+    utility: {},
+    reports: {},
+  },
   reports: {
     measurements: {
+      _computeKey: (field, level, reportName) => ([field, level, reportName].join('/')),
       // "<field>/<level>/<reportName>": {
       //   timespan,
       //   source,     // source of measurements, i.e 'meter' or 'device'
@@ -22,6 +25,7 @@ var initialState = {
       // }
     },
     system: {
+      _computeKey: (level, reportName) => ([level, reportName].join('/')),
       // "<level>/<reportName>": {
       //   source,
       //   timespan,

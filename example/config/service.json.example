@@ -1,0 +1,15 @@
+{
+  "server": {
+    "port": 3000,
+    "address": "0.0.0.0"
+  },
+  
+  "docRoot": ["public/www"],
+  "backend": {
+    "apiUrl": "https://app.dev.daiad.eu/api/v1/data/query",
+    "credentials": {
+      "username": "someone@daiad.eu",
+      "password": "secret"
+    }
+  }
+}

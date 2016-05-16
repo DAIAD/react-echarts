@@ -8,7 +8,7 @@ var PropTypes = React.PropTypes;
 var {Nav, Navbar, NavItem, NavDropdown, MenuItem} = ReactBootstrap;
 var {Router, Route, IndexRoute, Link, hashHistory} = ReactRouter;
 
-var config = require('../config-reports');
+// Presentational components
 
 var RootMenu = React.createClass({
   render: function ()
@@ -67,29 +67,45 @@ var AboutPage = ({}) => (
 var MeasurementReportsPage = React.createClass({
   
   propTypes: {
+    config: PropTypes.shape({
+      utility: PropTypes.object,
+      reports: PropTypes.object,
+    }),
     params: PropTypes.shape({
-      field: PropTypes.oneOf(_.keys(config.reports.measurements.fields)),
-      level: PropTypes.oneOf(_.keys(config.reports.measurements.levels)),
+      field: PropTypes.string,
+      level: PropTypes.string,
       reportName: PropTypes.string,
     }) 
+  },
+  
+  childContextTypes: {
+    config: PropTypes.shape({
+      utility: PropTypes.object,
+      reports: PropTypes.object,
+    }),
+  },
+
+  getChildContext: function() {
+    return {config: this.props.config};
   },
 
   render: function () {
     var {Panel, Chart, Info} = require('./reports-measurements');
     
-    var {field, level, reportName} = this.props.params; 
-    var _config = config.reports.measurements;
+    var {config, params: {field, level, reportName}} = this.props; 
+    
+    var _config = config.reports.byType.measurements; 
     
     var heading = (
       <h3>
         {_config.fields[field].title}
         <span className="delimiter">&nbsp;/&nbsp;</span>
-        {_config.levels[level].info.title}
+        {_config.levels[level].title}
         <span className="delimiter">&nbsp;/&nbsp;</span>
         {_config.levels[level].reports[reportName].title}
       </h3>
     );
-
+    
     return (
       <div className="reports reports-measurements">
         {heading}
@@ -106,20 +122,21 @@ var SystemReportsPage = React.createClass({
   
   propTypes: {
     params: PropTypes.shape({
-      level: PropTypes.oneOf(_.keys(config.reports.system.levels)),
+      level: PropTypes.string,
       reportName: PropTypes.string,
     }),
   },
 
   render: function () {
     var {level, reportName} = this.props.params;
-    var _config = config.reports.system;
     
+    return (<div>Loading configuration...</div>);
+    /*
     var heading = (
       <h3>
-        {_config.info.title} 
+        {_config.title} 
         <span className="delimiter">&nbsp;/&nbsp;</span>
-        {_config.levels[level].info.title}
+        {_config.levels[level].title}
         <span className="delimiter">&nbsp;/&nbsp;</span>
         {_config.levels[level].reports[reportName].title}
       </h3>
@@ -131,8 +148,27 @@ var SystemReportsPage = React.createClass({
         <em>Todo</em>
       </div>
     );
+    */
   },
 });
+
+// Container components
+
+MeasurementReportsPage = ReactRedux.connect(
+  (state, ownProps) => ({
+    config: state.config,
+  }),
+  null
+)(MeasurementReportsPage); 
+
+SystemReportsPage = ReactRedux.connect(
+  (state, ownProps) => ({
+    config: state.config,
+  }),
+  null
+)(SystemReportsPage); 
+
+// Root
 
 var Root = React.createClass({  
   render: function () {

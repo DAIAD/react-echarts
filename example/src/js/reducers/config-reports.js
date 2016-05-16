@@ -91,12 +91,12 @@ var initialState = {
                   ranking: [
                     {
                       type: 'TOP',
-                      metric: 'AVERAGE',
+                      metric: 'SUM',
                       limit: 2,
                     },
                     {
                       type: 'BOTTOM',
-                      metric: 'AVERAGE',
+                      metric: 'SUM',
                       limit: 2,
                     },
                   ],

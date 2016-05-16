@@ -14,7 +14,8 @@ class Ranking {
   _initialize (type, field, metric, limit=3) {
     this.type = (['TOP', 'BOTTOM'].indexOf(type) < 0)? 'TOP' : type;
     this.field = field;
-    this.metric = (['AVERAGE', 'MIN', 'MAX'].indexOf(metric) < 0)? 'AVERAGE' : metric;
+    this.metric = (['AVERAGE', 'MIN', 'MAX', 'SUM', 'COUNT'].indexOf(metric) < 0)? 
+      'AVERAGE' : metric;
     this.limit = parseInt(limit);
   }
 
@@ -41,7 +42,7 @@ class Ranking {
 
 Ranking.fromString = function (label) {
   var re = new RegExp(
-    '^(?:RANK)[/](\\w+)[/](AVERAGE|MIN|MAX)[/](TOP|BOTTOM)[/]([\\d]+)$');
+    '^(?:RANK)[/](\\w+)[/](AVERAGE|MIN|MAX|SUM|COUNT)[/](TOP|BOTTOM)[/]([\\d]+)$');
   var m = re.exec(label);
   return m? (new Ranking(m[3], m[1], m[2], m[4])) : null;
 }

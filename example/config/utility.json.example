@@ -1,32 +1,168 @@
 {
-  "name": "Daiad",
-  "id": "80de55eb-9bde-4477-a97a-b6048a1fcc9a",
-  "clusters": {
-     "INCOME": {
+  "name": "DAIAD",
+  "key": "abe8571c-3f21-482d-ace3-ef54d213ff75",
+  "clusters": [
+    {
+      "key": "b95b25aa-31d7-4a1b-9d1a-9a8322fef4c4",
+      "name": "Household Size",
+      "groups": [
+        {
+          "cluster_key": "b95b25aa-31d7-4a1b-9d1a-9a8322fef4c4",
+          "key": "fda7098a-f2c3-4465-bcc8-6284fd385c14",
+          "name": "Size: 1",
+          "size": 3
+        },
+        {
+          "cluster_key": "b95b25aa-31d7-4a1b-9d1a-9a8322fef4c4",
+          "key": "55caa484-0502-4ac1-ba17-f99485ce75da",
+          "name": "Size: 2",
+          "size": 5
+        },
+        {
+          "cluster_key": "b95b25aa-31d7-4a1b-9d1a-9a8322fef4c4",
+          "key": "52d736ae-416a-4352-8aa1-ca4872e9e890",
+          "name": "Size: 3",
+          "size": 1
+        },
+        {
+          "cluster_key": "b95b25aa-31d7-4a1b-9d1a-9a8322fef4c4",
+          "key": "0e33cc9f-5194-4dcf-a1a2-fc2e583251be",
+          "name": "Size: 4+",
+          "size": 3
+        }
+      ]
     },
-    "HOUSEHOLD_SIZE": {
-      "1": {
-        "name": "1",
-        "title": "single",
-        "id": "1234"
-      },
-      "2": {
-        "name": "2",
-        "title": "2 members",
-        "id": "1234"
-      },
-      "3": {
-        "name": "3",
-        "title": "3 members",
-        "id": "1234"
-      },
-      "4-plus": {
-        "name": "4+",
-        "title": "More than 3 members",
-        "id": "1234"
-      }
+    {
+      "key": "11807d0c-a9f9-433e-a6a3-3aa78fe43061",
+      "name": "Apartment Size",
+      "groups": [
+        {
+          "cluster_key": "11807d0c-a9f9-433e-a6a3-3aa78fe43061",
+          "key": "c1184624-7f19-4211-8a8a-51b7bdf329fb",
+          "name": "Size: 31-60",
+          "size": 0
+        },
+        {
+          "cluster_key": "11807d0c-a9f9-433e-a6a3-3aa78fe43061",
+          "key": "ceb1e4f0-8972-4a5d-bdef-acdd11bf2458",
+          "name": "Size: 61-80",
+          "size": 2
+        },
+        {
+          "cluster_key": "11807d0c-a9f9-433e-a6a3-3aa78fe43061",
+          "key": "030703fb-efaf-4507-a93d-1033d0bf55c8",
+          "name": "Size: 81-110",
+          "size": 5
+        },
+        {
+          "cluster_key": "11807d0c-a9f9-433e-a6a3-3aa78fe43061",
+          "key": "cea42173-2ec8-438e-8276-df875a0992f6",
+          "name": "Size: > 111",
+          "size": 5
+        }
+      ]
     },
-    "AGE": {
+    {
+      "key": "41dc3c07-9938-4ca5-b70b-58ee90cf7a6a",
+      "name": "Age",
+      "groups": [
+        {
+          "cluster_key": "41dc3c07-9938-4ca5-b70b-58ee90cf7a6a",
+          "key": "8fd79b7a-243d-4c0c-9fe8-6170762d6e2e",
+          "name": "Age: 18 - 24",
+          "size": 2
+        },
+        {
+          "cluster_key": "41dc3c07-9938-4ca5-b70b-58ee90cf7a6a",
+          "key": "e8973061-8a27-410c-9a8a-5e5e76c773f2",
+          "name": "Age: 25 - 34",
+          "size": 3
+        },
+        {
+          "cluster_key": "41dc3c07-9938-4ca5-b70b-58ee90cf7a6a",
+          "key": "42b7eefe-6e7e-4b8a-9123-5602110b765f",
+          "name": "Age: 35 - 44",
+          "size": 3
+        },
+        {
+          "cluster_key": "41dc3c07-9938-4ca5-b70b-58ee90cf7a6a",
+          "key": "0b7fe646-97f4-499f-9f7e-6b4a982754f7",
+          "name": "Age: 45 - 54",
+          "size": 3
+        },
+        {
+          "cluster_key": "41dc3c07-9938-4ca5-b70b-58ee90cf7a6a",
+          "key": "f03274c1-5a2c-444f-b80d-0e8c2e0541d7",
+          "name": "Age: 55 - 64",
+          "size": 1
+        },
+        {
+          "cluster_key": "41dc3c07-9938-4ca5-b70b-58ee90cf7a6a",
+          "key": "db841d38-0df2-47cb-9c77-abf2a2886f61",
+          "name": "Age: 65 - 74",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+      "name": "Income",
+      "groups": [
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "2bbb6cf3-8e23-4532-84d1-67045526ffc7",
+          "name": "Income: < 15.000€",
+          "size": 0
+        },
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "75cc835e-09e3-43b2-8e47-8492f06b4cf5",
+          "name": "Income: 15.000€ - 20.000€",
+          "size": 2
+        },
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "a168ffac-5546-4e49-9bdb-5b552fadc16a",
+          "name": "Income: 20.000€ - 25.000€",
+          "size": 0
+        },
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "f76d06bf-4d48-4593-ae89-e0adbbc6d5e5",
+          "name": "Income: 25.000€ - 30.000€",
+          "size": 2
+        },
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "0f8832fd-e7eb-4ed6-aeee-2b929f5f4eca",
+          "name": "Income: 30.000€ - 35.000€",
+          "size": 1
+        },
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "0c95025f-d7ac-42aa-8f2e-5205fa228b3b",
+          "name": "Income: 35.000€ - 40.000€",
+          "size": 3
+        },
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "164aaacb-33e9-462e-b8e2-217538bcf93b",
+          "name": "Income: 40.000€ - 50.000€",
+          "size": 1
+        },
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "b94e0a27-3d8a-4a8b-baef-a215a7621a16",
+          "name": "Income: 50.000€ - 60.000€",
+          "size": 2
+        },
+        {
+          "cluster_key": "bd1a6ad7-6419-44a1-b951-bf6f1a4200d5",
+          "key": "4d91c198-6dbf-4739-9059-94a8002d0af0",
+          "name": "Income: > 60.000€",
+          "size": 1
+        }
+      ]
     }
-  }
+  ]
 }

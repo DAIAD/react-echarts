@@ -50,7 +50,7 @@ var queryMeasurements = function (source, field, q, config={}) {
     q1.population = _.flatten(q1.population.map(p => {
       var g = population.Group.fromString(p.label);
       return q.ranking.map(r => {
-        var r1 = {limit: 3, type: 'TOP', ...r, field}; 
+        var r1 = {limit: 3, type: 'TOP', ...r, field: field.toUpperCase()}; 
         return {...p, 
           label: [g, new population.Ranking(r1)].join('/'),
           ranking: r1,
@@ -79,7 +79,7 @@ var queryMeasurements = function (source, field, q, config={}) {
           // Shape a result with ranking on users
           var points = rs.points.map(p => ({
             timestamp: p.timestamp,
-            values: p.users.map(u => u[rr.field][rr.metric]).sort(rr.comparator),
+            values: p.users.map(u => u[rr.field.toLowerCase()][rr.metric]).sort(rr.comparator),
           }));
           return _.times(rr.limit, (i) => ({
             ...params,

@@ -93,7 +93,10 @@ var Panel = React.createClass({
           new Error(propName + ' should be an array of length 2')))
       ),
     ]),
-    population: PropTypes.string, // Todo
+    population: PropTypes.shape({
+      cluster: PropTypes.string,
+      group: PropTypes.string,
+    }),
   }),
 
   contextTypes: {
@@ -115,7 +118,7 @@ var Panel = React.createClass({
     return {
       source: 'meter',
       timespan: 'month',
-      population: null,
+      population: {cluster: null, group: null},
     };
   },
   
@@ -156,7 +159,7 @@ var Panel = React.createClass({
   render: function () {
     var cls = this.constructor;
     var {config} = this.context;
-    var {field, level, reportName, source} = this.props;
+    var {field, level, reportName, source, population} = this.props;
     var {timespan, dirty, error, errorMessage} = this.state;
     
     var _config = config.reports.byType.measurements;
@@ -172,18 +175,26 @@ var Panel = React.createClass({
       },
     };
     
-    var sourceOptions = _config.fields[field].sources.map(
-      k => ({value: k, text: _config.sources[k].title})
+    var sourceOptions = _config.fields[field].sources.map(k => ({
+      value: k, text: _config.sources[k].title
+    }));
+
+    var timespanOptions = cls.timespanOptions.filter(
+      o => (!o.value || cls.checkTimespan(o.value, level) >= 0)
     );
 
-    var timespanOptions = cls.timespanOptions.filter(o => (
-      !o.value || cls.checkTimespan(o.value, level) >= 0
-    ));
+    var clusterOptions = config.utility.clusters.map(
+      c => ({value: c.key, text: c.name })
+    );
 
-    var groupbyOptions = [
-      {value: 'income', text: 'Income'},
-      {value: 'household-size', text: 'Household Size'},
-    ];
+    var groupOptions = [];
+    if (population.cluster) {
+      groupOptions = config.utility.clusters
+        .find(c => (c.key == population.cluster))
+          .groups.map(
+            g => ({value: g.key, text: g.name})
+          );
+    }
 
     var helpParagraph;
     if (errorMessage) {
@@ -231,33 +242,35 @@ var Panel = React.createClass({
            />
         </div>
         <div className="form-group">
-          <label>Cluster:</label> 
+          <label>Group:</label> 
           &nbsp;
           <Select
             className='select-cluster'
-            value={'household-size' || this.props.groupby}
-            onChange={this._setPopulation}
+            value={population.cluster || ''}
+            onChange={(val) => this._setPopulationGroup(val, null)}
            >
-            {groupbyOptions.map(toOptionElement)}
+            <option value="" key="" >None</option>
+            <optgroup label="Cluster by:">
+              {clusterOptions.map(toOptionElement)}
+            </optgroup>
           </Select>
           &nbsp;
           <Select
             className='select-cluster-group'
-            value={'all'}
+            value={population.group || ''}
+            onChange={(val) => this._setPopulationGroup(population.cluster, val)}
            >
-            <optgroup label="All groups">
-              <option value='all' key='all'>All</option>
+            <optgroup label={population.cluster? 'All groups' : 'No groups'}>
+              <option value="" key="">{population.cluster? 'All' : 'Everyone'}</option>
             </optgroup>
-            <optgroup label="Pick a specific group">
-              <option value='1' key='1'>{'Single'}</option>
-              <option value='2' key='2'>{'2+ people'}</option>
+            <optgroup label="Pick a specific group:">
+              {groupOptions.map(toOptionElement)}
             </optgroup>
           </Select>
         </div>
         <div className="form-group">
           <Button onClick={this._refresh} bsStyle="primary" disabled={!!error} title="Refresh">
-            {/*<Glyphicon glyph="repeat" />*/}
-            Refresh
+            {/*<Glyphicon glyph="repeat" />&nbsp;*/}Refresh
           </Button>
         </div>
         {helpParagraph}
@@ -306,9 +319,13 @@ var Panel = React.createClass({
     this.setState({dirty: true, timespan: val, error, errorMessage});
     return false;
   },
-
-  _setPopulation: function (val) {
-    // Todo
+  
+  _setPopulationGroup: function (clusterKey, groupKey) {
+    this.props.setPopulation({
+      cluster: clusterKey || null, 
+      group: groupKey || null,
+    });
+    this.setState({dirty: true});
     return false;
   },
 
@@ -571,7 +588,8 @@ Panel = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
     var key = _state._computeKey(field, level, reportName); 
-    return !(key in _state)? {} : _.pick(_state[key], ['source', 'timespan']);
+    return !(key in _state)? {} : 
+      _.pick(_state[key], ['source', 'timespan', 'population']);
   }, 
   (dispatch, ownProps) => {
     var {field, level, reportName} = ownProps;
@@ -582,6 +600,8 @@ Panel = ReactRedux.connect(
         dispatch(actions.setSource(field, level, reportName, source))),
       setTimespan: (ts) => (
         dispatch(actions.setTimespan(field, level, reportName, ts))),
+      setPopulation: (p) => (
+        dispatch(actions.setPopulation(field, level, reportName, p))),
       refreshData: () => (
         dispatch(actions.refreshData(field, level, reportName))), 
     };
@@ -593,7 +613,8 @@ Chart = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
     var key = _state._computeKey(field, level, reportName); 
-    return !(key in _state)? {} : _.pick(_state[key], ['finished', 'series']);
+    return !(key in _state)? {} : 
+      _.pick(_state[key], ['finished', 'series']);
   },
   null
 )(Chart);
@@ -603,8 +624,8 @@ Info = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
     var key = _state._computeKey(field, level, reportName); 
-    return !(key in _state)? {} : _.pick(
-      _state[key], ['requested', 'finished', 'requests', 'errors', 'series']
+    return !(key in _state)? {} : 
+      _.pick(_state[key], ['requested', 'finished', 'requests', 'errors', 'series']
     );
   },
   null

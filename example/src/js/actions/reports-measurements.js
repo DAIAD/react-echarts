@@ -64,6 +64,14 @@ var actions = {
     source,
   }),
 
+  setPopulation: (field, level, reportName, p) => ({
+    type: ActionTypes.reports.measurements.SET_POPULATION,
+    field,
+    level,
+    reportName,
+    population: p,
+  }),
+
   // Complex actions: functions processed by thunk middleware
   
   refreshData: (field, level, reportName) => (dispatch, getState) => {
@@ -92,7 +100,7 @@ var actions = {
       metrics: report.metrics,
       ranking: report.queryParams.population.ranking,
       population: [
-        new population.Utility(config.utility.name, config.utility.id),
+        new population.Utility(config.utility.name, config.utility.key),
       ],
     };
 

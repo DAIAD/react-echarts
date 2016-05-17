@@ -30,7 +30,7 @@ var reduce = function (state={}, action) {
         r = {
           source: 'meter',  // as default
           timespan: action.timespan || 'week',
-          population: null, 
+          population: {cluster: null, group: null}, 
           series: null,
           invalid: true,
           requested: null,
@@ -75,6 +75,13 @@ var reduce = function (state={}, action) {
           invalid: true
         });
       } 
+      break;
+    case 'SET_POPULATION':
+      assertInitialized(state, key);
+      r = _.extend({}, state[key], {
+        population: action.population,
+        invalid: true,
+      });
       break;
     default:
       // Unknown action; dont touch state

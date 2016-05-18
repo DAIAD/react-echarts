@@ -20,6 +20,7 @@ var actions = {
     level,
     reportName,
     timespan: defaults.timespan,
+    population: defaults.population,
   }),
   
   requestData: (field, level, reportName, t=null) => ({
@@ -64,12 +65,12 @@ var actions = {
     source,
   }),
 
-  setPopulation: (field, level, reportName, p) => ({
+  setPopulation: (field, level, reportName, population) => ({
     type: ActionTypes.reports.measurements.SET_POPULATION,
     field,
     level,
     reportName,
-    population: p,
+    population,
   }),
 
   // Complex actions: functions processed by thunk middleware
@@ -85,25 +86,37 @@ var actions = {
     var key = _state._computeKey(field, level, reportName);
     var report = _config.levels[level].reports[reportName];
     
-    var {timespan, source, requested} = _state[key];
-    
+    var {timespan, source, requested, population: target} = _state[key];
+
     var now = new Date();
     if (requested && (now.getTime() - requested < 1e+3)) {
       console.info('Skipping refresh requests arriving too fast...');
       return Promise.resolve();
     } 
-    dispatch(actions.requestData(field, level, reportName, now));
     
+    if (!target) {
+      // Assume target is the entire utility
+      target = new population.Utility(config.utility.key, config.utility.name);
+    } else if (target instanceof population.Cluster) {
+      // Expand to all groups inside target cluster
+      target = config.utility.clusters
+        .find(c => (c.key == target.key))
+          .groups.map(g => (new population.ClusterGroup(target.key, g.key)));
+    } else {
+      console.assert(target instanceof population.Group, 
+        'Expected an instance of population.Group');
+    }
+   
     var q = {
       granularity: report.queryParams.time.granularity,
       timespan: _.isString(timespan)? TimeSpan.fromName(timespan).toRange(true) : timespan,
       metrics: report.metrics,
       ranking: report.queryParams.population.ranking,
-      population: [
-        new population.Utility(config.utility.name, config.utility.key),
-      ],
+      population: _.flatten([target]),
     };
-
+    
+    dispatch(actions.requestData(field, level, reportName, now));
+    
     return queryMeasurements(source, field, q, _config).then(
       (data) => (
         dispatch(actions.setData(field, level, reportName, data))

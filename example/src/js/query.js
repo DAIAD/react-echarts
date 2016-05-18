@@ -29,9 +29,6 @@ var queryMeasurements = function (source, field, q, config={}) {
   // Validate parameters
 
   q = queryMeasurements.validate(q, config);
-
-  // Build query to target Action API
-  // Todo Allow groups (i.e. cluster groups) inside our utility.
   
   source = source.toUpperCase();
   
@@ -84,7 +81,7 @@ var queryMeasurements = function (source, field, q, config={}) {
           return _.times(rr.limit, (i) => ({
             ...params,
             metric: rr.metric,
-            label: g.toString(),
+            population: g,
             ranking: {...rr.toJSON(), index: i},
             data: points.map(p => ([p.timestamp, p.values[i] || null])),
           }));
@@ -93,7 +90,7 @@ var queryMeasurements = function (source, field, q, config={}) {
           return q.metrics.map(metric => ({
             ...params,
             metric,
-            label: g.toString(),
+            population: g,
             data: rs.points.map(p => ([p.timestamp, p[field][metric]])),
           }));
         }
@@ -137,7 +134,12 @@ queryMeasurements.getValidators = function (q, config) {
         )
       )? null : (new Error('Expected a ranking as an array of {type, metric}'))
     ),
-    population: (p) => (null),
+    population: (p) => (
+      p.every(p1 => (
+        (p1 instanceof population.Group) || 
+        (p1 instanceof population.Cluster)
+      ))? null : (new Error('Expected an instance of population.(Group|Cluster)'))
+    ),
   };
 };
 

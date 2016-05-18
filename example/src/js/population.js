@@ -49,68 +49,89 @@ Ranking.fromString = function (label) {
 
 class Group {
   
-  constructor(type='GROUP', name=null, id=null) {
-    this.type = type;
+  constructor (key, name=null) {
+    this.type = 'GROUP';
     this.name = name;
-    this.id = id;
+    this.key = key;
   }
 
   toJSON () {
     return {
       type: this.type,
       label: this.toString(),
-      group: this.id || this.name,
+      group: this.key,
     }
   }
 
   toString () {
-    return this.type + ':' + this.name;
+    return this.type + ':' + this.key;
   }
 };
 
 class Utility extends Group {
   
-  constructor (name, id=null) {
-    super('UTILITY', name, id);
+  constructor (key, name=null) {
+    super(key, name);
+    this.type = 'UTILITY';
   }
   
   toJSON () {
     return {
-      type: 'UTILITY',
+      type: this.type,
       label: this.toString(),
-      utility: this.id || this.name,
+      utility: this.key,
     }
   }
 };
 
-class ClusterGroup extends Group {
+class Cluster {
   
-  constructor (name, clusterName, id=null) {
-    super('GROUP', name);
-    this.clusterName = clusterName;
+  constructor (key, name=null) {
+    this.key = key;
+    this.name = name;
   }
   
   toString () {
-    return 'CLUSTER' + ':' + this.clusterName + ':' +  + this.name;
+    return 'CLUSTER' + ':' + this.key;
+  }
+  
+  toJSON () {
+    return {
+      type: 'CLUSTER',
+      label: this.toString(),
+      cluster: this.key,
+    };  
+  }
+}
+
+class ClusterGroup extends Group {
+  
+  constructor (clusterKey, key, name=null) {
+    super(key, name);
+    this.clusterKey = clusterKey;
+  }
+  
+  toString () {
+    return 'CLUSTER' + ':' + this.clusterKey + ':' + this.key;
   }
 };
 
 Group.fromString = function (label) {
   // A factory for Group instances
 
-  var r, m = (new RegExp('^([\\w]+)(?:[:](\\w+))?[:]([^/]+)$')).exec(label);
+  var r, m = (new RegExp('^([\\w]+)(?:[:]([-\\w]+))?[:]([^/]+)$')).exec(label);
   if (!m)
     return null;
   
   switch (m[1]) {
     case 'GROUP':
-      r = (m[2] == null)? (new Group('GROUP', m[3])) : null;
+      r = (m[2] == null)? (new Group(m[3])) : null;
       break;
     case 'UTILITY':
       r = (m[2] == null)? (new Utility(m[3])) : null;
       break;
     case 'CLUSTER':
-      r = (m[2] != null)? (new ClusterGroup(m[3], m[2])) : null;
+      r = (m[2] != null)? (new ClusterGroup(m[2], m[3])) : null;
       break;
     default:
       r = null;
@@ -119,21 +140,27 @@ Group.fromString = function (label) {
   return r
 }
 
+Cluster.fromString = function (label) {
+  
+  var m = (new RegExp('^CLUSTER[:]([-\\w]+)$')).exec(label);
+  return !m? null : (new Cluster(m[1]));
+}
+
 var fromString = function (label) {
   // Parse label and create a [Group, Ranking] pair
   // This pair represents a population target for data (measurement) queries
   
-  var g, r;
-  
+  var g, r;  
   var i = label.indexOf('/');
   if (i < 0) {
-    g = Group.fromString(label);
+    g = Group.fromString(label) || Cluster.fromString(label);
     r = null;
   } else {
-    g = Group.fromString(label.substr(0, i)); 
-    r = Ranking.fromString(label.substr(i +1));
+    var label1 = label.substr(0, i), label2 = label.substr(i +1);
+    g = Group.fromString(label1) || Cluster.fromString(label1); 
+    r = Ranking.fromString(label2);
   }
   return g? [g, r] : null;
 }
 
-module.exports = {Group, Utility, ClusterGroup, Ranking, fromString};
+module.exports = {Group, Cluster, Utility, ClusterGroup, Ranking, fromString};

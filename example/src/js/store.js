@@ -15,7 +15,7 @@ var initialState = {
       // "<field>/<level>/<reportName>": {
       //   timespan,
       //   source,     // source of measurements, i.e 'meter' or 'device'
-      //   population, // target population as {cluster, group}
+      //   population, // target (instance of population.Group or population.Cluster)
       //   series,     // collection of data points
       //   invalid,    // flag data that need to be refreshed
       //   requested,  // timestamp of last attempt to fetch series data

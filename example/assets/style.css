@@ -62,11 +62,11 @@ form.report-panel.form-inline .form-group {
 }
 
 .report-panel .dropdown.select-cluster button > span.text {
-  width: 7em;
+  width: 7.5em;
 }
 
 .report-panel .dropdown.select-cluster-group button > span.text {
-  width: 7em;
+  width: 7.5em;
 }
 
 .chart.portal {

@@ -378,7 +378,7 @@ var Chart = React.createClass({
     
     nameTemplates: {
       basic: _.template('<%= metric %> of <%= label %>'),
-      ranking: _.template('<%= ranking.type %>-<%= ranking.index + 1 %>'),
+      ranking: _.template('<%= ranking.type %>-<%= ranking.index + 1 %> of <%= label %>'),
     },
    
     defaults: {

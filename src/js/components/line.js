@@ -6,7 +6,7 @@ var echarts = require('echarts');
 var _ = require('lodash');
 var rgbcolor = require('rgbcolor');
 
-const development = !(process.env.NODE_ENV == 'production');
+const develop = !(process.env.NODE_ENV == 'production');
 
 var PropTypes = React.PropTypes;
 
@@ -45,7 +45,7 @@ var Chart = React.createClass({
         smooth: false, // override per-series
         lineWidth: 2,
       }, 
-      // Provide class-level fallbacks for ECharts chart options
+      // Provide class-level defaults for ECharts chart options
       options: {
         yAxis: {
           splitArea: {show: true},
@@ -344,7 +344,7 @@ var Chart = React.createClass({
 
   componentWillMount: function ()
   {
-    development && console.debug('About to mount <Chart>...');
+    develop && console.debug('About to mount <Chart>...');
     if (!this.props.id)
       this._id = (this.props.id)? 
         (this.props.id) : (this.props.prefix + '-' + randomString());
@@ -364,7 +364,7 @@ var Chart = React.createClass({
 
   componentWillReceiveProps: function (nextProps)
   {
-    development && console.debug('Received new props for <Chart>...')
+    develop && console.debug('Received new props for <Chart>...')
     this._redrawChart(nextProps);
   },
 
@@ -380,7 +380,7 @@ var Chart = React.createClass({
 
   render: function ()
   {
-    development && console.debug('Rendering <Chart>...');
+    develop && console.debug('Rendering <Chart>...');
     return (
       <div id={this._id}
         className={['portal', this.props.prefix].join(' ')}
@@ -414,7 +414,7 @@ var Chart = React.createClass({
     var cls = this.constructor;
     var options = null;
     
-    development && console.info('Redrawing <Chart> from nextProps...')
+    develop && console.info('Redrawing <Chart> from nextProps...')
     
     // Reset chart from received props
     options = cls.propsToOptions(nextProps);

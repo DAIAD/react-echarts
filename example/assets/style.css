@@ -23,6 +23,11 @@ form.report-panel {
   font-size: 0.9em;
 }
 
+.select-dropdown .dropdown-toggle > span.empty-value,
+.select-dropdown .dropdown-menu li.empty-value > a {
+  font-style: oblique;
+}
+
 form.report-panel.form-inline .form-group {
   margin: 8px 12px 8px 0px;
   /*
@@ -40,8 +45,12 @@ form.report-panel.form-inline .form-group {
   font-size: 1.4em;
 }
 
+.report-panel .form-group > label {
+  vertical-align: text-top;
+}
+
 .report-panel .dropdown.select-source button > span.text {
-  width: 3.2em;
+  width: 3.1em;
 }
 
 .report-panel .dropdown.select-timespan button > span.text {
@@ -53,11 +62,11 @@ form.report-panel.form-inline .form-group {
 }
 
 .report-panel .dropdown.select-cluster button > span.text {
-  width: 7em;
+  width: 7.5em;
 }
 
 .report-panel .dropdown.select-cluster-group button > span.text {
-  width: 5em;
+  width: 7.5em;
 }
 
 .chart.portal {

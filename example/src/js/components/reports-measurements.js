@@ -13,18 +13,24 @@ var Select = require('react-controls/select-dropdown');
 var echarts = require('./react-echarts');
 var Granularity = require('../granularity');
 var TimeSpan = require('../timespan');
+var population = require('../population');
 var consolidateFn = require('../consolidate');
 
 var PropTypes = React.PropTypes;
-var propTypes = { 
+var commonPropTypes = { 
   field: PropTypes.string,
   level: PropTypes.string,
   reportName: PropTypes.string,
 };
+var populationPropType = PropTypes.oneOfType([
+  PropTypes.instanceOf(population.Group),
+  PropTypes.instanceOf(population.Cluster),
+]);
 
 var toOptionElement = ({value, text}) => (
   <option value={value} key={value}>{text}</option>
 );
+
 
 // Presentational components
 
@@ -39,10 +45,11 @@ var Panel = React.createClass({
     },
   
     defaults: {
-      datetime: {
+      datetimeProps: {
+        closeOnSelect: true,
         dateFormat: 'DD/MM/YYYY',
         timeFormat: null, 
-        inputSize: 8, 
+        inputProps: {size: 8}, 
       },  
     },
     
@@ -81,9 +88,24 @@ var Panel = React.createClass({
         return [t0, t1];
       }
     },
+    
+    extractPopulationGroupParams: function (target) {
+      var clusterKey, groupKey;
+      if (target instanceof population.Cluster) {
+        clusterKey = target.key, groupKey = null;
+      } else if (target instanceof population.ClusterGroup) {
+        clusterKey = target.clusterKey, groupKey = target.key;
+      } else if (target instanceof population.Utility) { 
+        clusterKey = groupKey = null;
+      } else if (target instanceof population.Group) {
+        clusterKey = null, groupKey = target.key;
+      }
+      return [clusterKey, groupKey];
+    },
+
   },
   
-  propTypes: _.extend({}, propTypes, {
+  propTypes: _.extend({}, commonPropTypes, {
     source: PropTypes.oneOf(['meter', 'device']),
     timespan: PropTypes.oneOfType([
       PropTypes.oneOf(TimeSpan.commonNames()),
@@ -93,7 +115,7 @@ var Panel = React.createClass({
           new Error(propName + ' should be an array of length 2')))
       ),
     ]),
-    population: PropTypes.string, // Todo
+    population: populationPropType,
   }),
 
   contextTypes: {
@@ -156,43 +178,33 @@ var Panel = React.createClass({
   render: function () {
     var cls = this.constructor;
     var {config} = this.context;
-    var {field, level, reportName, source} = this.props;
-    var {timespan, dirty, error, errorMessage} = this.state;
+    var {field, level, reportName, source, population: target} = this.props;
+    var {timespan, error} = this.state;
     
     var _config = config.reports.byType.measurements;
     var [t0, t1] = cls.computeTimespan(timespan);
 
-    var datetimeProps = {
-      closeOnSelect: true,
-      dateFormat: cls.defaults.datetime.dateFormat,
-      timeFormat: cls.defaults.datetime.timeFormat,
-      inputProps: {
-        size: cls.defaults.datetime.inputSize,
-        disabled: _.isString(timespan)? 'disabled' : null, 
-      },
-    };
+    var datetimeProps = _.merge({}, cls.defaults.datetimeProps, {
+      inputProps: {disabled: _.isString(timespan)? 'disabled' : null}
+    });
     
-    var sourceOptions = _config.fields[field].sources.map(
-      k => ({value: k, text: _config.sources[k].title})
+    var sourceOptions = _config.fields[field].sources.map(k => ({
+      value: k, text: _config.sources[k].title
+    }));
+
+    var timespanOptions = cls.timespanOptions.filter(
+      o => (!o.value || cls.checkTimespan(o.value, level) >= 0)
     );
 
-    var timespanOptions = cls.timespanOptions.filter(o => (
-      !o.value || cls.checkTimespan(o.value, level) >= 0
-    ));
-
-    var groupbyOptions = [
-      {value: 'income', text: 'Income'},
-      {value: 'household-size', text: 'Household Size'},
-    ];
-
-    var helpParagraph;
-    if (errorMessage) {
-      helpParagraph = (<p className="help text-danger">{errorMessage}</p>);
-    } else if (dirty) {
-      helpParagraph = (<p className="help text-info">Parameters have changed. Refresh to redraw data!</p>); 
-    } else {
-      helpParagraph = (<p className="help text-muted">Refresh to redraw data.</p>);
-    }
+    var clusterOptions = config.utility.clusters.map(
+      c => ({value: c.key, text: c.name })
+    );
+    
+    var [clusterKey, groupKey] = cls.extractPopulationGroupParams(target);
+    var groupOptions = !clusterKey? [] :
+      config.utility.clusters
+        .find(c => (c.key == clusterKey))
+          .groups.map(g => ({value: g.key, text: g.name}));
 
     return (
       <form className="form-inline report-panel" 
@@ -231,36 +243,38 @@ var Panel = React.createClass({
            />
         </div>
         <div className="form-group">
-          <label>Cluster:</label> 
+          <label>Group:</label> 
           &nbsp;
           <Select
             className='select-cluster'
-            value={'household-size' || this.props.groupby}
-            onChange={this._setPopulation}
+            value={clusterKey || ''}
+            onChange={(val) => this._setPopulation(val, null)}
            >
-            {groupbyOptions.map(toOptionElement)}
+            <option value="" key="" >None</option>
+            <optgroup label="Cluster by:">
+              {clusterOptions.map(toOptionElement)}
+            </optgroup>
           </Select>
           &nbsp;
           <Select
             className='select-cluster-group'
-            value={'all'}
+            value={groupKey || ''}
+            onChange={(val) => this._setPopulation(clusterKey, val)}
            >
-            <optgroup label="All groups">
-              <option value='all' key='all'>All</option>
+            <optgroup label={clusterKey? 'All groups' : 'No groups'}>
+              <option value="" key="">{clusterKey? 'All' : 'Everyone'}</option>
             </optgroup>
-            <optgroup label="Pick a specific group">
-              <option value='1' key='1'>{'Single'}</option>
-              <option value='2' key='2'>{'2+ people'}</option>
+            <optgroup label="Pick a specific group:">
+              {groupOptions.map(toOptionElement)}
             </optgroup>
           </Select>
         </div>
         <div className="form-group">
           <Button onClick={this._refresh} bsStyle="primary" disabled={!!error} title="Refresh">
-            {/*<Glyphicon glyph="repeat" />*/}
-            Refresh
+            {/*<Glyphicon glyph="repeat" />&nbsp;*/}Refresh
           </Button>
         </div>
-        {helpParagraph}
+        {this._markupHelp()}
       </form>
     )
   },
@@ -306,9 +320,24 @@ var Panel = React.createClass({
     this.setState({dirty: true, timespan: val, error, errorMessage});
     return false;
   },
+  
+  _setPopulation: function (clusterKey, groupKey) {
+    
+    var {config} = this.context;
+    var p;
 
-  _setPopulation: function (val) {
-    // Todo
+    if (!clusterKey && !groupKey) {
+      p = new population.Utility(config.utility.key, config.utility.name);
+    } else if (clusterKey && !groupKey) {
+      p = new population.Cluster(clusterKey);
+    } else if (!clusterKey && groupKey) {
+      p = new population.Group(groupKey);
+    } else {
+      p = new population.ClusterGroup(clusterKey, groupKey);
+    }
+
+    this.props.setPopulation(p);
+    this.setState({dirty: true});
     return false;
   },
 
@@ -325,17 +354,34 @@ var Panel = React.createClass({
   },
   
   // Helpers
+  
+  _markupHelp: function () {
+    
+    var {errorMessage, dirty} = this.state;
+    var paragraph;
+    
+    if (errorMessage) {
+      paragraph = (<p className="help text-danger">{errorMessage}</p>);
+    } else if (dirty) {
+      paragraph = (<p className="help text-info">Parameters have changed. Refresh to redraw data!</p>); 
+    } else {
+      paragraph = (<p className="help text-muted">Refresh to redraw data.</p>);
+    }
+    return paragraph;
+  },
+
 }); 
 
 var Chart = React.createClass({
   
   statics: {
     
+    nameTemplates: {
+      basic: _.template('<%= metric %> of <%= label %>'),
+      ranking: _.template('<%= ranking.type %>-<%= ranking.index + 1 %>'),
+    },
+   
     defaults: {
-      nameTemplates: {
-        'default': _.template('<%= metric %> of <%= label %>'),
-        'ranking': _.template('<%= ranking.type %>-<%= ranking.index + 1 %>'),
-      },
       xAxis: {
         dateformat: {
           'minute': 'HH:mm',
@@ -349,21 +395,17 @@ var Chart = React.createClass({
       }
     },
 
-    nameForSeries: function (s) {
-      return (this.defaults.nameTemplates[s.ranking? 'ranking' : 'default'])(s);
-    }
   }, 
 
-  propTypes: _.extend({}, propTypes, {
+  propTypes: _.extend({}, commonPropTypes, {
     width: PropTypes.number,
     height: PropTypes.number,
     series: PropTypes.arrayOf(PropTypes.shape({
-      label: PropTypes.string,
+      population: populationPropType,
       metric: PropTypes.string,
       source: PropTypes.string,
-      data: PropTypes.arrayOf(
-        PropTypes.arrayOf(PropTypes.number)
-      ),
+      ranking: PropTypes.object,
+      data: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
     })),
     finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     scaleTimeAxis: PropTypes.bool,
@@ -384,8 +426,7 @@ var Chart = React.createClass({
   },
 
   render: function () {
-    var cls = this.constructor;
-    var defaults = cls.defaults;
+    var {defaults} = this.constructor;
     var {field, level, reportName} = this.props;
     
     var {config} = this.context;
@@ -394,9 +435,11 @@ var Chart = React.createClass({
     var {title, unit} = _config.fields[field];
     
     var {xaxisData, series} = this._consolidateData();
+    
     xaxisData || (xaxisData = []);
+    
     series = (series || []).map(s => ({
-      name: cls.nameForSeries(s),
+      name: this._getNameForSeries(s),
       symbolSize: 0,
       smooth: true,
       data: s.data,
@@ -503,15 +546,33 @@ var Chart = React.createClass({
     
     return result;
   },
+
+  _getNameForSeries: function ({ranking, population: target, metric}) {
+    var {nameTemplates} = this.constructor;
+    var {config} = this.context;
+    
+    var label;
+    if (target instanceof population.Utility) {
+      // Use utility's friendly name
+      label = config.utility.name;
+    } else if (target instanceof population.ClusterGroup) {
+      // Use group's friendly name
+      label = config.utility.clusters
+        .find(c => (c.key == target.clusterKey))
+          .groups.find(g => (g.key == target.key)).name;
+    }
+
+    var tpl = (ranking)? nameTemplates.ranking : nameTemplates.basic;
+    return tpl({metric, label, ranking});
+  },
+  
 });
 
 var Info = React.createClass({
   
-  statics: {
-    
-  },
+  statics: {},
 
-  propTypes: _.extend({}, propTypes, {
+  propTypes: _.extend({}, commonPropTypes, {
     requested: PropTypes.number,
     finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     errors: PropTypes.arrayOf(PropTypes.string),
@@ -529,6 +590,12 @@ var Info = React.createClass({
   },
 
   shouldComponentUpdate: function (nextProps) {
+    if (
+      (nextProps.field != this.props.field) || 
+      (nextProps.level != this.props.level) ||
+      (nextProps.reportName != this.props.reportName)
+    )
+      return true;
     return _.isNumber(nextProps.finished);
   },
 
@@ -571,7 +638,8 @@ Panel = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
     var key = _state._computeKey(field, level, reportName); 
-    return !(key in _state)? {} : _.pick(_state[key], ['source', 'timespan']);
+    return !(key in _state)? {} : 
+      _.pick(_state[key], ['source', 'timespan', 'population']);
   }, 
   (dispatch, ownProps) => {
     var {field, level, reportName} = ownProps;
@@ -582,6 +650,8 @@ Panel = ReactRedux.connect(
         dispatch(actions.setSource(field, level, reportName, source))),
       setTimespan: (ts) => (
         dispatch(actions.setTimespan(field, level, reportName, ts))),
+      setPopulation: (p) => (
+        dispatch(actions.setPopulation(field, level, reportName, p))),
       refreshData: () => (
         dispatch(actions.refreshData(field, level, reportName))), 
     };
@@ -593,7 +663,8 @@ Chart = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
     var key = _state._computeKey(field, level, reportName); 
-    return !(key in _state)? {} : _.pick(_state[key], ['finished', 'series']);
+    return !(key in _state)? {} : 
+      _.pick(_state[key], ['finished', 'series']);
   },
   null
 )(Chart);
@@ -603,8 +674,8 @@ Info = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
     var key = _state._computeKey(field, level, reportName); 
-    return !(key in _state)? {} : _.pick(
-      _state[key], ['requested', 'finished', 'requests', 'errors', 'series']
+    return !(key in _state)? {} : 
+      _.pick(_state[key], ['requested', 'finished', 'requests', 'errors', 'series']
     );
   },
   null

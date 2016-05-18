@@ -17,12 +17,15 @@ module.exports = mirrorToPath({
       INITIALIZE: null,
       SET_SOURCE: null,
       SET_TIMESPAN: null,
+      SET_POPULATION: null,
       REQUEST_DATA: null,
       SET_DATA: null,
     },
 
     system: {
       INITIALIZE: null, 
+      REQUEST_DATA: null,
+      SET_DATA: null,
     },
   },
  

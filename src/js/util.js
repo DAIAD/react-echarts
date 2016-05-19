@@ -15,9 +15,9 @@ var delimiter = (step, delim) => (res, val, i) => (
 );
 
 // An array reducer that flattens input, possibly inserting a delimiting symbol
-var flattener = (delim) => (res, val) => (
+var flattener = (delim) => (res, val, i) => (
+  (delim != null && i > 0) && res.push(delim),
   res.push.apply(res, _.isArray(val)? val : [val]),
-  delim && res.push(delim),
   res
 );
 

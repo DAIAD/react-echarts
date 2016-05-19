@@ -272,15 +272,20 @@ var Chart = React.createClass({
           data: (names.length > L)? names.reduce(delimiter(L, ''), []) : names
         };
       } else if (_.isArray(legend)) {
-        legend = {...defaults.legend};
         // The layout is described as an array of names
         if (legend.every(v => _.isString(v))) {
           // Assume a flat array of series names
-          legend.data = (legend.length > L)? 
-            legend.reduce(delimiter(L, ''), []) : legend;
+          legend = {
+            ...defaults.legend,
+            data: (legend.length > L)? 
+              legend.reduce(delimiter(L, ''), []) : legend,
+          };
         } else {
           // Assume a nested array that explicitly describes layout (line breaks)
-          legend.data = legend.reduce(flattener(''), []);
+          legend = {
+            ...defaults.legend,
+            data: legend.reduce(flattener(''), []),
+          };
         }
       } else {
         legend = null;

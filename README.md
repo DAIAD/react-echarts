@@ -84,8 +84,12 @@ Properties for the status of plotted data:
 
 ```jsx
 <LineChart 
-    width='400px'
-    height='250px'
+    width='500px'
+    height='300px'
+    legend: {[
+        ['Athens', 'Thesalloniki'],
+        ['Herakleion'],
+    ]}
     xAxis={{
         numTicks: 5,
         data: ['Mo','Tu','We','Th','Fr','Sa','Su'],
@@ -108,6 +112,10 @@ Properties for the status of plotted data:
         {
             name: 'Thesalloniki',
             data: [5.0, 8.5, 13.5, 14.7, 16, 19, 21.5],
+        },
+        {
+            name: 'Herakleion',
+            data: [15.0, 18.5, 19.5, 24.7, 26, 29, 31.5],
         },
     ]}
 />

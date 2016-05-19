@@ -49,14 +49,15 @@ Properties for the chart (a simplified subset of those supported by ECharts):
 | `yAxis.numTicks` | No | `Number` | A hint for the number of ticks on y axis | `5` |
 | `yAxis.min` | No | `Number` | A maximum for displayed y values | `-100` |
 | `yAxis.max` | No | `Number` | A minimum for displayed y values | `+100` |
-| `grid.x` | No | Percentage (`String`) | See [ECharts - grid.x](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~grid.x) | `15%` | 
-| `grid.y` | No | Percentage (`String`) | See [ECharts - grid.y](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~grid.y) | `10%` | 
-| `grid.x2` | No | Percentage (`String`) | See [ECharts - grid.x2](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~grid.x2) | `15%` | 
-| `grid.y2` | No | Percentage (`String`) | See [ECharts - grid.y2](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~grid.y2) | `10%` | 
-| `color` | No | `Array` of `String` | A list of preferred colors | `['#C23531', '#2F4554']` |
+| `grid.x` | No | `String` or `Number` | See [ECharts - grid.x](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~grid.x) | `15%` | 
+| `grid.y` | No | `String` or `Number` | See [ECharts - grid.y](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~grid.y) | `10%` | 
+| `grid.x2` | No | `String` or `Number` | See [ECharts - grid.x2](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~grid.x2) | `15%` | 
+| `grid.y2` | No | `String` or `Number` | See [ECharts - grid.y2](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~grid.y2) | `10%` | 
+| `color` | No | `Array` of `String` | A palette of preferred colors | `['#C23531', '#2F4554']` |
 | `tooltip` | No | `Boolean` | Display tooltips for data points or marker points/lines | `true` |
 | `smooth` | No | `Boolean` | Smoothen lines for all series (spline interpolation) | `false` |
 | `lineWidth` | No | `Number` | The width (pixels) of all plotted lines | `2` |
+| `legend` | No | `Boolean` or `Array` | Display legend. If an array is supplied, then it can control the order and layout of items (a nested array generates a legend that wraps over multiple lines) | `true`, `[['A', 'B'], ['C', 'D']]`, `['A', 'C', 'D', 'B']`|
 
 The `series` property is an array that provides the actual data to be plotted:
 

@@ -1,16 +1,17 @@
 'use strict';
 
+var _ = require('lodash');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var echarts = require('echarts');
-var _ = require('lodash');
 var rgbcolor = require('rgbcolor');
+var sprintf = require('sprintf');
 
-const development = !(process.env.NODE_ENV == 'production');
+const develop = !(process.env.NODE_ENV == 'production');
 
 var PropTypes = React.PropTypes;
 
-var {randomString} = require('../util');
+var util = require('../util');
 var validators = require('../validators');
 
 // A ECharts-based chart implemented as a React portal component
@@ -19,22 +20,24 @@ var Chart = React.createClass({
   statics: {
     limits: {
       numSeries: 8, // per chart
+      numLegendItemsPerLine: 4,
     },
     defaults: {
       // Provide class-level defaults for props (simplified subset of ECharts options)
       // Note: This part feeds getDefaultProps() method needed for React.
       props: {
         grid: {
-          x: '12%', 
-          y: '10%', 
-          y2: '10%', 
+          x: '10%', 
+          y: '30', 
           x2: '8%',
+          y2: '30',
         },
         color: [
           '#C23531', '#2F4554', '#61A0A8', '#ECA63F', '#41B024', 
           '#DD4BCF', '#30EC9F', '#ECE030', '#ED2868', '#34B4F1',
         ],
         tooltip: true,
+        legend: true,
         xAxis: {
           numTicks: 10,
           boundaryGap: false,
@@ -45,8 +48,23 @@ var Chart = React.createClass({
         smooth: false, // override per-series
         lineWidth: 2,
       }, 
-      // Provide class-level fallbacks for ECharts chart options
+      // Provide class-level defaults for ECharts chart options
       options: {
+        legend: {
+          padding: 5,
+          itemHeight: 12,
+          itemGap: 6,
+          itemWidth: 35,
+          backgroundColor: '#FFF',
+          borderColor: '#CCC',
+          borderWidth: 0,
+          textStyle: {
+            fontSize: 11,
+            fontFamily: 'monospace', // needed only for vertical alignment
+          },
+          x: 'center',
+          y: 0,
+        },
         yAxis: {
           splitArea: {show: true},
           splitNumber: 5,
@@ -64,6 +82,7 @@ var Chart = React.createClass({
           textStyle: {fontSize: 10},
         },
         series: {
+          type: 'line',
           smooth: false,
           symbol: 'emptyCircle',
           symbolSize: 4,
@@ -81,22 +100,45 @@ var Chart = React.createClass({
 
     propsToOptions: function (props)
     {
-      // Build options for (ECharts) chart based on props passed to a component
-      return _.extend(
-        {}, 
+      // Build ECharts-specific options based on props passed to a component
+      
+      var opts = _.extend({}, 
         this.propsToAxisOptions(props),
         this.propsToTooltipOptions(props),
         this.propsToSeries(props)
       );
+      
+      // Perform a final pass to adjust options previously built
+      
+      opts = this.adjustOptions(opts);
+
+      return opts;
+    },
+    
+    adjustOptions: function (opts) {
+      // Note: This method modifies options in-place! 
+      
+      var {grid, legend} = opts;
+
+      // Adjust grid according to legend data
+       
+      if (legend.data) {
+        // Re-adjust grid.y according to number of line breaks in legend
+        let n = legend.data.filter(name => (name == '')).length;
+        grid.y = parseInt(grid.y) +
+          2 * legend.padding + (n + 1) * (legend.itemGap + legend.itemHeight);
+      }
+      
+      return opts
     },
     
     propsToAxisOptions: function (props)
     {
-      var defaults = this.defaults.options;
+      const defaults = this.defaults.options;
       return {
         animation: false,
         calculable: false,
-        grid: props.grid,
+        grid: {...props.grid},
         xAxis: [{
           name: props.xAxis.name, 
           type: props.xAxis.data? 'category' : 'value',
@@ -133,18 +175,14 @@ var Chart = React.createClass({
       if (!props.tooltip)
         return {tooltip: false};
       
-      var defaults = this.defaults;
-      var opts = _.extend({}, defaults.options.tooltip);
+      var {templates, options: defaultOptions} = this.defaults;
       
       var fx = props.xAxis.formatter || (x => x.toString());
       var fy = props.yAxis.formatter || (y => y.toString());
-      var markupForPoint = defaults.templates.pointTooltip;
-      var markupForValue = defaults.templates.valueTooltip;
-      
-      opts.formatter = (p) => {
+      var formatter = (p) => {
         if (_.isArray(p.value)) {
           // Tooltip for a point
-          return markupForPoint({
+          return templates.pointTooltip({
             seriesName: p.seriesName,
             x: fx(p.value[0]),
             y: fy(p.value[1]),
@@ -152,7 +190,7 @@ var Chart = React.createClass({
         } else {
           // Tooltip for a named value.
           // (a mark line or y value of a category chart)
-          return markupForValue({
+          return templates.valueTooltip({
             seriesName: p.seriesName,
             name: _.isNumber(p.name)? fx(p.name) : p.name,
             y: fy(p.value)
@@ -160,61 +198,116 @@ var Chart = React.createClass({
         } 
       }; 
       
-      return {tooltip: opts};
+      return {tooltip: {...defaultOptions.tooltip, formatter}};
     },
 
     propsToSeries: function (props)
     {
-      var defaults = this.defaults.options;
-      var N = this.limits.numSeries;
-      var series = props.series || [];
+      var {delimiter, flattener} = util;
+
+      const defaults = this.defaults.options;
+      const {numSeries: N, numLegendItemsPerLine: L} = this.limits;
       
-      series = (series.length > N)? series.slice(0, N) : series;
-      return {
-        legend: {data: series.map(y => y.name)},
-        series: series
-          .map((y, i) => {
-            var color = new rgbcolor(y.color || props.color[i]);
-            color.alpha = (y.fill == null)? 1.0 : y.fill;
-            var data = this._checkData(props, y.data);
-            return data? {
-              name: y.name,
-              type: 'line',
-              symbol: y.symbol || defaults.series.symbol,
-              symbolSize: (y.symbolSize == null)? (defaults.series.symbolSize) : (y.symbolSize),
-              smooth: (y.smooth == null)? 
-                ((props.smooth == null)? defaults.series.smooth : props.smooth) : (y.smooth), 
-              itemStyle: {
-                normal: {
-                  areaStyle: (y.fill == null)? null : {
-                    color: color.toRGBA(),
-                  },
-                  lineStyle: {
-                    width: (y.lineWidth == null)? (props.lineWidth) : (y.lineWidth),
-                    color: color.toRGB(),
-                  },
-                }
+      var {series, legend} = props;
+      
+      if (series == null) {
+        series = [];
+      } else if (series.length > N) {
+        console.warn(sprintf('Unable to plot more than %d series per chart', N));
+        series = series.slice(0, N);
+      }
+      
+      // Build series options
+
+      series = series.map((y, i) => {
+        var data = this._checkData(props.xAxis.data, y.data); 
+        if (!data)
+          return null;
+        
+        var color = new rgbcolor(y.color || props.color[i]);
+        color.alpha = (y.fill == null)? 1.0 : y.fill;
+        
+        return {
+          name: y.name,
+          type: defaults.series.type,
+          data,
+          symbol: y.symbol || defaults.series.symbol,
+          symbolSize: (y.symbolSize == null)? 
+            defaults.series.symbolSize : y.symbolSize,
+          smooth: (y.smooth == null)?
+            ((props.smooth == null)? defaults.series.smooth : props.smooth) : y.smooth,
+          itemStyle: {
+            normal: {
+              areaStyle: (y.fill == null)? null : {
+                color: color.toRGBA(),
               },
-              data: data,
-              markPoint: (y.mark && y.mark.points)? {
-                data: y.mark.points.map(y1 => ({name: y1.name, type: y1.type,})
-              )} : null,
-              markLine: (y.mark && y.mark.lines)? {
-                data: y.mark.lines.map(y1 => ({name: y1.name, type: y1.type, })
-              )} : null,
-            } : null; // return null if data is invalid
-        })
-        .filter(y => y), // omit malformed series (mapped to null)
-      };
+              lineStyle: {
+                width: (y.lineWidth == null)? (props.lineWidth) : (y.lineWidth),
+                color: color.toRGB(),
+              },
+            }
+          },
+          markPoint: !(y.mark && y.mark.points)? null : {
+            data: y.mark.points.map(y1 => ({name: y1.name, type: y1.type})
+          )},
+          markLine: !(y.mark && y.mark.lines)? null : {
+            data: y.mark.lines.map(y1 => ({name: y1.name, type: y1.type})
+          )},
+        };
+      });
+      
+      series = series.filter(y => y); //omit malformed series (mapped to null)
+
+      // Build legend options based on series.
+      // For readability, insert line breaks every L items.
+
+      if (legend === false) {
+        // Hide
+        legend = {show: false};
+      } else if (legend == null || legend === true) {
+        // By default, simply provide the names of all series.
+        let names = series.map(y => y.name);
+        legend = {
+          ...defaults.legend,
+          data: (names.length > L)? names.reduce(delimiter(L, ''), []) : names
+        };
+      } else if (_.isArray(legend)) {
+        // The layout is described as an array of names
+        if (legend.every(v => _.isString(v))) {
+          // Assume a flat array of series names
+          legend = {
+            ...defaults.legend,
+            data: (legend.length > L)? 
+              legend.reduce(delimiter(L, ''), []) : legend,
+          };
+        } else {
+          // Assume a nested array that explicitly describes layout (line breaks)
+          legend = {
+            ...defaults.legend,
+            data: legend.reduce(flattener(''), []),
+          };
+        }
+      } else {
+        legend = null;
+      }
+      
+      if (legend.data) {
+        // Format names to appear in a table layout (pad to maximum length)
+        let n = _.max(legend.data.map(name => name.length)); 
+        legend.formatter = (name) => (_.padEnd(name, n, ' '));
+      }
+
+      // Done
+      return {legend, series};
     },
     
-    _checkData: function (props, data)
+    _checkData: function (xaxisData, data)
     {
       // Check if supplied (series) data is according to x-axis type
-      if (props.xAxis.data) {
+      if (xaxisData) {
         // Expect array of numbers paired to x-axis data (aAxis.type=category)
         data = data.map(v => ((v == '-' || v == null)? null : Number(v)));
-        if (data.length != props.xAxis.data.length || data.some(v => isNaN(v)))
+        if (data.length != xaxisData.length || data.some(v => isNaN(v)))
           data = null; // invalidate the entire array
       } else {
         // Expect array of [x, y] pairs (xAxis.type=value)
@@ -250,7 +343,14 @@ var Chart = React.createClass({
     // Properties for various chart options:
     // This is a (simplified) subset of the options provided by ECharts
     theme: PropTypes.string,
-    loading: PropTypes.shape({text: PropTypes.string}),
+    legend: PropTypes.oneOfType([
+      PropTypes.bool, 
+      PropTypes.array, // as: ['A', 'B', 'C', 'D'] or [['A', 'B'], ['C', 'D']]
+    ]),
+    loading: PropTypes.oneOfType([
+      PropTypes.bool,
+      PropTypes.shape({text: PropTypes.string}),
+    ]),
     xAxis: PropTypes.shape({
       data: PropTypes.array,
       formatter: PropTypes.func,
@@ -344,7 +444,8 @@ var Chart = React.createClass({
 
   componentWillMount: function ()
   {
-    development && console.debug('About to mount <Chart>...');
+    var {randomString} = util;
+    develop && console.debug('About to mount <Chart>...');
     if (!this.props.id)
       this._id = (this.props.id)? 
         (this.props.id) : (this.props.prefix + '-' + randomString());
@@ -364,7 +465,7 @@ var Chart = React.createClass({
 
   componentWillReceiveProps: function (nextProps)
   {
-    development && console.debug('Received new props for <Chart>...')
+    develop && console.debug('Received new props for <Chart>...')
     this._redrawChart(nextProps);
   },
 
@@ -380,7 +481,7 @@ var Chart = React.createClass({
 
   render: function ()
   {
-    development && console.debug('Rendering <Chart>...');
+    develop && console.debug('Rendering <Chart>...');
     return (
       <div id={this._id}
         className={['portal', this.props.prefix].join(' ')}
@@ -414,7 +515,7 @@ var Chart = React.createClass({
     var cls = this.constructor;
     var options = null;
     
-    development && console.info('Redrawing <Chart> from nextProps...')
+    develop && console.info('Redrawing <Chart> from nextProps...')
     
     // Reset chart from received props
     options = cls.propsToOptions(nextProps);

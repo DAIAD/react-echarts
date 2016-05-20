@@ -31,8 +31,9 @@ var toOptionElement = ({value, text}) => (
   <option value={value} key={value}>{text}</option>
 );
 
-
+//
 // Presentational components
+//
 
 var Panel = React.createClass({
   
@@ -456,7 +457,7 @@ var Chart = React.createClass({
             height={this.props.height}
             loading={this.props.finished? null : {text: 'Loading data...'}}
             tooltip={false}
-            lineWidth={1}
+            lineWidth={2}
             xAxis={{
               data: xaxisData,
               boundaryGap: true, 
@@ -629,7 +630,9 @@ var Info = React.createClass({
   },
 });
 
+//
 // Container components
+//
 
 var actions = require('../actions/reports-measurements');
 

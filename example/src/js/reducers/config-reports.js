@@ -8,6 +8,7 @@ var initialState = {
     'day': {bucket: 'day', duration: [1, 'd']},
     'week': {bucket: 'isoweek', duration: [1, 'w']},
     'month': {bucket: 'month', duration: [1, 'M']},
+    'year': {bucket: 'year', duration: [1, 'Y']},
   },
   
   // Describe types of reports
@@ -65,8 +66,8 @@ var initialState = {
               metrics: ['AVERAGE'],
               consolidate: 'AVERAGE',
             },
-            'avg-daily-extrema': {
-              title: 'Extrema of daily consumption',
+            'avg-daily-peak': {
+              title: 'Peak of daily consumption',
               description: 'The weekly average of the daily min/max consumption',
               queryParams: {
                 time: {
@@ -124,6 +125,7 @@ var initialState = {
     system: {
       title: 'System Utilization',
       computeKey: (level, reportName) => ([level, reportName].join('/')),
+      
       levels: {
         'week': {
           name: 'week',

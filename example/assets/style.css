@@ -75,3 +75,55 @@ form.report-panel.form-inline .form-group {
   background-color: #fff;
   border: solid 1px silver;
 }
+
+.overview .panel .panel-title {
+  font-weight: bold;
+}
+
+.overview .panel-body h4 {
+  margin: 12px 0px;
+}
+
+div.measurement-value {
+  display: block;
+  float: left;
+  min-height: 6.5em;
+  min-width: 8em;
+  border-style: solid;
+  border-color: #ccc;
+  border-width: 0px 0px 0px 4px;
+  padding: 5px;
+  margin: 0px 10px 0px 0px;
+}
+
+div.measurement-value > .title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  padding: 5px 0px;
+}
+
+div.measurement-value > .current-value > .value,
+div.measurement-value > .current-value > .unit,
+div.measurement-value > .delta > .value, 
+div.measurement-value > .delta > .unit {
+  font-family: monospace;
+}
+
+div.measurement-value > .current-value .value, 
+div.measurement-value > .current-value .unit {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+div.measurement-value > .delta > .value,
+div.measurement-value > .delta > .unit {
+  font-size: 0.9rem;
+}
+
+div.measurement-value > .delta > .sign.negative {
+  color: #D8512D;
+}
+
+div.measurement-value > .delta > .sign.non-negative {
+  color: #169C4D;
+}

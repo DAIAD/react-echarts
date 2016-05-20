@@ -28,6 +28,10 @@
   top: 2px;
 }
 
+.panel-group .panel {
+  border-radius: 1px;
+}
+
 .form-group select {
   line-height: 1.25em;
   padding: 4px 7px;

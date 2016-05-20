@@ -8,25 +8,32 @@ var PropTypes = React.PropTypes;
 var {Nav, Navbar, NavItem, NavDropdown, MenuItem} = ReactBootstrap;
 var {Router, Route, IndexRoute, Link, hashHistory} = ReactRouter;
 
+var _configPropType = PropTypes.shape({
+  utility: PropTypes.object,
+  reports: PropTypes.object,
+});
+
+//
 // Presentational components
+//
 
 var RootMenu = React.createClass({
-  render: function ()
-  {
-     return (
+  render: function () {
+    return (
       <div>
         <Navbar>
           <Navbar.Header>
             <Navbar.Brand><a href="#">Utility Reports</a></Navbar.Brand>
           </Navbar.Header>
           <Nav activeHref={'#' + this.props.location.pathname}>
-            <NavDropdown title={'Water Consumption'} id="nav-dropdown-reports-water">
+            <NavItem href="#/overview">Overview</NavItem>
+            <NavDropdown title={'Analytics'} id="nav-dropdown-reports-water">
               <MenuItem header>Report over week</MenuItem>
               <MenuItem href="#/reports/measurements/volume/week/avg-daily-avg">
                 Average of daily consumption
               </MenuItem> 
-              <MenuItem href="#/reports/measurements/volume/week/avg-daily-extrema">
-                Extrema of daily consumption
+              <MenuItem href="#/reports/measurements/volume/week/avg-daily-peak">
+                Peak of daily consumption
               </MenuItem> 
               <MenuItem href="#/reports/measurements/volume/week/top-3">
                 Top consumers
@@ -67,10 +74,7 @@ var AboutPage = ({}) => (
 var MeasurementReportsPage = React.createClass({
   
   propTypes: {
-    config: PropTypes.shape({
-      utility: PropTypes.object,
-      reports: PropTypes.object,
-    }),
+    config: _configPropType,
     params: PropTypes.shape({
       field: PropTypes.string,
       level: PropTypes.string,
@@ -79,10 +83,7 @@ var MeasurementReportsPage = React.createClass({
   },
   
   childContextTypes: {
-    config: PropTypes.shape({
-      utility: PropTypes.object,
-      reports: PropTypes.object,
-    }),
+    config: _configPropType, 
   },
 
   getChildContext: function() {
@@ -121,17 +122,26 @@ var MeasurementReportsPage = React.createClass({
 var SystemReportsPage = React.createClass({
   
   propTypes: {
+    config: _configPropType,
     params: PropTypes.shape({
       level: PropTypes.string,
       reportName: PropTypes.string,
     }),
   },
+  
+  childContextTypes: {
+    config: _configPropType, 
+  },
+
+  getChildContext: function() {
+    return {config: this.props.config};
+  },
 
   render: function () {
-    var {level, reportName} = this.props.params;
+    var {config, params: {level, reportName}} = this.props; 
     
-    return (<div>Loading configuration...</div>);
-    /*
+    var _config = config.reports.byType.system; 
+   
     var heading = (
       <h3>
         {_config.title} 
@@ -145,30 +155,62 @@ var SystemReportsPage = React.createClass({
     return (
       <div className="reports reports-system">
         {heading}
-        <em>Todo</em>
+        <ul>
+          <li><em>Todo</em>:
+          {'Avg time (days) between 2 consecutive data transmissions of participants'}</li>
+          <li><em>Todo</em>:
+          {'Max time (days) between 2 consecutive data transmissions (Top 10 participants)'}</li>
+        </ul>
       </div>
     );
-    */
   },
 });
 
-// Container components
+var OverviewPage = React.createClass({
+  
+  propTypes: {
+    config: _configPropType,
+  },
+ 
+  childContextTypes: {
+    config: _configPropType, 
+  },
 
-MeasurementReportsPage = ReactRedux.connect(
-  (state, ownProps) => ({
-    config: state.config,
-  }),
-  null
-)(MeasurementReportsPage); 
+  getChildContext: function() {
+    return {config: this.props.config};
+  },
+ 
+  render: function () { 
+    var {Overview} = require('./overview');
+    
+    var heading = 'Overview' 
+    return (
+      <div className="overview">
+        <h3>{heading}</h3>
+        <Overview />
+      </div>
+    );
+  },
+});
 
-SystemReportsPage = ReactRedux.connect(
-  (state, ownProps) => ({
-    config: state.config,
-  }),
-  null
-)(SystemReportsPage); 
+//
+// Container components:
+//
 
+// Inject global configuration to basic page components
+var injectConfigToProps = (state, ownProps) => ({
+  config: state.config,
+});
+
+MeasurementReportsPage = ReactRedux.connect(injectConfigToProps, null)(MeasurementReportsPage); 
+
+SystemReportsPage = ReactRedux.connect(injectConfigToProps, null)(SystemReportsPage); 
+
+OverviewPage = ReactRedux.connect(injectConfigToProps, null)(OverviewPage); 
+
+//
 // Root
+//
 
 var Root = React.createClass({  
   render: function () {
@@ -177,6 +219,7 @@ var Root = React.createClass({
         <Route path="/" component={RootMenu}>
           <IndexRoute component={HomePage} />
           <Route path="about" component={AboutPage} />
+          <Route path="overview" component={OverviewPage} />
           <Route 
             path="reports/measurements/:field/:level/:reportName"
             component={MeasurementReportsPage} 

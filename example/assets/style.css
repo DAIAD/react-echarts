@@ -1,6 +1,10 @@
 @import url(bootstrap.css);
 @import url(react-datetime.css);
 
+h2 {
+  margin: 12px 0px
+}
+
 /* Charts/Panels */
 
 div.stats-page {
@@ -70,8 +74,8 @@ form.report-panel.form-inline .form-group {
 }
 
 .chart.portal {
-  margin: 5px 0px;
-  padding: 5px 0px;
+  margin: 0px 0px;
+  padding: 0px 0px;
   background-color: #fff;
   border: solid 1px silver;
 }
@@ -85,45 +89,84 @@ form.report-panel.form-inline .form-group {
 }
 
 div.measurement-value {
+  display: inline-block;
+  border-style: solid;
+  border-color: rgb(191, 212, 222);
+  border-width: 1px 1px 1px 5px;
+}
+
+div.measurement-value > .wrapper {
+  padding: 0px 0px;
+  min-height: 150px;
+  min-width: 11em;
+}
+
+div.measurement-value .title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  padding: 8px 5px 8px 5px;
+  border-color: rgb(191, 212, 222);
+  border-width: 0px 0px 1px 0px;
+  border-style: solid;
+}
+
+div.measurement-value .subtitle {
+  font-size: 1.2rem;
+  padding: 9px 5px 0px 5px;
+}
+
+div.measurement-value .current-value > .value,
+div.measurement-value .current-value > .unit,
+div.measurement-value .delta > .value, 
+div.measurement-value .delta > .unit {
+  font-family: 'Inconsolata', monospace;
+  /*font-family: monospace;*/
+}
+
+div.measurement-value .current-value {
+  padding: 0px 5px 0px 5px; 
+}
+
+div.measurement-value .current-value .value { 
+  font-size: 3.3rem;
+  font-weight: normal;
+}
+
+div.measurement-value .current-value .unit {
+  font-size: 2rem;
+}
+
+div.measurement-value .delta { 
+  position: relative;
+  top: -5px;
+  padding: 0px 5px 0px 5px; 
+  font-size: 1.4rem;
+  color: #545E63;
+}
+
+div.measurement-value .delta > .value,
+div.measurement-value .delta > .unit {
+  vertical-align: baseline; 
+}
+div.measurement-value .delta > .unit {
+  font-size: 1rem;
+}
+
+div.measurement-value .delta > .sign {
+  vertical-align: text-top; 
+}
+
+.overview-utility .level > .measurement-value,
+.overview-utility .level > .chart {
   display: block;
   float: left;
-  min-height: 6.5em;
-  min-width: 8em;
   border-style: solid;
-  border-color: #ccc;
-  border-width: 0px 0px 0px 4px;
-  padding: 5px;
-  margin: 0px 10px 0px 0px;
+  border-color: rgb(191, 212, 222);
+  border-width: 1px 1px 1px 5px;
+  margin: 0px 8px 0px 0px;
 }
 
-div.measurement-value > .title {
-  font-size: 1.4rem;
-  font-weight: bold;
-  padding: 5px 0px;
-}
-
-div.measurement-value > .current-value > .value,
-div.measurement-value > .current-value > .unit,
-div.measurement-value > .delta > .value, 
-div.measurement-value > .delta > .unit {
-  font-family: monospace;
-}
-
-div.measurement-value > .current-value .value, 
-div.measurement-value > .current-value .unit {
-  font-size: 1.3rem;
-  font-weight: bold;
-}
-
-div.measurement-value > .delta > .value,
-div.measurement-value > .delta > .unit {
-  font-size: 0.9rem;
-}
-
-div.measurement-value > .delta > .sign.negative {
-  color: #D8512D;
-}
-
-div.measurement-value > .delta > .sign.non-negative {
-  color: #169C4D;
+.overview-utility .level > .chart {
+  width: 455px;
+  height: 230px;
 }

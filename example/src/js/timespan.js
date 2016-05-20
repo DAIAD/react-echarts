@@ -53,6 +53,10 @@ TimeSpan.common = new Map([
     title: 'Last 24 hours',
     getArgs: () => ([moment(), -1, 'day']),
   }],
+  ['day-2', {
+    title: 'Last 48 hours',
+    getArgs: () => ([moment(), -2, 'day']),
+  }],
   ['week', {
     title: 'This week',
     getArgs: () => ([moment().startOf('isoweek'), +1, 'week']),

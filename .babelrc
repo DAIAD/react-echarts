@@ -3,7 +3,14 @@
     "es2015",
     "stage-2",
     "react", // transform JSX 
-  ]
+  ],
+  plugins: [
+    ["transform-regenerator", {
+       asyncGenerators: false, // true by default
+       generators: false, // true by default
+       async: false // true by default
+    }],
+  ],  
 }
 
 

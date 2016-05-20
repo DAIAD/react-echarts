@@ -3,6 +3,7 @@
 var _ = require('lodash');
 
 var ActionTypes = require('../action-types');
+var reports = require('../reports');
 
 var assertInitialized = (r, key) => (
   console.assert(_.isObject(r), 
@@ -20,7 +21,7 @@ var reduce = function (state={}, action) {
   if (level == null || reportName == null)
     return state; // malformed action; dont touch state
 
-  var key = state._computeKey(level, reportName);
+  var key = reports.system.computeKey(level, reportName);
   var r = null; 
   if (key in state) {
     // Clone existing state for (level, reportName)

@@ -1,3 +1,6 @@
+'use strict';
+
+var moment = require('moment');
 var React = require('react');
 var ReactBootstrap = require('react-bootstrap');
 var ReactRouter = require('react-router');
@@ -26,28 +29,26 @@ var RootMenu = React.createClass({
             <Navbar.Brand><a href="#">Utility Reports</a></Navbar.Brand>
           </Navbar.Header>
           <Nav activeHref={'#' + this.props.location.pathname}>
-            <NavItem href="#/overview">Overview</NavItem>
-            <NavDropdown title={'Analytics'} id="nav-dropdown-reports-water">
+            <NavDropdown title="Overview" id="nav-dropdown-overview">
+              <MenuItem href="#/overview/utility">Utility</MenuItem>
+              <MenuItem href="#/overview/per-efficiency">Per customer efficiency</MenuItem>
+              <MenuItem href="#/overview/per-household-members">Per household members</MenuItem>
+              <MenuItem href="#/overview/per-household-size">Per household size</MenuItem>
+              <MenuItem href="#/overview/per-income">Per income</MenuItem>
+            </NavDropdown>
+            <NavDropdown title="Analytics" id="nav-dropdown-reports-measurements">
               <MenuItem header>Report over week</MenuItem>
-              <MenuItem href="#/reports/measurements/volume/week/avg-daily-avg">
-                Average of daily consumption
-              </MenuItem> 
-              <MenuItem href="#/reports/measurements/volume/week/avg-daily-peak">
-                Peak of daily consumption
-              </MenuItem> 
-              <MenuItem href="#/reports/measurements/volume/week/top-3">
-                Top consumers
-              </MenuItem> 
+              <MenuItem href="#/reports/measurements/volume/week/weekly-avg">Average of weekly consumption</MenuItem> 
+              <MenuItem href="#/reports/measurements/volume/week/avg-daily-avg">Average of daily consumption</MenuItem> 
+              <MenuItem href="#/reports/measurements/volume/week/avg-daily-peak">Peak of daily consumption</MenuItem> 
+              <MenuItem href="#/reports/measurements/volume/week/top-k">Top consumers</MenuItem> 
               <MenuItem divider></MenuItem>
               <MenuItem header>Report over month</MenuItem>
-              <MenuItem href="#/reports/measurements/volume/month/avg-daily-avg" disabled>
-                Average of daily consumption
-              </MenuItem> 
+              <MenuItem href="#/reports/measurements/volume/month/avg-daily-avg" disabled>Average of daily consumption</MenuItem> 
             </NavDropdown>
-            <NavDropdown title={'System Utilization'} id="nav-dropdown-system-utilization">
-              <MenuItem href="#/reports/system/week/data-transmission">
-                Data Transmission
-              </MenuItem> 
+            <NavDropdown title="System Utilization" id="nav-dropdown-system-utilization">
+              <MenuItem header>Report over week</MenuItem>
+              <MenuItem href="#/reports/system/week/data-transmission">Data Transmission</MenuItem>
             </NavDropdown>
             <NavItem href="#/about">About</NavItem>
           </Nav>
@@ -62,13 +63,13 @@ var RootMenu = React.createClass({
 
 var HomePage = ({}) => (
   <div>
-    <h3>Utility reports</h3>
+    <h2>Utility reports</h2>
     <p>See <a href="//github.com/DAIAD/react-echarts.git">DAIAD/react-echarts</a></p>
   </div>
 );
 
 var AboutPage = ({}) => (
-  <div><h3>About</h3><p>This is about</p></div>
+  <div><h2>About</h2><p>This is about</p></div>
 );
 
 var MeasurementReportsPage = React.createClass({
@@ -91,22 +92,20 @@ var MeasurementReportsPage = React.createClass({
   },
 
   render: function () {
-    var {Panel, Chart, Info} = require('./reports-measurements');
-    
+    var {Panel, Chart, Info} = require('./reports-measurements/pane');
+ 
     var {config, params: {field, level, reportName}} = this.props; 
-    
     var _config = config.reports.byType.measurements; 
     
     var heading = (
-      <h3>
+      <h2>
         {_config.fields[field].title}
         <span className="delimiter">&nbsp;/&nbsp;</span>
         {_config.levels[level].title}
         <span className="delimiter">&nbsp;/&nbsp;</span>
         {_config.levels[level].reports[reportName].title}
-      </h3>
+      </h2>
     );
-    
     return (
       <div className="reports reports-measurements">
         {heading}
@@ -139,28 +138,30 @@ var SystemReportsPage = React.createClass({
 
   render: function () {
     var {config, params: {level, reportName}} = this.props; 
-    
     var _config = config.reports.byType.system; 
    
     var heading = (
-      <h3>
+      <h2>
         {_config.title} 
         <span className="delimiter">&nbsp;/&nbsp;</span>
         {_config.levels[level].title}
         <span className="delimiter">&nbsp;/&nbsp;</span>
         {_config.levels[level].reports[reportName].title}
-      </h3>
+      </h2>
     );
-   
+    
+    var Report;
+    switch (reportName) {
+      case 'data-transmission':
+      default:
+        Report = require('./reports-system/data-transmission').Report;
+        break;
+    }
+
     return (
       <div className="reports reports-system">
         {heading}
-        <ul>
-          <li><em>Todo</em>:
-          {'Avg time (days) between 2 consecutive data transmissions of participants'}</li>
-          <li><em>Todo</em>:
-          {'Max time (days) between 2 consecutive data transmissions (Top 10 participants)'}</li>
-        </ul>
+        <Report level={level} reportName={reportName} />
       </div>
     );
   },
@@ -181,13 +182,46 @@ var OverviewPage = React.createClass({
   },
  
   render: function () { 
-    var {Overview} = require('./overview');
+    var overview = require('./reports-measurements/overview');
+    var {config, params: {section}, location: {query: q}} = this.props; 
     
-    var heading = 'Overview' 
+    var startAt = Number(q.start); 
+    startAt = _.isNaN(startAt)? moment().valueOf() : startAt;
+
+    var body;
+    switch (section) {
+      case 'utility':
+      default:
+        body = (<overview.UtilityView startAt={startAt} />);
+        break;
+      case 'per-efficiency':
+        body = (<overview.GroupPerEfficiencyView startAt={startAt} />);
+        break;
+      case 'per-household-size':
+        body = (<overview.GroupPerSizeView startAt={startAt} />);
+        break;
+      case 'per-household-members':
+        body = (<overview.GroupPerMembersView startAt={startAt} />);
+        break;
+      case 'per-income':
+        body = (<overview.GroupPerIncomeView startAt={startAt} />);
+        break;
+    }
+  
+    var heading = (
+       <h2>
+        {'Overview'}
+        <span className="delimiter">&nbsp;/&nbsp;</span>
+        {'Water Consumption'}
+        <span className="delimiter">&nbsp;/&nbsp;</span>
+        {config.overview.sections[section].title}
+      </h2>
+    );
+
     return (
       <div className="overview">
-        <h3>{heading}</h3>
-        <Overview />
+        {heading}
+        {body}
       </div>
     );
   },
@@ -219,7 +253,10 @@ var Root = React.createClass({
         <Route path="/" component={RootMenu}>
           <IndexRoute component={HomePage} />
           <Route path="about" component={AboutPage} />
-          <Route path="overview" component={OverviewPage} />
+          <Route 
+            path="overview/:section" 
+            component={OverviewPage} 
+           />
           <Route 
             path="reports/measurements/:field/:level/:reportName"
             component={MeasurementReportsPage} 

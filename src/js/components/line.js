@@ -238,6 +238,7 @@ var Chart = React.createClass({
             ((props.smooth == null)? defaults.series.smooth : props.smooth) : y.smooth,
           itemStyle: {
             normal: {
+              color: color.toRGB(),
               areaStyle: (y.fill == null)? null : {
                 color: color.toRGBA(),
               },

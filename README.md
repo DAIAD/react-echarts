@@ -41,6 +41,7 @@ Properties for the chart (a simplified subset of those supported by ECharts):
 | ---- | -------- | ---- | ----------- | --------|
 | `xAxis.data` | No | `array` | An array of distinct (aka `category`) values that `x` can take | `['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']` |
 | `xAxis.formatter` | No | `(x)=>(<String>)` | Formatter callback for x values | `(x)=>(x.toString() + 'Km')` |
+| `xAxis.labels` | No | {`auto`, `formatted`, `all`} | The way to decide if a label should be generated on the axis. If `formatted`, then we only generate labels that supply a non-empty formatted string (by `xAxis.formatter`) | `auto` |
 | `xAxis.numTicks` | No | `Number` | A hint for the number of ticks on X axis | `5` |
 | `xAxis.boundaryGap` | No | `Boolean` | Add a gap between min/max x value and axis boundaries | `false` |
 | `xAxis.min` | No | `Number` | A maximum for displayed x values (meaningless if `xAxis.data` is supplied) | `0` |

@@ -41,6 +41,7 @@ var Chart = React.createClass({
         xAxis: {
           numTicks: 10,
           boundaryGap: false,
+          labels: 'auto',
         },
         yAxis: {
           numTicks: 5,
@@ -135,20 +136,47 @@ var Chart = React.createClass({
     propsToAxisOptions: function (props)
     {
       const defaults = this.defaults.options;
+       
+      var axisType = props.xAxis.data? 'category' : 'value';
+      
+      // A function to decide if a label should be placed on an axis
+      var filterForLabel = ({labels, formatter}) => {
+        var filter;
+        switch (labels) {
+          default:
+          case 'auto':
+            filter = 'auto';
+            break;
+          case 'all':
+            filter = false;
+          case 'formatted':
+            if (!_.isFunction(formatter))
+              filter = 'auto';
+            else
+              filter = (i, x) => (formatter(x, i) != null);
+        }
+        return filter;
+      }; 
+
       return {
         animation: false,
         calculable: false,
         grid: {...props.grid},
         xAxis: [{
           name: props.xAxis.name, 
-          type: props.xAxis.data? 'category' : 'value',
+          type: axisType,
           boundaryGap: (props.xAxis.boundaryGap == null)? 
             defaults.xAxis.boundaryGap : props.xAxis.boundaryGap,
           data: props.xAxis.data,
-          splitNumber: props.xAxis.data? null : ((props.xAxis.numTicks == null)? 
-            defaults.xAxis.splitNumber : props.xAxis.numTicks),
+          splitNumber: (axisType == 'category')? null : (
+            (props.xAxis.numTicks == null)? defaults.xAxis.splitNumber : props.xAxis.numTicks),
+          axisTick: {
+            show: true,
+            interval: 'auto',
+          },
           axisLabel: {
-            formatter: props.xAxis.formatter
+            formatter: props.xAxis.formatter,
+            interval: (axisType == 'value')? null : filterForLabel(props.xAxis),
           },
           scale: defaults.xAxis.scale,
           min: props.xAxis.min, 

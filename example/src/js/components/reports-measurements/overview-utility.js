@@ -571,12 +571,8 @@ class _MonthView extends _View {
             formatter: (t) => (moment(t).format('D MMM')),
           },
           comparison: {
-            labels: 'formatted',
-            formatter: (t, i) => {
-              var m = moment(t);
-              // Supply a non-empty label every 5 items
-              return (i % 5 == 0) ? m.format('D') : undefined;
-            },
+            labelFilter: (i, t) => (i % 5 == 0), // place every 5 items
+            formatter: (t, i) => (moment(t).format('D')),
           },
         },
       },

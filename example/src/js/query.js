@@ -86,7 +86,8 @@ var queryMeasurements = function (source, field, q, config={}) {
             data: points.map(p => ([p.timestamp, p.values[i] || null])),
           }));
         } else {   
-          // Shape a normal timerseries result for requested metrics
+          // Shape a normal timeseries result for requested metrics
+          // Todo support other metrics (as client-side "average")
           return q.metrics.map(metric => ({
             ...params,
             metric,

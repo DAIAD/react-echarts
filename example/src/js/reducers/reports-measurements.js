@@ -3,6 +3,7 @@
 var _ = require('lodash');
 
 var ActionTypes = require('../action-types');
+var reports = require('../reports');
 
 var assertInitialized = (state, key) => (
   console.assert(_.isObject(state[key]), 
@@ -15,11 +16,11 @@ var reduce = function (state={}, action) {
   if (!type)
     return state; // not interested
 
-  var {field, level, reportName} = action;
-  if (field == null || level == null || reportName == null)
+  var {field, level, reportName, key} = action;
+  if (field == null || level == null || reportName == null || key == null)
     return state; // malformed action; dont touch state
-
-  var key = state._computeKey(field, level, reportName);
+  key = reports.measurements.computeKey(field, level, reportName, key);
+  
   var r = null; // updated entry for key
   switch (type) {
     case 'INITIALIZE':
@@ -28,7 +29,7 @@ var reduce = function (state={}, action) {
       if (!(key in state)) {
         // Not initialized; make a new entry
         r = {
-          source: 'meter',  // as default
+          source: action.source || 'meter',
           timespan: action.timespan || 'week',
           population: action.population,
           series: null,

@@ -10,11 +10,14 @@ var DatetimeInput = require('react-datetime');
 
 var Select = require('react-controls/select-dropdown');
 
-var echarts = require('./react-echarts');
-var Granularity = require('../granularity');
-var TimeSpan = require('../timespan');
-var population = require('../population');
-var consolidateFn = require('../consolidate');
+var Granularity = require('../../granularity');
+var TimeSpan = require('../../timespan');
+var population = require('../../population');
+var reports = require('../../reports');
+var consolidateFn = require('../../consolidate');
+var {timespanPropType, populationPropType, seriesPropType} = require('../../prop-types');
+
+var echarts = require('../react-echarts');
 
 var PropTypes = React.PropTypes;
 var commonPropTypes = { 
@@ -22,17 +25,18 @@ var commonPropTypes = {
   level: PropTypes.string,
   reportName: PropTypes.string,
 };
-var populationPropType = PropTypes.oneOfType([
-  PropTypes.instanceOf(population.Group),
-  PropTypes.instanceOf(population.Cluster),
-]);
 
 var toOptionElement = ({value, text}) => (
   <option value={value} key={value}>{text}</option>
 );
 
+var {computeKey} = reports.measurements;
 
+const REPORT_KEY = 'pane';
+
+//
 // Presentational components
+//
 
 var Panel = React.createClass({
   
@@ -105,18 +109,12 @@ var Panel = React.createClass({
 
   },
   
-  propTypes: _.extend({}, commonPropTypes, {
+  propTypes: {
+    ...commonPropTypes,
     source: PropTypes.oneOf(['meter', 'device']),
-    timespan: PropTypes.oneOfType([
-      PropTypes.oneOf(TimeSpan.commonNames()),
-      (props, propName, componentName) => ( 
-        (PropTypes.arrayOf(PropTypes.number)(props, propName, componentName)) ||
-        ((props[propName].length == 2)? null : (
-          new Error(propName + ' should be an array of length 2')))
-      ),
-    ]),
+    timespan: timespanPropType,
     population: populationPropType,
-  }),
+  },
 
   contextTypes: {
     config: PropTypes.object,
@@ -397,19 +395,14 @@ var Chart = React.createClass({
 
   }, 
 
-  propTypes: _.extend({}, commonPropTypes, {
+  propTypes: {
+    ...commonPropTypes,
     width: PropTypes.number,
     height: PropTypes.number,
-    series: PropTypes.arrayOf(PropTypes.shape({
-      population: populationPropType,
-      metric: PropTypes.string,
-      source: PropTypes.string,
-      ranking: PropTypes.object,
-      data: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-    })),
+    series: PropTypes.arrayOf(seriesPropType),
     finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     scaleTimeAxis: PropTypes.bool,
-  }), 
+  }, 
   
   contextTypes: {
     config: PropTypes.object,
@@ -441,7 +434,7 @@ var Chart = React.createClass({
     series = (series || []).map(s => ({
       name: this._getNameForSeries(s),
       symbolSize: 0,
-      smooth: true,
+      smooth: false,
       data: s.data,
     }));
 
@@ -456,7 +449,7 @@ var Chart = React.createClass({
             height={this.props.height}
             loading={this.props.finished? null : {text: 'Loading data...'}}
             tooltip={false}
-            lineWidth={1}
+            lineWidth={2}
             xAxis={{
               data: xaxisData,
               boundaryGap: true, 
@@ -572,7 +565,8 @@ var Info = React.createClass({
   
   statics: {},
 
-  propTypes: _.extend({}, commonPropTypes, {
+  propTypes: {
+    ...commonPropTypes,
     requested: PropTypes.number,
     finished: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
     errors: PropTypes.arrayOf(PropTypes.string),
@@ -580,7 +574,7 @@ var Info = React.createClass({
       data: PropTypes.array,
     })),
     requests: PropTypes.number,
-  }),
+  },
   
   getDefaultProps: function () {
     return {
@@ -629,15 +623,17 @@ var Info = React.createClass({
   },
 });
 
+//
 // Container components
+//
 
-var actions = require('../actions/reports-measurements');
+var actions = require('../../actions/reports-measurements');
 
 Panel = ReactRedux.connect(
   (state, ownProps) => {
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
-    var key = _state._computeKey(field, level, reportName); 
+    var key = computeKey(field, level, reportName, REPORT_KEY); 
     return !(key in _state)? {} : 
       _.pick(_state[key], ['source', 'timespan', 'population']);
   }, 
@@ -645,15 +641,15 @@ Panel = ReactRedux.connect(
     var {field, level, reportName} = ownProps;
     return {
       initializeReport: (defaults) => (
-        dispatch(actions.initialize(field, level, reportName, defaults))),
+        dispatch(actions.initialize(field, level, reportName, REPORT_KEY, defaults))),
       setSource: (source) => (
-        dispatch(actions.setSource(field, level, reportName, source))),
+        dispatch(actions.setSource(field, level, reportName, REPORT_KEY, source))),
       setTimespan: (ts) => (
-        dispatch(actions.setTimespan(field, level, reportName, ts))),
+        dispatch(actions.setTimespan(field, level, reportName, REPORT_KEY, ts))),
       setPopulation: (p) => (
-        dispatch(actions.setPopulation(field, level, reportName, p))),
+        dispatch(actions.setPopulation(field, level, reportName, REPORT_KEY, p))),
       refreshData: () => (
-        dispatch(actions.refreshData(field, level, reportName))), 
+        dispatch(actions.refreshData(field, level, reportName, REPORT_KEY))),
     };
   }
 )(Panel);
@@ -662,7 +658,7 @@ Chart = ReactRedux.connect(
   (state, ownProps) => {
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
-    var key = _state._computeKey(field, level, reportName); 
+    var key = computeKey(field, level, reportName, REPORT_KEY); 
     return !(key in _state)? {} : 
       _.pick(_state[key], ['finished', 'series']);
   },
@@ -673,7 +669,7 @@ Info = ReactRedux.connect(
   (state, ownProps) => {
     var {field, level, reportName} = ownProps;
     var _state = state.reports.measurements;
-    var key = _state._computeKey(field, level, reportName); 
+    var key = computeKey(field, level, reportName, REPORT_KEY);
     return !(key in _state)? {} : 
       _.pick(_state[key], ['requested', 'finished', 'requests', 'errors', 'series']
     );

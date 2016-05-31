@@ -10,7 +10,7 @@ var logger = require('morgan');
 var reqparser = require('body-parser');
 
 var makeApiProxy = function (options) {
-  var {apiUrl, credentials, utility} = options;
+  var {apiUrl, credentials, timezone, utility} = options;
   
   return {
     queryMeasurements: function (query) {
@@ -21,7 +21,7 @@ var makeApiProxy = function (options) {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({credentials, query}),
+        body: JSON.stringify({credentials, timezone, query}),
       });
       
       return p.then(res => (res.json()), res => (undefined));
@@ -81,14 +81,14 @@ var makeApp = function (config) {
     var granularity = Granularity.fromName(q.time.granularity.toLowerCase());
     if (granularity == null) {
       res.json({
-        errors: [sprintf('No such granularity: %s', q.granularity)
+        errors: [sprintf('No such granularity: %s', q.time.granularity)
       ]
       });
     } else if (granularity.valueOf() > dt) {
       res.json({
         errors: [
           sprintf('Too narrow timespan (%s) for given granularity (%s)',
-            moment.duration(dt).humanize(), q.granularity)
+            moment.duration(dt).humanize(), q.time.granularity)
         ],
       });
     } else {

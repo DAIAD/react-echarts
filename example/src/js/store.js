@@ -8,11 +8,11 @@ var initialState = {
   config: {
     utility: {},
     reports: {},
+    overview: {},
   },
   reports: {
     measurements: {
-      _computeKey: (field, level, reportName) => ([field, level, reportName].join('/')),
-      // "<field>/<level>/<reportName>": {
+      // "<field>/<level>/<reportName>/<key1>(/<key2>)*": {
       //   timespan,
       //   source,     // source of measurements, i.e 'meter' or 'device'
       //   population, // target (instance of population.Group or population.Cluster)
@@ -25,7 +25,6 @@ var initialState = {
       // }
     },
     system: {
-      _computeKey: (level, reportName) => ([level, reportName].join('/')),
       // "<level>/<reportName>": {
       //   source,
       //   timespan,
@@ -37,7 +36,7 @@ var initialState = {
       //   errors,
       // }
     },
-  }
+  },
 };
 
 var middleware = [

@@ -5,8 +5,11 @@ var sprintf = require('sprintf');
 
 var ActionTypes = require('../action-types');
 var TimeSpan = require('../timespan');
+var reports = require('../reports');
 var population = require('../population');
 var {queryMeasurements} = require('../query');
+
+var {computeKey} = reports.measurements;
 
 // Define actions
 
@@ -14,68 +17,76 @@ var actions = {
 
   // Plain actions
   
-  initialize: (field, level, reportName, defaults) => ({
+  initialize: (field, level, reportName, key, defaults) => ({
     type: ActionTypes.reports.measurements.INITIALIZE,
     field,
     level,
     reportName,
+    key,
+    source: defaults.source,
     timespan: defaults.timespan,
     population: defaults.population,
   }),
   
-  requestData: (field, level, reportName, t=null) => ({
+  requestData: (field, level, reportName, key, t=null) => ({
     type: ActionTypes.reports.measurements.REQUEST_DATA,
     field,
     level,
     reportName,
+    key,
     timestamp: (t || new Date()).getTime(),
   }),
   
-  setData: (field, level, reportName, data, t=null) => ({
+  setData: (field, level, reportName, key, data, t=null) => ({
     type: ActionTypes.reports.measurements.SET_DATA,
     field,
     level,
     reportName,
+    key,
     data,
     timestamp: (t || new Date()).getTime(),
   }),
 
-  setDataError: (field, level, reportName, errors, t=null) => ({
+  setDataError: (field, level, reportName, key, errors, t=null) => ({
     type: ActionTypes.reports.measurements.SET_DATA,
     field,
     level,
     reportName,
+    key,
     errors,
     timestamp: (t || new Date()).getTime(),
   }),
 
-  setTimespan: (field, level, reportName, timespan) => ({
+  setTimespan: (field, level, reportName, key, timespan) => ({
     type: ActionTypes.reports.measurements.SET_TIMESPAN,
     field,
     level,
     reportName,
+    key,
     timespan,
   }),
   
-  setSource: (field, level, reportName, source) => ({
+  setSource: (field, level, reportName, key, source) => ({
     type: ActionTypes.reports.measurements.SET_SOURCE,
     field,
     level,
     reportName,
+    key,
     source,
   }),
 
-  setPopulation: (field, level, reportName, population) => ({
+  setPopulation: (field, level, reportName, key, population) => ({
     type: ActionTypes.reports.measurements.SET_POPULATION,
     field,
     level,
     reportName,
+    key,
     population,
   }),
 
   // Complex actions: functions processed by thunk middleware
   
-  refreshData: (field, level, reportName) => (dispatch, getState) => {
+  refreshData: (field, level, reportName, key) => (dispatch, getState) => {
     var state = getState();
     
     var _state = state.reports.measurements;
@@ -83,10 +94,10 @@ var actions = {
     var {config} = state;
     var _config = config.reports.byType.measurements;
     
-    var key = _state._computeKey(field, level, reportName);
+    var k = computeKey(field, level, reportName, key);
     var report = _config.levels[level].reports[reportName];
     
-    var {timespan, source, requested, population: target} = _state[key];
+    var {timespan, source, requested, population: target} = _state[k];
 
     var now = new Date();
     if (requested && (now.getTime() - requested < 1e+3)) {
@@ -108,22 +119,22 @@ var actions = {
     }
    
     var q = {
-      granularity: report.queryParams.time.granularity,
+      granularity: report.granularity,
       timespan: _.isString(timespan)? TimeSpan.fromName(timespan).toRange(true) : timespan,
       metrics: report.metrics,
-      ranking: report.queryParams.population.ranking,
+      ranking: report.ranking,
       population: _.flatten([target]),
     };
     
-    dispatch(actions.requestData(field, level, reportName, now));
+    dispatch(actions.requestData(field, level, reportName, key, now));
     
     return queryMeasurements(source, field, q, _config).then(
       (data) => (
-        dispatch(actions.setData(field, level, reportName, data))
+        dispatch(actions.setData(field, level, reportName, key, data))
       ),
       (reason) => (
-        console.error(sprintf('Cannot refresh data for %s: %s', key, reason)),
-        dispatch(actions.setDataError(field, level, reportName, [reason]))
+        console.error(sprintf('Cannot refresh data for %s: %s', k, reason)),
+        dispatch(actions.setDataError(field, level, reportName, key, [reason]))
       )
     );
   },

@@ -2,6 +2,10 @@
  * Apply site-local overrides for Bootstap
  */
 
+body {
+  font-family: sans-serif;
+}
+
 .form-group input {
   border-radius: 1px;
   height: 32px;
@@ -26,6 +30,10 @@
 
 .glyphicon {
   top: 2px;
+}
+
+.panel-group .panel {
+  border-radius: 1px;
 }
 
 .form-group select {

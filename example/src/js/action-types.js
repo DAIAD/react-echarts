@@ -28,22 +28,4 @@ module.exports = mirrorToPath({
       SET_DATA: null,
     },
   },
-
-  overview: {
-    utility: {
-      totals: {
-        REQUEST_DATA: null,
-        SET_DATA: null,
-      },
-      peaks: {
-        REQUEST_DATA: null,
-        SET_DATA: null,
-      },
-      history: {
-        REQUEST_DATA: null,
-        SET_DATA: null,
-      },
-    },
-  },
- 
 });

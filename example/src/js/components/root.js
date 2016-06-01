@@ -185,26 +185,26 @@ var OverviewPage = React.createClass({
     var overview = require('./reports-measurements/overview');
     var {config, params: {section}, location: {query: q}} = this.props; 
     
-    var startAt = Number(q.start); 
-    startAt = _.isNaN(startAt)? moment().valueOf() : startAt;
+    var now = Number(q.now); 
+    now = _.isNaN(now)? moment().valueOf() : now;
 
     var body;
     switch (section) {
       case 'utility':
       default:
-        body = (<overview.UtilityView startAt={startAt} />);
+        body = (<overview.UtilityView now={now} />);
         break;
       case 'per-efficiency':
-        body = (<overview.GroupPerEfficiencyView startAt={startAt} />);
+        body = (<overview.GroupPerEfficiencyView now={now} />);
         break;
       case 'per-household-size':
-        body = (<overview.GroupPerSizeView startAt={startAt} />);
+        body = (<overview.GroupPerSizeView now={now} />);
         break;
       case 'per-household-members':
-        body = (<overview.GroupPerMembersView startAt={startAt} />);
+        body = (<overview.GroupPerMembersView now={now} />);
         break;
       case 'per-income':
-        body = (<overview.GroupPerIncomeView startAt={startAt} />);
+        body = (<overview.GroupPerIncomeView now={now} />);
         break;
     }
   

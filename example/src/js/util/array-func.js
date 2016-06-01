@@ -6,7 +6,7 @@ var funcs = {
     return a;
   },
   
-  pad: function (a, n, padding) {
+  padLeft: function (a, n, padding) {
     // Pad *in-place* the given array a to length n
     a.unshift.apply(a, Array(n - a.length).fill(padding));
     return a;

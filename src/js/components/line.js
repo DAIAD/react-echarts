@@ -52,7 +52,7 @@ var Chart = React.createClass({
       // Provide class-level defaults for ECharts chart options
       options: {
         legend: {
-          padding: 5,
+          padding: 7,
           itemHeight: 12,
           itemGap: 6,
           itemWidth: 35,
@@ -352,7 +352,10 @@ var Chart = React.createClass({
     refreshData: PropTypes.func,
     // Properties for various chart options:
     // This is a (simplified) subset of the options provided by ECharts
-    theme: PropTypes.string,
+    theme: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object,
+    ]),  
     legend: PropTypes.oneOfType([
       PropTypes.bool, 
       PropTypes.array, // as: ['A', 'B', 'C', 'D'] or [['A', 'B'], ['C', 'D']]
@@ -525,7 +528,7 @@ var Chart = React.createClass({
     var cls = this.constructor;
     var options = null;
     
-    develop && console.info('Redrawing <Chart> from nextProps...')
+    develop && console.debug('Redrawing <Chart> from nextProps...')
     
     // Reset chart from received props
     options = cls.propsToOptions(nextProps);

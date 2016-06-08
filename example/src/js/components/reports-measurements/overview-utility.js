@@ -161,7 +161,7 @@ UtilityView = ReactRedux.connect(
       initialize,
       refreshData,
     };
-  },
+  }
 )(UtilityView);
 
 // Export

@@ -68,7 +68,7 @@ class _View extends React.Component {
         k,
         d.length,
         moment(d[0][0]).format(f),
-        moment(d[d.length - 1][0]).format(f),
+        moment(d[d.length - 1][0]).format(f)
       ));
     }
   }
@@ -83,8 +83,7 @@ class _View extends React.Component {
     var te = moment(t0).endOf(startsAt);
     var n = _.ceil(moment.duration(te - ts).as(level), 3);
     
-    console.assert(n >= points.length, 
-      'Received too many points!')
+    console.assert(n >= points.length, 'Received too many points!')
 
     if (n == points.length) {
       // This array doesnt seem to have gaps: return it
@@ -99,7 +98,7 @@ class _View extends React.Component {
       'About to densify points for report (%s, level: %s): +%d points', 
        moment.duration(te - ts).humanize(),
        level,
-       n - points.length,
+       n - points.length
     ));
     return timestamps.reduce((res, t) => {
       // If found, include values from the source array

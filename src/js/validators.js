@@ -9,6 +9,11 @@ var PropTypes = React.PropTypes;
 
 var validateDimension = function (props, propName, componentName) {
   var val = props[propName];
+  
+  if (val == null) {
+    return; // do not validate; nulls are allowed
+  }
+  
   if (_.isNumber(val)) {
     return;
   } else if (!/^[0-9]+.?([0-9]+)?(px|em|ex|%|vx|vw)$/.test(val.toString())) {

@@ -22,88 +22,35 @@ var Chart = React.createClass({
       numSeries: 8, // per chart
       numLegendItemsPerLine: 4,
     },
+    messages: {
+      loadingText: 'Loading data...',
+    },
+    // Provide class-level defaults for messages, titles etc (lodash templates).
+    templates: {
+      pointTooltip: _.template('<%= seriesName %> <br/><%= x %>: <%= y %>'),
+      valueTooltip: _.template('<%= seriesName %> <br/><%= name %>: <%= y %>'),
+    },
     defaults: {
-      // Provide class-level defaults for props (simplified subset of ECharts options)
-      // Note: This part feeds getDefaultProps() method needed for React.
-      props: {
-        grid: {
-          x: '10%', 
-          y: '30', 
-          x2: '8%',
-          y2: '30',
-        },
-        color: [
-          '#C23531', '#2F4554', '#61A0A8', '#ECA63F', '#41B024', 
-          '#DD4BCF', '#30EC9F', '#ECE030', '#ED2868', '#34B4F1',
-        ],
-        tooltip: true,
-        legend: true,
-        xAxis: {
-          numTicks: 10,
-          boundaryGap: false,
-          labelFilter: 'auto',
-        },
-        yAxis: {
-          numTicks: 5,
-        },
-        smooth: false, // override per-series
-        lineWidth: 2,
-      }, 
-      // Provide class-level defaults for ECharts chart options
-      options: {
-        legend: {
-          padding: 7,
-          itemHeight: 12,
-          itemGap: 6,
-          itemWidth: 35,
-          backgroundColor: '#FFF',
-          borderColor: '#CCC',
-          borderWidth: 0,
-          textStyle: {
-            fontSize: 11,
-            fontFamily: 'monospace', // needed only for vertical alignment
-          },
-          x: 'center',
-          y: 0,
-        },
-        yAxis: {
-          splitArea: {show: true},
-          splitNumber: 5,
-          scale: true,
-        },
-        xAxis: {
-          boundaryGap: false,
-          splitNumber: 10,
-          scale: true,
-        },
-        tooltip: {
-          trigger: 'item',
-          borderRadius: 1,
-          padding: 5,
-          textStyle: {fontSize: 10},
-        },
-        series: {
-          type: 'line',
-          smooth: false,
-          symbol: 'emptyCircle',
-          symbolSize: 4,
-        },
+      series: {
+        type: 'line',
       },
-      // Provide class-level defaults for messages, titles etc (lodash templates).
-      templates: {
-        pointTooltip: _.template('<%= seriesName %> <br/><%= x %>: <%= y %>'),
-        valueTooltip: _.template('<%= seriesName %> <br/><%= name %>: <%= y %>'),
+      xAxis: {
+        scale: true,
       },
-      messages: {
-        loadingText: 'Loading data...',
+      yAxis: {
+        splitArea: true,
+        scale: true,
       },
     },
 
     propsToOptions: function (props)
     {
       // Build ECharts-specific options based on props passed to a component
-      
       var opts = _.extend({}, 
+        {
+          animation: false, 
+          calculable: false,
+        },
         this.propsToAxisOptions(props),
         this.propsToTooltipOptions(props),
         this.propsToSeries(props)
@@ -111,22 +58,24 @@ var Chart = React.createClass({
       
       // Perform a final pass to adjust options previously built
       
-      opts = this.adjustOptions(opts);
+      opts = this.adjustOptions(opts, props);
 
       return opts;
     },
     
-    adjustOptions: function (opts) {
+    adjustOptions: function (opts, props) {
       // Note: This method modifies options in-place! 
       
-      var {grid, legend} = opts;
+      var {grid} = opts;
+      var legend = {...opts.legend, ...props.theme.legend};
 
       // Adjust grid according to legend data
-       
       if (legend.data) {
         // Re-adjust grid.y according to number of line breaks in legend
         let n = legend.data.filter(name => (name == '')).length;
-        grid.y = parseInt(grid.y) +
+        let y0 = (_.isString(grid.y) && grid.y.endsWith('%'))? 
+          (parseInt(grid.y) * 0.01 * parseInt(props.height)) : (grid.y); 
+        grid.y = parseInt(y0) +
           2 * legend.padding + (n + 1) * (legend.itemGap + legend.itemHeight);
       }
       
@@ -135,48 +84,51 @@ var Chart = React.createClass({
     
     propsToAxisOptions: function (props)
     {
-      const defaults = this.defaults.options;
-       
+      var {defaults} = this;
       var axisType = props.xAxis.data? 'category' : 'value';
+      var opts = {};
+        
+      opts.grid = {...props.theme.grid, ...props.grid};
 
-      return {
-        animation: false,
-        calculable: false,
-        grid: {...props.grid},
-        xAxis: [{
-          name: props.xAxis.name, 
-          type: axisType,
-          boundaryGap: (props.xAxis.boundaryGap == null)? 
-            defaults.xAxis.boundaryGap : props.xAxis.boundaryGap,
-          data: props.xAxis.data,
-          splitNumber: (axisType == 'category')? null : (
-            (props.xAxis.numTicks == null)? defaults.xAxis.splitNumber : props.xAxis.numTicks),
-          axisTick: {
-            show: true,
-            interval: 'auto',
-          },
-          axisLabel: {
-            formatter: props.xAxis.formatter,
-            interval: (axisType == 'value')? null : (props.xAxis.labelFilter || 'auto'),
-          },
-          scale: defaults.xAxis.scale,
-          min: props.xAxis.min, 
-          max: props.xAxis.max,
-        }],
-        yAxis: [{
-          type: 'value',
-          name: props.yAxis.name, 
-          splitArea: defaults.yAxis.splitArea,
-          splitNumber: (props.yAxis.numTicks == null)? 
-            defaults.yAxis.splitNumber : props.yAxis.numTicks,
-          axisLabel: {
-            formatter: props.yAxis.formatter
-          },
-          scale: defaults.yAxis.scale,
-          min: props.yAxis.min, 
-          max: props.yAxis.max,
-        }],
+      var xax1 = {
+        type: axisType,
+        name: props.xAxis.name, 
+        data: props.xAxis.data,
+        boundaryGap: props.xAxis.boundaryGap, 
+        splitNumber: (axisType == 'category')? null : props.xAxis.numTicks,
+        axisTick: {
+          show: true,
+          interval: 'auto',
+        },
+        axisLabel: {
+          formatter: props.xAxis.formatter,
+          interval: (axisType == 'value')? null : (props.xAxis.labelFilter || 'auto'),
+        },
+        scale: (props.xAxis.scale == null)? defaults.xAxis.scale : props.xAxis.scale,
+        min: props.xAxis.min, 
+        max: props.xAxis.max,
       };
+   
+      opts.xAxis = [xax1];
+
+      var yax1 = {
+        type: 'value',
+        name: props.yAxis.name, 
+        splitArea: {
+          show: props.yAxis.splitArea || defaults.yAxis.splitArea
+        },
+        splitNumber: props.yAxis.numTicks,
+        axisLabel: {
+          formatter: props.yAxis.formatter
+        },
+        scale: (props.yAxis.scale == null)? defaults.yAxis.scale : props.yAxis.scale,
+        min: props.yAxis.min, 
+        max: props.yAxis.max,
+      };
+   
+      opts.yAxis = [yax1];
+
+      return opts;
     },
     
     propsToTooltipOptions: function (props)
@@ -184,14 +136,12 @@ var Chart = React.createClass({
       if (!props.tooltip)
         return {tooltip: false};
       
-      var {templates, options: defaultOptions} = this.defaults;
-      
       var fx = props.xAxis.formatter || (x => x.toString());
       var fy = props.yAxis.formatter || (y => y.toString());
       var formatter = (p) => {
         if (_.isArray(p.value)) {
           // Tooltip for a point
-          return templates.pointTooltip({
+          return this.templates.pointTooltip({
             seriesName: p.seriesName,
             x: fx(p.value[0]),
             y: fy(p.value[1]),
@@ -199,7 +149,7 @@ var Chart = React.createClass({
         } else {
           // Tooltip for a named value.
           // (a mark line or y value of a category chart)
-          return templates.valueTooltip({
+          return this.templates.valueTooltip({
             seriesName: p.seriesName,
             name: _.isNumber(p.name)? fx(p.name) : p.name,
             y: fy(p.value)
@@ -207,14 +157,14 @@ var Chart = React.createClass({
         } 
       }; 
       
-      return {tooltip: {...defaultOptions.tooltip, formatter}};
+      return {tooltip: {formatter}};
     },
 
     propsToSeries: function (props)
     {
       var {delimiter, flattener} = util;
 
-      const defaults = this.defaults.options;
+      const {defaults} = this;
       const {numSeries: N, numLegendItemsPerLine: L} = this.limits;
       
       var {series, legend} = props;
@@ -233,18 +183,13 @@ var Chart = React.createClass({
         if (!data)
           return null;
         
-        var color = new rgbcolor(y.color || props.color[i]);
+        var color = new rgbcolor(y.color || (props.color || props.theme.color)[i]);
         color.alpha = (y.fill == null)? 1.0 : y.fill;
         
-        return {
+        var r = {
+          type: y.type || defaults.series.type,
           name: y.name,
-          type: defaults.series.type,
           data,
-          symbol: y.symbol || defaults.series.symbol,
-          symbolSize: (y.symbolSize == null)? 
-            defaults.series.symbolSize : y.symbolSize,
-          smooth: (y.smooth == null)?
-            ((props.smooth == null)? defaults.series.smooth : props.smooth) : y.smooth,
           itemStyle: {
             normal: {
               color: color.toRGB(),
@@ -252,7 +197,6 @@ var Chart = React.createClass({
                 color: color.toRGBA(),
               },
               lineStyle: {
-                width: (y.lineWidth == null)? (props.lineWidth) : (y.lineWidth),
                 color: color.toRGB(),
               },
             }
@@ -264,11 +208,22 @@ var Chart = React.createClass({
             data: y.mark.lines.map(y1 => ({name: y1.name, type: y1.type})
           )},
         };
+       
+        _.isString(y.symbol) && (r.symbol = y.symbol); 
+        
+        _.isNumber(y.symbolSize) && (r.symbolSize = y.symbolSize);
+
+        _.isBoolean(y.smooth) && (r.smooth = y.smooth);
+        
+        var lineWidth = y.lineWidth || props.lineWidth;
+        _.isNumber(lineWidth) && (r.itemStyle.normal.lineStyle.width = lineWidth);
+
+        return r;
       });
       
       series = series.filter(y => y); //omit malformed series (mapped to null)
 
-      // Build legend options based on series.
+      // Build legend options based on supplied series.
       // For readability, insert line breaks every L items.
 
       if (legend === false) {
@@ -278,7 +233,6 @@ var Chart = React.createClass({
         // By default, simply provide the names of all series.
         let names = series.map(y => y.name);
         legend = {
-          ...defaults.legend,
           data: (names.length > L)? names.reduce(delimiter(L, ''), []) : names
         };
       } else if (_.isArray(legend)) {
@@ -286,14 +240,12 @@ var Chart = React.createClass({
         if (legend.every(v => _.isString(v))) {
           // Assume a flat array of series names
           legend = {
-            ...defaults.legend,
             data: (legend.length > L)? 
               legend.reduce(delimiter(L, ''), []) : legend,
           };
         } else {
           // Assume a nested array that explicitly describes layout (line breaks)
           legend = {
-            ...defaults.legend,
             data: legend.reduce(flattener(''), []),
           };
         }
@@ -335,7 +287,7 @@ var Chart = React.createClass({
         var text = props.loading.text;
         opts = {
           effect: 'spin',
-          text: text || this.defaults.messages.loadingText,
+          text: text || this.messages.loadingText,
         };
       }
       return opts;
@@ -367,14 +319,20 @@ var Chart = React.createClass({
     xAxis: PropTypes.shape({
       data: PropTypes.array,
       formatter: PropTypes.func,
-      boundaryGap: PropTypes.bool,
+      boundaryGap: PropTypes.oneOfType([
+        PropTypes.bool,
+        PropTypes.arrayOf(PropTypes.number),
+      ]),
       numTicks: PropTypes.number,
+      scale: PropTypes.bool,
       min: PropTypes.number,
       max: PropTypes.number,
     }),
     yAxis: PropTypes.shape({
       formatter: PropTypes.func,
       numTicks: PropTypes.number,
+      splitArea: PropTypes.bool,
+      scale: PropTypes.bool,
       min: PropTypes.number,
       max: PropTypes.number,
     }),
@@ -418,41 +376,27 @@ var Chart = React.createClass({
   getDefaultProps: function ()
   {
     // Note: getDefaultProps is a class method (`this` is the component class)
+    var {defaults} = this;
 
-    return _.extend(
-      {
-        prefix: 'chart',
-        theme: 'default',
-        loading: false,
+    return {
+      prefix: 'chart',
+      loading: false,
+      theme: require('../theme/default'),
+      grid: {},
+      tooltip: true,
+      legend: true,
+      xAxis: {
+        ...defaults.xAxis,
+        numTicks: 10,
+        labelFilter: 'auto',
       },
-      // Provide class-level defaults
-      this.defaults.props, 
-      // Provide example values for "xAxis", "yAxis", "series" props; 
-      // in reality, these props will be provided by a parent component!
-      {
-        xAxis: {
-          // An axis of `category` type 
-          data: ['A','B','C','D','E','F','G'], 
-          numTicks: 10,
-        },
-        yAxis: {
-          numTicks: 5,
-          formatter: (y) => (y.toString() + '°C'),
-        },
-        series: [
-          {
-            name: 'Sample #1',
-            smooth: true,
-            fill: 0.4,
-            data: [11.0, 11.5, 13, 14, 13, 15, 17],
-          },
-          {
-            name: 'Sample #2',
-            data: [5.0, 8.5, 13.5, 14.7, 16, 19, 21.5],
-          },
-        ],
-      }
-    );
+      yAxis: {
+        ...defaults.yAxis,
+        numTicks: 5,
+      },
+      smooth: false, // override per-series
+      lineWidth: 2,
+    };
   },
 
   componentWillMount: function ()
@@ -512,7 +456,9 @@ var Chart = React.createClass({
   _initializeChart: function ()
   {
     console.assert(this._chart == null, 'Expected an empty EChart instance');
-    this._chart = echarts.init(this._el, this.props.theme);
+    
+    var theme = _.cloneDeep(this.props.theme);
+    this._chart = echarts.init(this._el, theme);
     
     if (_.isFunction(this.props.refreshData)) {
       // Can refresh itself: fire a request for fresh series data.

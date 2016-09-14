@@ -19,6 +19,8 @@ var echarts = require('./react-echarts');
 var sourceMeta = require('../source-metadata');
 var Granularity = require('../granularity');
 
+var theme = require('../theme/example');
+
 var propTypes = { 
   source: PropTypes.oneOf(['water', 'energy']),
   granularity: PropTypes.oneOf(Granularity.names()),
@@ -271,12 +273,14 @@ var Chart = React.createClass({
     var {title, unit} = sourceMeta[this.props.source];
     var xf = defaults.xAxis.dateformat[this.props.granularity];
     
-    var pilot = (this.props.series || [])[0];
+    var pilot = (this.props.series || [])[0];   
     return (
        <div id={'chart-' + this.props.source}>
          <echarts.LineChart 
             width={750}
             height={340}
+            //theme={theme}
+            legend={true}
             xAxis={{
               numTicks: pilot? Math.min(6, pilot.data.length) : 0,
               formatter: (t) => (moment(t).format(xf)),

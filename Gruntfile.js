@@ -217,8 +217,10 @@ module.exports = function(grunt) {
          files: [
            'src/js/**.js',
            'src/js/components/**.js',
+           'src/js/theme/**.js',
            'example/src/js/**.js',
            'example/src/js/components/**.js',
+           'example/src/js/theme/**.js',
            'example/src/html/**.html',
          ],
          tasks: ['build:example', 'deploy:example'],

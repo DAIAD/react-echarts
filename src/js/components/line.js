@@ -41,6 +41,12 @@ var Chart = React.createClass({
         splitArea: true,
         scale: true,
       },
+      legend: { 
+        data: null,
+        padding: 5,
+        itemGap: 5,
+        itemHeight: 35,
+      },
     },
 
     propsToOptions: function (props)
@@ -67,16 +73,20 @@ var Chart = React.createClass({
       // Note: This method modifies options in-place! 
       
       var {grid} = opts;
-      var legend = {...opts.legend, ...props.theme.legend};
+      var legend = {
+        ...this.defaults.legend,
+        ...props.theme.legend, 
+        ...opts.legend,
+      };
 
-      // Adjust grid according to legend data
+      // Try to adjust grid according to legend data
       if (legend.data) {
         // Re-adjust grid.y according to number of line breaks in legend
         let n = legend.data.filter(name => (name == '')).length;
         let y0 = (_.isString(grid.y) && grid.y.endsWith('%'))? 
-          (parseInt(grid.y) * 0.01 * parseInt(props.height)) : (grid.y); 
-        grid.y = parseInt(y0) +
-          2 * legend.padding + (n + 1) * (legend.itemGap + legend.itemHeight);
+          (parseInt(grid.y) * 0.01 * parseInt(props.height)) : (grid.y);
+        let h = parseInt(legend.itemGap) + parseInt(legend.itemHeight);
+        grid.y = parseInt(y0 || 0) + 2 * legend.padding + (n + 1) * h;
       }
       
       return opts

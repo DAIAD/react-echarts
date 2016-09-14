@@ -19,7 +19,7 @@ var echarts = require('./react-echarts');
 var sourceMeta = require('../source-metadata');
 var Granularity = require('../granularity');
 
-var theme = require('../theme/example');
+var theme = require('../theme/macarons2');
 
 var propTypes = { 
   source: PropTypes.oneOf(['water', 'energy']),
@@ -279,7 +279,7 @@ var Chart = React.createClass({
          <echarts.LineChart 
             width={750}
             height={340}
-            //theme={theme}
+            theme={theme}
             legend={true}
             xAxis={{
               numTicks: pilot? Math.min(6, pilot.data.length) : 0,
@@ -288,7 +288,7 @@ var Chart = React.createClass({
             yAxis={{
               name: title + ((unit)?(' (' + unit + ')') : ''),
               numTicks: 4,
-              formatter: (unit)? ((y) => (y.toFixed(2) + ' ' + unit)) : null,
+              formatter: (unit)? ((y) => (y.toFixed(1) + ' ' + unit)) : null,
             }}
             series={this.props.series}
         />

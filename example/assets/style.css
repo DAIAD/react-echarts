@@ -1,7 +1,15 @@
 @import url(bootstrap.css);
 @import url(react-datetime.css);
 
+.navbar {
+  margin-bottom: 7px;
+}
+
 /* Charts/Panels */
+
+.dropdown.select-theme button > span.text {
+  width: 5em;
+}
 
 div.stats-page {
   width: 100%;

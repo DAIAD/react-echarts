@@ -19,7 +19,7 @@ var echarts = require('./react-echarts');
 var sourceMeta = require('../source-metadata');
 var Granularity = require('../granularity');
 
-var theme = require('../theme/macarons2');
+var theme = require('../theme/example');
 
 var propTypes = { 
   source: PropTypes.oneOf(['water', 'energy']),

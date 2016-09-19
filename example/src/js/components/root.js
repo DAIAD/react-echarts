@@ -11,6 +11,8 @@ var sourceMeta = require('../source-metadata');
 
 var ChartPane = require('./chart-pane');
 
+var Demo = require('./demo');
+
 var RootMenu = React.createClass({
   render: function ()
   {
@@ -38,8 +40,8 @@ var RootMenu = React.createClass({
 
 var HomePage = ({}) => (
   <div>
-    <h3>An example!</h3>
-    <p>An example using <strong><a href="//github.com/DAIAD/react-echarts.git">DAIAD/react-echarts</a></strong></p>
+    <h2>A demo: <a href="//github.com/DAIAD/react-echarts.git">DAIAD/react-echarts</a></h2>
+    <Demo />
   </div>
 );
 

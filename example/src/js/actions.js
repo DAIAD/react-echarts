@@ -6,7 +6,12 @@ var api = require('./api-client/action.js');
 var actions = {
 
   // Plain actions
-  
+
+  setTheme: (name) => ({
+    type: 'SET_THEME',
+    name,
+  }),
+
   requestData: (source, t=null) => ({
     type: 'REQUEST_DATA',
     source: source, 

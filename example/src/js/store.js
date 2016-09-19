@@ -2,10 +2,11 @@ var Redux = require('redux');
 var ReduxLogger = require('redux-logger');
 var ReduxThunk = require('redux-thunk');
 
-var reducers = require('./reducers');
+var {reduceStats, reduceDemo} = require('./reducers');
 
 var rootReducer = Redux.combineReducers({
-  stats: reducers.reduceStats,
+  demo: reduceDemo,
+  stats: reduceStats,
 });
 
 // Create and configure store

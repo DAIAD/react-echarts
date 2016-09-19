@@ -1,5 +1,15 @@
 var _ = require('lodash');
 
+var reduceDemo = function (state={theme: 'default'}, action)
+{
+  switch (action.type) {
+    case 'SET_THEME':
+      return {theme: action.name};
+    default:
+      return state;
+  }
+}
+
 var reduceStats = function (state={}, action)
 {
   var source = action.source;
@@ -48,4 +58,4 @@ var reduceStats = function (state={}, action)
   return state1;
 }
 
-module.exports = {reduceStats}
+module.exports = {reduceDemo, reduceStats}

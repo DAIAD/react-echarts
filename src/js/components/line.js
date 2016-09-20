@@ -14,6 +14,62 @@ var PropTypes = React.PropTypes;
 var util = require('../util');
 var validators = require('../validators');
 
+var xaxisPropType = PropTypes.shape({
+  name: PropTypes.string,
+  data: PropTypes.array,
+  formatter: PropTypes.func,
+  boundaryGap: PropTypes.oneOfType([
+    PropTypes.bool,
+    PropTypes.arrayOf(PropTypes.number),
+  ]),
+  numTicks: PropTypes.number,
+  scale: PropTypes.bool,
+  min: PropTypes.number,
+  max: PropTypes.number,
+});
+
+var yaxisPropType = PropTypes.shape({
+  name: PropTypes.string,
+  formatter: PropTypes.func,
+  numTicks: PropTypes.number,
+  splitArea: PropTypes.bool,
+  scale: PropTypes.bool,
+  min: PropTypes.number,
+  max: PropTypes.number,
+});
+
+var seriesPropType = PropTypes.shape({
+  name: PropTypes.string.isRequired,
+  data: PropTypes.array.isRequired, // further checks must be performed at runtime
+  yAxisIndex: PropTypes.number, // meaningfull if a dual Y axis is provided
+  color: PropTypes.string,
+  fill: PropTypes.number, // area opacity
+  smooth: PropTypes.bool, // per-series
+  symbolSize: PropTypes.number, 
+  symbol: PropTypes.oneOf([
+    'circle', 'rectangle', 'triangle', 'diamond',
+    'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond',
+  ]),
+  lineWidth: PropTypes.number, // pixels
+  mark: PropTypes.shape({
+    points: PropTypes.arrayOf(PropTypes.shape({
+      type: PropTypes.oneOf(['min', 'max']),
+      name: PropTypes.string,
+    })), 
+    lines:  PropTypes.arrayOf(PropTypes.shape({
+      type: PropTypes.oneOf(['min', 'max', 'avg']),
+      name: PropTypes.string, 
+    })),
+  }),
+});
+
+var gridPropType = PropTypes.shape({
+  x:  PropTypes.string,
+  y:  PropTypes.string,
+  x2:  PropTypes.string,
+  y2:  PropTypes.string,
+});
+
 // A ECharts-based chart implemented as a React portal component
 var Chart = React.createClass({
   
@@ -105,7 +161,8 @@ var Chart = React.createClass({
         name: props.xAxis.name, 
         data: props.xAxis.data,
         boundaryGap: props.xAxis.boundaryGap, 
-        splitNumber: (axisType == 'category')? null : props.xAxis.numTicks,
+        splitNumber: (axisType == 'category' || !_.isNumber(props.xAxis.numTicks))? 
+          null : (Number(props.xAxis.numTicks) - 1),
         axisTick: {
           show: true,
           interval: 'auto',
@@ -120,23 +177,22 @@ var Chart = React.createClass({
       };
    
       opts.xAxis = [xax1];
-
-      var yax1 = {
-        type: 'value',
-        name: props.yAxis.name, 
-        splitArea: {
-          show: props.yAxis.splitArea || defaults.yAxis.splitArea
-        },
-        splitNumber: props.yAxis.numTicks,
-        axisLabel: {
-          formatter: props.yAxis.formatter
-        },
-        scale: (props.yAxis.scale == null)? defaults.yAxis.scale : props.yAxis.scale,
-        min: props.yAxis.min, 
-        max: props.yAxis.max,
-      };
-   
-      opts.yAxis = [yax1];
+      
+      opts.yAxis = (_.isArray(props.yAxis)? (props.yAxis.slice(0, 2)) : ([props.yAxis]))
+        .map(y => ({
+          type: 'value',
+          name: y.name, 
+          splitArea: {
+            show: (y.splitArea == null)? defaults.yAxis.splitArea : Boolean(y.splitArea),
+          },
+          splitNumber: !_.isNumber(y.numTicks)? null : (Number(y.numTicks) - 1),
+          axisLabel: {
+            formatter: y.formatter
+          },
+          scale: (y.scale == null)? defaults.yAxis.scale : y.scale,
+          min: y.min, 
+          max: y.max,
+        }))
 
       return opts;
     },
@@ -225,6 +281,8 @@ var Chart = React.createClass({
 
         _.isBoolean(y.smooth) && (r.smooth = y.smooth);
         
+        _.isNumber(y.yAxisIndex) && (r.yAxisIndex = y.yAxisIndex);
+
         var lineWidth = y.lineWidth || props.lineWidth;
         _.isNumber(lineWidth) && (r.itemStyle.normal.lineStyle.width = lineWidth);
 
@@ -312,12 +370,11 @@ var Chart = React.createClass({
     height: validators.validateDimension,
     // Properties injected from parent for callbacks
     refreshData: PropTypes.func,
-    // Properties for various chart options:
-    // This is a (simplified) subset of the options provided by ECharts
+    // Properties for charting: a simplified subset of the options provided by ECharts
     theme: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object,
-    ]),  
+      PropTypes.string, 
+      PropTypes.object
+    ]),
     legend: PropTypes.oneOfType([
       PropTypes.bool, 
       PropTypes.array, // as: ['A', 'B', 'C', 'D'] or [['A', 'B'], ['C', 'D']]
@@ -326,59 +383,17 @@ var Chart = React.createClass({
       PropTypes.bool,
       PropTypes.shape({text: PropTypes.string}),
     ]),
-    xAxis: PropTypes.shape({
-      data: PropTypes.array,
-      formatter: PropTypes.func,
-      boundaryGap: PropTypes.oneOfType([
-        PropTypes.bool,
-        PropTypes.arrayOf(PropTypes.number),
-      ]),
-      numTicks: PropTypes.number,
-      scale: PropTypes.bool,
-      min: PropTypes.number,
-      max: PropTypes.number,
-    }),
-    yAxis: PropTypes.shape({
-      formatter: PropTypes.func,
-      numTicks: PropTypes.number,
-      splitArea: PropTypes.bool,
-      scale: PropTypes.bool,
-      min: PropTypes.number,
-      max: PropTypes.number,
-    }),
-    grid: PropTypes.shape({
-      x:  PropTypes.string,
-      y:  PropTypes.string,
-      x2:  PropTypes.string,
-      y2:  PropTypes.string,
-    }),
+    xAxis: xaxisPropType,
+    yAxis: PropTypes.oneOfType([
+      yaxisPropType,
+      PropTypes.arrayOf(yaxisPropType), // a pair of Y axis (dual Y axis)
+    ]),
+    grid: gridPropType, 
     color: PropTypes.arrayOf(PropTypes.string),
     tooltip: PropTypes.bool,
     smooth: PropTypes.bool, // fallback for series
     lineWidth: PropTypes.number, // fallback for series (pixels)
-    series: PropTypes.arrayOf(PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      data: PropTypes.array.isRequired, // further checks must be performed at runtime
-      color: PropTypes.string,
-      fill: PropTypes.number, // area opacity
-      smooth: PropTypes.bool, // per-series
-      symbolSize: PropTypes.number, 
-      symbol: PropTypes.oneOf([
-        'circle', 'rectangle', 'triangle', 'diamond',
-        'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond',
-      ]),
-      lineWidth: PropTypes.number, // pixels
-      mark: PropTypes.shape({
-        points: PropTypes.arrayOf(PropTypes.shape({
-          type: PropTypes.oneOf(['min', 'max']),
-          name: PropTypes.string,
-        })), 
-        lines:  PropTypes.arrayOf(PropTypes.shape({
-          type: PropTypes.oneOf(['min', 'max', 'avg']),
-          name: PropTypes.string, 
-        })),
-      }),
-    })),
+    series: PropTypes.arrayOf(seriesPropType),
   },
 
   // Lifecycle

@@ -5,9 +5,7 @@ var {Button, Glyphicon} = require('react-bootstrap');
 var Select = require('react-controls/select-dropdown');
 
 var echarts = require('./react-echarts');
-
 var actions = require('../actions');
-
 var themes = require('../theme/index');
 
 var Form = React.createClass({
@@ -65,16 +63,16 @@ var Charts = React.createClass({
   render: function ()
   {
     var chartProps = {
-      width: 780, 
-      height: 280, 
+      width: 750, 
+      height: 250, 
       legend: true, 
       theme: themes.get(this.props.theme),
     };
     
     return (
       <div>
-        <div key={"chart-1/" + this.props.theme} id="chart-1-wrapper">
-          <h4>{'Demo 1: Line charts - Value axis'}</h4>
+        <div className="demo chart-wrapper" key={"chart-1/" + this.props.theme} id="chart-1-wrapper">
+          <h4>{'Demo 1: Line charts - Value X axis'}</h4>
           <echarts.LineChart {...chartProps} 
             xAxis={{
               numTicks: 10,
@@ -91,16 +89,8 @@ var Charts = React.createClass({
                 name: 'Town A',
                 fill: 0.33,
                 data: [
-                  [0.2, 2.23],
-                  [0.5, 2.70],
-                  [0.7, 2.99],
-                  [0.91, 3.35],
-                  [1.02, 3.79],
-                  [1.19, 3.98],
-                  [1.50, 4.20],
-                  [1.71, 4.05],
-                  [1.89, 3.91],
-                  [2.01, 3.77],
+                  [0.20, 2.23], [0.50, 2.70], [0.70, 2.99], [0.91, 3.35], [1.02, 3.79], 
+                  [1.19, 3.98], [1.50, 4.20], [1.71, 4.05], [1.89, 3.91], [2.01, 3.77],
                 ],
               },
               {
@@ -110,29 +100,20 @@ var Charts = React.createClass({
                 symbolSize: 8,
                 smooth: true,
                 data: [
-                  [0.25, 2.46],
-                  [0.55, 2.90],
-                  [0.75, 3.20],
-                  [0.90, 3.55],
-                  [1.10, 3.89],
-                  [1.19, 4.07],
-                  [1.55, 4.30],
-                  [1.79, 4.24],
-                  [1.93, 4.10],
-                  [2.03, 3.97],
+                  [0.25, 2.46], [0.55, 2.90], [0.75, 3.20], [0.90, 3.55], [1.10, 3.89],
+                  [1.19, 4.07], [1.55, 4.30], [1.79, 4.24], [1.93, 4.10], [2.03, 3.97],
                 ],
               },
             ]}
           />
         </div>
         
-        <div key={"chart-2/" + this.props.theme} id="chart-2-wrapper">
-          <h4>{'Demo 2: Line charts - Category axis'}</h4>
+        <div className="demo chart-wrapper" key={"chart-2/" + this.props.theme} id="chart-2-wrapper">
+          <h4>{'Demo 2: Line charts - Category X axis'}</h4>
           <echarts.LineChart {...chartProps}
             xAxis={{
               data: ['A', 'B', 'C', 'D', 'E', 'F'],
               formatter: (x) => (x.toLowerCase()),
-              boundaryGap: true,
             }}
             yAxis={{
               name: "Demo 2",
@@ -154,6 +135,59 @@ var Charts = React.createClass({
                   8.70, 9.58, 10.11, 10.40, 10.97, 11.46,
                 ],
               },
+            ]}
+          />
+        </div>
+
+        <div className="demo chart-wrapper" key={"chart-3/" + this.props.theme} id="chart-3-wrapper">
+          <h4>{'Demo 3: Line charts - Category X axis - Dual Y axis'}</h4>
+          <echarts.LineChart {...chartProps}
+            legend={[
+              ['Temperature - Station A', 'Temperature - Station B'], 
+              ['Humidity']
+            ]}
+            xAxis={{
+              data: ['A', 'B', 'C', 'D', 'E', 'F'],
+            }}
+            yAxis={[
+              {
+                name: "Temperature (C)",
+                numTicks: 4,
+                formatter: (y) => (y.toFixed(1) + 'C'),
+                splitArea: false,
+                min: 5.0,
+                max: 20.0,
+              },
+              {
+                name: "Humidity (%)",
+                numTicks: 4,
+                formatter: (y) => (y.toFixed(0) + '%'),
+                min: 40.0,
+                max: 100.0,
+                splitArea: true,
+              },
+            ]}
+            series={[
+               {
+                name: 'Temperature - Station A',
+                data: [
+                  9.85, 12.34, 12.90, 15.2, 14.08, 13.85,
+                ],
+              },
+              {
+                name: 'Temperature - Station B',
+                data: [
+                  10.26, 12.55, 13.40, 16.50, 14.95, 14.10,
+                ],
+              },
+              {
+                name: 'Humidity',
+                data: [
+                  50.81, 55.58, 60.34, 61.56, 57.91, 57.07,
+                ],
+                smooth: true,
+                yAxisIndex: 1, // corresponds to 2nd Y axis
+              },            
             ]}
           />
         </div>

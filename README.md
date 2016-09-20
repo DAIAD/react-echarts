@@ -40,6 +40,7 @@ Properties for the chart (a simplified subset of those supported by ECharts):
 | Name | Required | Type | Description | Example |
 | ---- | -------- | ---- | ----------- | --------|
 | `xAxis.data` | No | `array` | An array of distinct (aka `category`) values that `x` can take | `['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']` |
+| `xAxis.name` | No | `String` | Name X axis | `Time (s)` |
 | `xAxis.scale` | No | `Boolean` | Scale axis according to supplied series data (meaningless if `xAxis.data` is supplied) | `true` |
 | `xAxis.formatter` | No | `(x)=>(<String>)` | Formatter callback for x values | `(x)=>(x.toString() + 'Km')` |
 | `xAxis.labelFilter` | No | `(i, x) => (<Boolean>)` | Decide if a label should be shown on the X axis. | `(i) => (i % 2 == 0)` |
@@ -47,6 +48,7 @@ Properties for the chart (a simplified subset of those supported by ECharts):
 | `xAxis.boundaryGap` | No | `Boolean` | Add a gap between min/max x value and axis boundaries | `false` |
 | `xAxis.min` | No | `Number` | A maximum for displayed x values (meaningless if `xAxis.data` is supplied) | `0` |
 | `xAxis.max` | No | `Number` | A minimum for displayed x values (meaningless if `xAxis.data` is supplied) | `5.0` |
+| `yAxis.name` | No | `String` | Name Y axis | `Velocity` |
 | `yAxis.scale` | No | `Boolean` | Scale axis according to supplied series data | `true` |
 | `yAxis.formatter` | No | `(y)=>(<String>)` | Formatter callback for y values | `(y)=>(y.toString() + 'lit')` |
 | `yAxis.numTicks` | No | `Number` | A hint for the number of ticks on y axis | `5` |
@@ -70,6 +72,7 @@ The `series` property is an array that provides the actual data to be plotted:
 | `series.0.type` | Yes | `String` | The type of the plot for this series. One of: `line`, `bar`, `scatter` | `line` |
 | `series.0.name` | Yes | `String` | The name of this dataset | `Temperature - Athens` |
 | `series.0.data` | Yes | `Array` | The data points. See [note](#note---series-data) | `[11.0, 11.5, 13, 14, 13, 15, 17]` |
+| `series.0.yAxisIndex` | No | `Number` | The Y axis that a series corresponds to. This is meaningfull only if a dual Y axis is provided as `yAxis` property. | `0` or `1`|
 | `series.0.color` | No | `String` | The color for this line/area | `'#C23531'` |
 | `series.0.smooth` | No | `Boolean` | Smooth line for this series (spline interpolation) | `false` |
 | `series.0.fill` | No | `Number` | Fill areas with the given opacity | `null` or `0.55`|
@@ -136,9 +139,9 @@ We have 2 cases:
 
 2. If `xAxis.data` is missing, this implies that each one of the series will carry its own data points (i.e pairs of (x,y) numerical values). This is a _value_ x axis. Example: some (rougly stepped at `0.5`) measurements: `[[0.0, 15.6], [0.43, 19.1], [0.97, 18.8], [1.52, 17], [2.10, 17.6]]`
 
-## Examples
+#### Note - Dual Y axis
 
-_Todo_
+In some cases, we want to plot different series on a dual Y axis (on the same categorical X axis). For these cases, the `yAxis` property can be provided as a pair (as array) of yAxis-shaped properties (see above documentation).
 
 ## Development - Quickstart 
 
@@ -161,4 +164,4 @@ Deploy for the local development Express server:
 
 Start development server:
     
-    npm start
+    npm run example

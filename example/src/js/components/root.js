@@ -39,14 +39,14 @@ var RootMenu = React.createClass({
 });
 
 var HomePage = ({}) => (
-  <div>
-    <h2>A demo: <a href="//github.com/DAIAD/react-echarts.git">DAIAD/react-echarts</a></h2>
-    <Demo />
-  </div>
+  <Demo />
 );
 
 var AboutPage = ({}) => (
-  <div><h3>About me</h3><p>This is about me</p></div>
+  <div>
+    <h2>{'This a demo for react-echarts'}</h2>
+    <p>See more at <a href="//github.com/DAIAD/react-echarts.git">DAIAD/react-echarts</a></p>
+  </div>
 );
 
 var StatsPage = ({params}) => (

@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactRedux = require('react-redux');
@@ -15,6 +17,12 @@ var renderRoot = function (placeholder)
       <Root />
     </Provider>
   );
+  
+  var resize = () => {
+    store.dispatch(actions.resize());
+  };
+  window.addEventListener('resize', _.debounce(resize, 300, {maxWait: 1000}));
+
   ReactDOM.render(root, placeholder);
 };
 

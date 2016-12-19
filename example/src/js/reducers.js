@@ -1,10 +1,24 @@
 var _ = require('lodash');
 
-var reduceDemo = function (state={theme: 'default'}, action)
+var reduceDemo = function (state, action)
 {
+  if (state == undefined || _.isEmpty(state)) {
+    state = {
+      width: document.documentElement.clientWidth, 
+      height: document.documentElement.clientHeight,
+      theme: 'default',
+    };
+  }
+
   switch (action.type) {
     case 'SET_THEME':
-      return {theme: action.name};
+      return {...state, theme: action.name};
+    case 'RESIZE':
+      return {
+          ...state,
+          width: document.documentElement.clientWidth,
+          height: document.documentElement.clientHeight,
+        };
     default:
       return state;
   }

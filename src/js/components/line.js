@@ -437,6 +437,7 @@ var Chart = React.createClass({
   {
     this._el = ReactDOM.findDOMNode(this);
     this._initializeChart();
+    this._redrawChart(this.props);
   },
   
   componentWillUnmount: function ()
@@ -448,6 +449,13 @@ var Chart = React.createClass({
   componentWillReceiveProps: function (nextProps)
   {
     develop && console.debug('Received new props for <Chart>...')
+    
+    // Check if viewport has changed
+    if (nextProps.width != this.props.width || nextProps.height != this.props.height) {
+      this._resize(nextProps.width, nextProps.height);
+    }
+
+    // Redraw chart
     this._redrawChart(nextProps);
   },
 
@@ -465,19 +473,29 @@ var Chart = React.createClass({
   {
     develop && console.debug('Rendering <Chart>...');
     return (
-      <div id={this._id}
+      <div 
+        id={this._id}
         className={['portal', this.props.prefix].join(' ')}
         style={{
           width: this.props.width,
           height: this.props.height
         }}
-       >
-      </div>
+       />
     );
   },
   
   // Internal methods: lifecycle of ECharts instance
 
+  _resize: function (width, height)
+  {
+    console.assert(this._el != null, 'The DOM element must be mounted!');
+    this._el.style.width = width.toString() + "px";
+    this._el.style.height = height.toString() + "px";
+    
+    console.assert(this._chart != null, 'The ECharts instance must be initialized!');
+    this._chart.resize();
+  },
+  
   _initializeChart: function ()
   {
     console.assert(this._chart == null, 'Expected an empty EChart instance');
@@ -489,9 +507,6 @@ var Chart = React.createClass({
       // Can refresh itself: fire a request for fresh series data.
       this.props.refreshData();
     }
-    
-    // Regardless of data, draw chart based on current props.
-    this._redrawChart(this.props);
   },
   
   _redrawChart: function (nextProps)

@@ -7,6 +7,10 @@ var actions = {
 
   // Plain actions
 
+  resize: () => ({
+    type: 'RESIZE',
+  }),
+  
   setTheme: (name) => ({
     type: 'SET_THEME',
     name,

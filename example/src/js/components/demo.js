@@ -63,8 +63,8 @@ var Charts = React.createClass({
   render: function ()
   {
     var chartProps = {
-      width: 750, 
-      height: 250, 
+      width: parseInt(this.props.width * 0.7),
+      height: Math.max(parseInt(this.props.height * 0.25), 230), 
       legend: true, 
       theme: themes.get(this.props.theme),
     };
@@ -196,6 +196,18 @@ var Charts = React.createClass({
   },
 });
 
+var Demo = React.createClass({
+  render: function ()
+  {
+    return (
+      <div>
+        <Form />
+        <Charts />
+      </div>
+    );
+  }
+});
+
 // Containers
 
 Form = ReactRedux.connect(
@@ -209,20 +221,14 @@ Form = ReactRedux.connect(
 
 Charts = ReactRedux.connect(
   (state, ownProps) => (
-    {theme: state.demo.theme}
+    {
+      theme: state.demo.theme,
+      width: state.demo.width,
+      height: state.demo.height,
+    }
   ), 
 )(Charts);
 
 // Exports
 
-module.exports = React.createClass({
-  render: function ()
-  {
-    return (
-      <div>
-        <Form />
-        <Charts />
-      </div>
-    );
-  }
-});
+module.exports = Demo;

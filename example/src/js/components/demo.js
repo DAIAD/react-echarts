@@ -63,8 +63,8 @@ var Charts = React.createClass({
   render: function ()
   {
     var chartProps = {
-      width: parseInt(this.props.width * 0.7),
-      height: Math.max(parseInt(this.props.height * 0.25), 230), 
+      width: parseInt(this.props.width * 0.65),
+      height: Math.max(parseInt(this.props.height * 0.33), 250), 
       legend: true, 
       theme: themes.get(this.props.theme),
     };

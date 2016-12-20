@@ -132,6 +132,12 @@ module.exports = {
           width: 2,
           type: 'solid',
         },
+        label: {
+          textStyle: {
+            position: 'top',
+            fontSize: 11,
+          }
+        }
       },
       emphasis: {
       }
@@ -139,6 +145,30 @@ module.exports = {
     smooth : false,
     symbol: 'emptyCircle',
     symbolSize: 4,
+  },
+  
+  bar: {
+    barMinHeight: 0,
+    barGap: '20%',
+    barCategoryGap: '35%',
+    itemStyle: {
+      normal: {
+        barBorderWidth: 0,
+        barBorderRadius: 0,
+        label: {
+          position: 'top',
+          textStyle: {
+            fontSize: 11,
+          },
+        },
+      },
+      emphasis: {
+        label: {
+          position: 'top',
+          textStyle: {},
+        },
+      },
+    },
   },
 
   symbolList: [

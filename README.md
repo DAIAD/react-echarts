@@ -79,6 +79,9 @@ The `series` property is an array that provides the actual data to be plotted:
 | `series.0.symbolSize` | No | `Number` | Radius for symbols for (x,y) points | `4` |
 | `series.0.symbol` | No | `String` | Choose a symbol for (x,y) points. One of: `circle`, `rectangle`, `triangle`, `diamond`, `emptyCircle`, `emptyRectangle`, `emptyTriangle`, `emptyDiamond` | `emptyCircle` |
 | `series.0.lineWidth` | No | `Number` | The width (pixels) for this line | `false` |
+| `series.0.label` | No | `Object` or `Boolean`| Describe labels for points on cartesian plane. If present, each (x, y) point is labeled. | `{position: "top"}` |
+| `series.0.label.position` | No | `String` | Specify a position for labels (relative to point). One of: `top`, `bottom`, `left`, `right`, `inside`, `insideTop`, `insideBottom` | `top` |
+| `series.0.label.formatter` | No | `(y)=>(<String>)` | Provide a formatter for labels | `() => y.toFixed(1)` |
 | `series.0.mark.points` | No | `Object` | Describe marker points | `[{type: "max", name: "Max Temperature"}]` |
 | `series.0.mark.lines` | No | `Object` | Describe marker lines | `[{type: "min", name: "Min Temperature"}]` |
 

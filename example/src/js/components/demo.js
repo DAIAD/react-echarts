@@ -63,7 +63,7 @@ var Charts = React.createClass({
   render: function ()
   {
     var chartProps = {
-      width: parseInt(this.props.width * 0.65),
+      width: parseInt(this.props.width * 0.7),
       height: Math.max(parseInt(this.props.height * 0.33), 250), 
       legend: true, 
       theme: themes.get(this.props.theme),
@@ -71,6 +71,7 @@ var Charts = React.createClass({
     
     return (
       <div>
+        
         <div className="demo chart-wrapper" key={"chart-1/" + this.props.theme} id="chart-1-wrapper">
           <h4>{'Demo 1: Line charts - Value X axis'}</h4>
           <echarts.LineChart {...chartProps} 
@@ -97,7 +98,7 @@ var Charts = React.createClass({
                 name: 'Town B',
                 fill: null,
                 symbol: 'rectangle',
-                symbolSize: 8,
+                symbolSize: 9,
                 smooth: true,
                 data: [
                   [0.25, 2.46], [0.55, 2.90], [0.75, 3.20], [0.90, 3.55], [1.10, 3.89],
@@ -191,6 +192,52 @@ var Charts = React.createClass({
             ]}
           />
         </div>
+        
+        <div className="demo chart-wrapper" key={"chart-4/" + this.props.theme} id="chart-4-wrapper">
+          <h4>{'Demo 4: Bar charts - Category X axis'}</h4>
+          <echarts.LineChart {...chartProps}
+            xAxis={{
+              data: ['A', 'B', 'C', 'D', 'E', 'F'],
+              boundaryGap: [1, 1],
+            }}
+            yAxis={{
+              name: "Demo 4",
+              numTicks: 4,
+              formatter: (y) => (y.toFixed(2)),
+            }}
+            tooltip={false}
+            series={[
+              {
+                name: 'Town A',
+                type: 'bar',
+                label: false,
+                data: [
+                  10.16, 10.39, 10.42, 10.56, 11.08, 11.85,
+                ],
+              },
+              {
+                name: 'Town B',
+                type: 'bar',
+                label: true,
+                data: [
+                  8.70, 9.58, 10.11, 10.40, 10.97, 11.46,
+                ],
+              },
+              {
+                name: 'Town C',
+                type: 'bar',
+                label: {
+                  position: 'top',
+                  formatter: (y) => (y.toFixed(1))
+                },
+                data: [
+                  9.50, 10.45, 10.41, 12.82, 11.33, 12.90,
+                ],
+              },
+            ]}
+          />
+        </div>
+      
       </div>
     )
   },

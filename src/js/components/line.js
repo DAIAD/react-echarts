@@ -1,4 +1,3 @@
-'use strict';
 
 var _ = require('lodash');
 var React = require('react');
@@ -39,6 +38,7 @@ var yaxisPropType = PropTypes.shape({
 });
 
 var seriesPropType = PropTypes.shape({
+  type: PropTypes.oneOf(['line', 'bar', 'scatter']),
   name: PropTypes.string.isRequired,
   data: PropTypes.array.isRequired, // further checks must be performed at runtime
   yAxisIndex: PropTypes.number, // meaningfull if a dual Y axis is provided
@@ -49,6 +49,15 @@ var seriesPropType = PropTypes.shape({
   symbol: PropTypes.oneOf([
     'circle', 'rectangle', 'triangle', 'diamond',
     'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond',
+  ]),
+  label: PropTypes.oneOfType([
+    PropTypes.bool,
+    PropTypes.shape({
+      position: PropTypes.oneOf([   
+        'left', 'right', 'top', 'bottom','inside', 'insideTop', 'insideBottom'
+      ]),
+      formatter: PropTypes.func,
+    }),
   ]),
   lineWidth: PropTypes.number, // pixels
   mark: PropTypes.shape({
@@ -233,7 +242,7 @@ var Chart = React.createClass({
       const {defaults} = this;
       const {numSeries: N, numLegendItemsPerLine: L} = this.limits;
       
-      var {series, legend} = props;
+      var {series, legend, theme} = props;
       
       if (series == null) {
         series = [];
@@ -245,17 +254,32 @@ var Chart = React.createClass({
       // Build series options
 
       series = series.map((y, i) => {
+        var type = y.type || defaults.series.type;
+        
         var data = this._checkData(props.xAxis.data, y.data); 
         if (!data)
           return null;
         
-        var color = new rgbcolor(y.color || (props.color || props.theme.color)[i]);
+        var color = new rgbcolor(y.color || (props.color || theme.color)[i]);
         color.alpha = (y.fill == null)? 1.0 : y.fill;
-        
+
+        var label = (y.label == null || y.label === false)? 
+          null : (_.isObject(y.label)? y.label : {}); 
+        if (label != null) {
+          var yf = label.formatter || props.yAxis.formatter;
+          label = _.merge({show: true}, 
+            _.get(theme, type + ".itemStyle.normal.label", {}),
+            {
+              label: label.position,
+              formatter: (yf == null)? null : (p) => (p.data? yf(p.data) : null),
+            }
+          );
+        }
+
         var r = {
-          type: y.type || defaults.series.type,
-          name: y.name,
+          type,
           data,
+          name: y.name,
           itemStyle: {
             normal: {
               color: color.toRGB(),
@@ -265,6 +289,7 @@ var Chart = React.createClass({
               lineStyle: {
                 color: color.toRGB(),
               },
+              label,
             }
           },
           markPoint: !(y.mark && y.mark.points)? null : {
@@ -275,16 +300,21 @@ var Chart = React.createClass({
           )},
         };
        
-        _.isString(y.symbol) && (r.symbol = y.symbol); 
+        if (_.isString(y.symbol))
+          r.symbol = y.symbol; 
         
-        _.isNumber(y.symbolSize) && (r.symbolSize = y.symbolSize);
+        if (_.isNumber(y.symbolSize))
+          r.symbolSize = y.symbolSize;
 
-        _.isBoolean(y.smooth) && (r.smooth = y.smooth);
+        if (_.isBoolean(y.smooth)) 
+          r.smooth = y.smooth;
         
-        _.isNumber(y.yAxisIndex) && (r.yAxisIndex = y.yAxisIndex);
+        if (_.isNumber(y.yAxisIndex)) 
+          r.yAxisIndex = y.yAxisIndex;
 
         var lineWidth = y.lineWidth || props.lineWidth;
-        _.isNumber(lineWidth) && (r.itemStyle.normal.lineStyle.width = lineWidth);
+        if (_.isNumber(lineWidth)) 
+          r.itemStyle.normal.lineStyle.width = lineWidth;
 
         return r;
       });
@@ -335,7 +365,7 @@ var Chart = React.createClass({
     {
       // Check if supplied (series) data is according to x-axis type
       if (xaxisData) {
-        // Expect array of numbers paired to x-axis data (aAxis.type=category)
+        // Expect array of numbers paired to x-axis data (xAxis.type=category)
         data = data.map(v => ((v == '-' || v == null)? null : Number(v)));
         if (data.length != xaxisData.length || data.some(v => isNaN(v)))
           data = null; // invalidate the entire array

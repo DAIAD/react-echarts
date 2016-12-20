@@ -7,9 +7,9 @@ module.exports = {
 
   grid: {
     x: '12%', 
-    y: '8%', 
-    x2: '8%', 
-    y2: '8%',
+    y: '9%', 
+    x2: '9%', 
+    y2: '9%',
     borderColor: '#bbb',
   },
   
@@ -22,8 +22,9 @@ module.exports = {
     borderColor: '#ccc',
     borderWidth: 0,
     textStyle: {
-      fontSize: 11,
-      fontFamily: 'monospace', // needed only for vertical alignment
+      fontSize: 12,
+      fontFamily: 'serif',
+      //fontFamily: 'monospace', // needed only for vertical alignment
     },
     x: 'center',
     y: 0,
@@ -42,6 +43,9 @@ module.exports = {
 
   categoryAxis: {
     boundaryGap: false,
+    nameTextStyle: {
+      fontSize: 13,
+    },
     axisLine: {
       show: true,
       lineStyle: {
@@ -66,7 +70,9 @@ module.exports = {
       rotate: 0,
       margin: 8,
       textStyle: {
-        color: '#333'
+        color: '#333',
+        fontSize: 11,
+        fontFamily: 'sans-serif',
       }
     },
     splitArea: {
@@ -79,6 +85,9 @@ module.exports = {
 
   valueAxis: {
     boundaryGap: [0, 0],
+    nameTextStyle: {
+      fontSize: 13,
+    },
     axisLine: {
       show: true,
       lineStyle: {
@@ -103,7 +112,9 @@ module.exports = {
       rotate: 0,
       margin: 8,
       textStyle: {
-        color: '#333'
+        color: '#333',
+        fontSize: 11,
+        fontFamily: 'sans-serif',
       }
     },
     splitArea: {
@@ -128,6 +139,20 @@ module.exports = {
     smooth : false,
     symbol: 'emptyCircle',
     symbolSize: 4,
+  },
+  
+  bar: {
+    barMinHeight: 0,
+    //barGap: '10%',
+    barCategoryGap: '40%',
+    itemStyle: {
+      normal: {
+        barBorderWidth: 0,
+        barBorderRadius: 0,
+      },
+      emphasis: {
+      },
+    },
   },
 
   symbolList: [

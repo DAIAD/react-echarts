@@ -276,7 +276,7 @@ var Chart = React.createClass({
     var pilot = (this.props.series || [])[0];   
     return (
        <div id={'chart-' + this.props.source}>
-         <echarts.LineChart 
+         <echarts.Chart 
             width={750}
             height={340}
             theme={theme}

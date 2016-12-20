@@ -74,7 +74,7 @@ var Charts = React.createClass({
         
         <div className="demo chart-wrapper" key={"chart-1/" + this.props.theme} id="chart-1-wrapper">
           <h4>{'Demo 1: Line charts - Value X axis'}</h4>
-          <echarts.LineChart {...chartProps} 
+          <echarts.Chart {...chartProps} 
             xAxis={{
               numTicks: 10,
               formatter: (x) => (x.toFixed(1)),
@@ -112,7 +112,7 @@ var Charts = React.createClass({
         
         <div className="demo chart-wrapper" key={"chart-2/" + this.props.theme} id="chart-2-wrapper">
           <h4>{'Demo 2: Line charts - Category X axis'}</h4>
-          <echarts.LineChart {...chartProps}
+          <echarts.Chart {...chartProps}
             xAxis={{
               data: ['A', 'B', 'C', 'D', 'E', 'F'],
               formatter: (x) => (x.toLowerCase()),
@@ -132,9 +132,8 @@ var Charts = React.createClass({
               },
               {
                 name: 'Town B',
-                fill: 0.33,
                 data: [
-                  8.70, 9.58, 10.11, 10.40, 10.97, 11.46,
+                  8.70, 9.58, 10.11, 10.40, 10.97, 10.18,
                 ],
               },
             ]}
@@ -143,7 +142,7 @@ var Charts = React.createClass({
 
         <div className="demo chart-wrapper" key={"chart-3/" + this.props.theme} id="chart-3-wrapper">
           <h4>{'Demo 3: Line charts - Category X axis - Dual Y axis'}</h4>
-          <echarts.LineChart {...chartProps}
+          <echarts.Chart {...chartProps}
             legend={[
               ['Temperature - Station A', 'Temperature - Station B'], 
               ['Humidity']
@@ -196,7 +195,7 @@ var Charts = React.createClass({
         
         <div className="demo chart-wrapper" key={"chart-4/" + this.props.theme} id="chart-4-wrapper">
           <h4>{'Demo 4: Bar charts'}</h4>
-          <echarts.LineChart {...chartProps}
+          <echarts.Chart {...chartProps}
             xAxis={{
               data: ['A', 'B', 'C', 'D', 'E', 'F'],
               boundaryGap: [1, 1],
@@ -244,7 +243,7 @@ var Charts = React.createClass({
       
         <div className="demo chart-wrapper" key={"chart-5/" + this.props.theme} id="chart-5-wrapper">
           <h4>{'Demo 5: Bar charts - Color Palette'}</h4>
-          <echarts.LineChart {...chartProps}
+          <echarts.Chart {...chartProps}
             xAxis={{
               data: ['A', 'B', 'C', 'D', 'E', 'F'],
               boundaryGap: [1, 1],
@@ -290,7 +289,7 @@ var Charts = React.createClass({
         
         <div className="demo chart-wrapper" key={"chart-6/" + this.props.theme} id="chart-6-wrapper">
           <h4>{'Demo 6: Bar charts - Horizontal View'}</h4>
-          <echarts.LineChart {...chartProps}
+          <echarts.Chart {...chartProps}
             horizontal={true}
             height={Math.max(parseInt(this.props.height * 0.50), 400)} /* make it a bit taller */
             xAxis={{

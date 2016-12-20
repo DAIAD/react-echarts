@@ -1,5 +1,3 @@
-'use strict';
-
 // Several utility functions that dont fit anywhere //
 
 // Generate a random string mapped from a random integer in range 0 .. 10^dd

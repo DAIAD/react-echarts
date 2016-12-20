@@ -10,17 +10,17 @@ Install the module via NPM, directly from the GIT url:
 Require a component class:
 
 ```javascript
-var {LineChart} = require('react-echarts');
+var {Chart} = require('react-echarts');
 ...
 ```
 
 ## Components
 
-### LineChart
+### Chart
 
-Represents a line/area chart. 
+Represents a cartesian chart on a 2D plane. It can hold any combination of line/bar/scatter plots. 
 
-#### Properties - LineChart
+#### Properties - Chart
 
 Properties related to the portal (i.e. container) element:
 
@@ -92,10 +92,10 @@ Properties for the status of plotted data:
 | ---- | -------- | ---- | ----------- | --------|
 | `loading`| No | `Object` or `Boolean` | Provide a progress visual feedback (spinner, progressbar) | `{text: "Loading data...", progress: 0.7}` |
 
-#### Example - LineChart
+#### Example - A simple line chart
 
 ```jsx
-<LineChart 
+<Chart 
     width='500px'
     height='300px'
     legend: {[
@@ -132,7 +132,6 @@ Properties for the status of plotted data:
     ]}
 />
 ```
-
 #### Note - Series Data
 
 The expected `series.X.data` shape is completely different depending on `xAxis.data` (see also [ECharts - xAxis type](http://echarts.baidu.com/echarts2/doc/option-en.html#tooltip-line1~xAxis-i)). 
@@ -146,6 +145,19 @@ We have 2 cases:
 #### Note - Dual Y axis
 
 In some cases, we want to plot different series on a dual Y axis (on the same categorical X axis). For these cases, the `yAxis` property can be provided as a pair (as array) of yAxis-shaped properties (see above documentation).
+
+
+### LineChart
+
+A convienience wrapper around `Chart` providing sensible defaults for line-only charts. 
+
+All options relevant to `Chart` also apply here, except for the per-series `type`.
+
+### BarChart 
+
+A convienience wrapper around `Chart` providing sensible defaults for bar-only charts. 
+
+All options relevant to `Chart` also apply here, except for the per-series `type`.
 
 ## Development - Quickstart 
 
@@ -169,3 +181,4 @@ Deploy for the local development Express server:
 Start development server:
     
     npm run example
+

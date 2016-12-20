@@ -1,4 +1,3 @@
-'use strict';
 
 var _ = require('lodash');
 var React = require('react');
@@ -39,16 +38,29 @@ var yaxisPropType = PropTypes.shape({
 });
 
 var seriesPropType = PropTypes.shape({
+  type: PropTypes.oneOf(['line', 'bar', 'scatter']),
   name: PropTypes.string.isRequired,
   data: PropTypes.array.isRequired, // further checks must be performed at runtime
   yAxisIndex: PropTypes.number, // meaningfull if a dual Y axis is provided
-  color: PropTypes.string,
+  color: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func,
+  ]),
   fill: PropTypes.number, // area opacity
   smooth: PropTypes.bool, // per-series
   symbolSize: PropTypes.number, 
   symbol: PropTypes.oneOf([
     'circle', 'rectangle', 'triangle', 'diamond',
     'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond',
+  ]),
+  label: PropTypes.oneOfType([
+    PropTypes.bool,
+    PropTypes.shape({
+      position: PropTypes.oneOf([   
+        'left', 'right', 'top', 'bottom','inside', 'insideTop', 'insideBottom'
+      ]),
+      formatter: PropTypes.func,
+    }),
   ]),
   lineWidth: PropTypes.number, // pixels
   mark: PropTypes.shape({
@@ -105,6 +117,36 @@ var Chart = React.createClass({
       },
     },
 
+    propsToTheme: function (props)
+    {
+      var theme = _.cloneDeep(props.theme);
+      
+      theme = _.defaultsDeep(theme, {
+        scatter: {
+          itemStyle: {
+            normal: {},
+            emphasis: {},
+          },
+        },
+        line: {
+          itemStyle: {
+            normal: {
+              label: {},
+            },
+            emphasis: {},
+          }
+        },
+        bar: {
+            normal: {
+              label: {},
+            },
+            emphasis: {},
+        },
+      });
+
+      return theme;
+    },
+    
     propsToOptions: function (props)
     {
       // Build ECharts-specific options based on props passed to a component
@@ -233,7 +275,7 @@ var Chart = React.createClass({
       const {defaults} = this;
       const {numSeries: N, numLegendItemsPerLine: L} = this.limits;
       
-      var {series, legend} = props;
+      var {series, legend, theme} = props;
       
       if (series == null) {
         series = [];
@@ -242,28 +284,60 @@ var Chart = React.createClass({
         series = series.slice(0, N);
       }
       
-      // Build series options
+      var colors = props.color || theme.color; // chart-wide palette
+
+      // Build options for all provided series
 
       series = series.map((y, i) => {
+        var type = y.type || defaults.series.type; // line, bar, scatter
+        
         var data = this._checkData(props.xAxis.data, y.data); 
         if (!data)
           return null;
         
-        var color = new rgbcolor(y.color || (props.color || props.theme.color)[i]);
-        color.alpha = (y.fill == null)? 1.0 : y.fill;
+        // Colorize
         
+        var color = null, rgba = null;
+        if (y.color != null && _.isFunction(y.color)) {
+          // A user-provided function for coloring: wrap to what ECharts expects
+          color = (p) => (y.color(p.name, p.data, p.dataIndex));
+        } else {
+          // A simple color: turn into rgba
+          rgba = new rgbcolor(y.color || colors[i]);
+          rgba.alpha = (y.fill == null)? 1.0 : y.fill;
+          color = rgba.toRGB();
+        }
+
+        // Provide labels for points
+        
+        var label = (y.label == null || y.label === false)? null : 
+          (_.isObject(y.label)? y.label : {}); 
+        if (label != null) {
+          let yf = label.formatter || props.yAxis.formatter;
+          label = {
+            show: true,
+            position: label.position,
+            formatter: (yf == null)? null : 
+              (p) => (p.data? yf(p.data) : null),
+          };
+          label = _.defaults(label, theme[type].itemStyle.normal.label);
+        }
+
+        // Build options for this series 
+         
         var r = {
-          type: y.type || defaults.series.type,
-          name: y.name,
+          type,
           data,
+          name: y.name,
           itemStyle: {
             normal: {
-              color: color.toRGB(),
-              areaStyle: (y.fill == null)? null : {
-                color: color.toRGBA(),
+              color,
+              label,
+              areaStyle: (y.fill == null || rgba == null)? null : {
+                color: rgba.toRGBA(),
               },
-              lineStyle: {
-                color: color.toRGB(),
+              lineStyle: (rgba == null)? {} : {
+                color: rgba.toRGB(),
               },
             }
           },
@@ -275,16 +349,21 @@ var Chart = React.createClass({
           )},
         };
        
-        _.isString(y.symbol) && (r.symbol = y.symbol); 
+        if (_.isString(y.symbol))
+          r.symbol = y.symbol; 
         
-        _.isNumber(y.symbolSize) && (r.symbolSize = y.symbolSize);
+        if (_.isNumber(y.symbolSize))
+          r.symbolSize = y.symbolSize;
 
-        _.isBoolean(y.smooth) && (r.smooth = y.smooth);
+        if (_.isBoolean(y.smooth)) 
+          r.smooth = y.smooth;
         
-        _.isNumber(y.yAxisIndex) && (r.yAxisIndex = y.yAxisIndex);
+        if (_.isNumber(y.yAxisIndex)) 
+          r.yAxisIndex = y.yAxisIndex;
 
         var lineWidth = y.lineWidth || props.lineWidth;
-        _.isNumber(lineWidth) && (r.itemStyle.normal.lineStyle.width = lineWidth);
+        if (_.isNumber(lineWidth)) 
+          r.itemStyle.normal.lineStyle.width = lineWidth;
 
         return r;
       });
@@ -335,7 +414,7 @@ var Chart = React.createClass({
     {
       // Check if supplied (series) data is according to x-axis type
       if (xaxisData) {
-        // Expect array of numbers paired to x-axis data (aAxis.type=category)
+        // Expect array of numbers paired to x-axis data (xAxis.type=category)
         data = data.map(v => ((v == '-' || v == null)? null : Number(v)));
         if (data.length != xaxisData.length || data.some(v => isNaN(v)))
           data = null; // invalidate the entire array
@@ -498,9 +577,11 @@ var Chart = React.createClass({
   
   _initializeChart: function ()
   {
+    var cls = this.constructor;
+    
     console.assert(this._chart == null, 'Expected an empty EChart instance');
     
-    var theme = _.cloneDeep(this.props.theme);
+    var theme = cls.propsToTheme(this.props);
     this._chart = echarts.init(this._el, theme);
     
     if (_.isFunction(this.props.refreshData)) {

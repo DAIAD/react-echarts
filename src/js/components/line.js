@@ -149,7 +149,8 @@ var Chart = React.createClass({
     
     propsToOptions: function (props)
     {
-      // Build ECharts-specific options based on props passed to a component
+      // Build echarts-specific options based on props passed to component
+      
       var opts = _.extend({}, 
         {
           animation: false, 
@@ -160,24 +161,27 @@ var Chart = React.createClass({
         this.propsToSeries(props)
       );
       
-      // Perform a final pass to adjust options previously built
+      // Perform a final pass to adjust previously built options
       
       opts = this.adjustOptions(opts, props);
 
       return opts;
     },
     
-    adjustOptions: function (opts, props) {
+    adjustOptions: function (opts, props) 
+    {
       // Note: This method modifies options in-place! 
       
+      // 1. Adjust grid according to legend data
+      
       var {grid} = opts;
+      
       var legend = {
         ...this.defaults.legend,
         ...props.theme.legend, 
         ...opts.legend,
       };
 
-      // Try to adjust grid according to legend data
       if (legend.data) {
         // Re-adjust grid.y according to number of line breaks in legend
         let n = legend.data.filter(name => (name == '')).length;
@@ -187,6 +191,14 @@ var Chart = React.createClass({
         grid.y = parseInt(y0 || 0) + 2 * legend.padding + (n + 1) * h;
       }
       
+      // 2. Swap axes, if horizontal view is enabled
+     
+      if (props.horizontal) {
+        var {xAxis, yAxis} = opts;
+        opts.yAxis = xAxis;
+        opts.xAxis = yAxis;
+      }
+
       return opts
     },
     
@@ -310,13 +322,12 @@ var Chart = React.createClass({
 
         // Provide labels for points
         
-        var label = (y.label == null || y.label === false)? null : 
-          (_.isObject(y.label)? y.label : {}); 
+        var label = y.label? (_.isObject(y.label)? y.label : {}) : null; 
         if (label != null) {
           let yf = label.formatter || props.yAxis.formatter;
           label = {
             show: true,
-            position: label.position,
+            position: label.position || (props.horizontal? 'right' : 'top'),
             formatter: (yf == null)? null : 
               (p) => (p.data? yf(p.data) : null),
           };
@@ -470,6 +481,7 @@ var Chart = React.createClass({
     grid: gridPropType, 
     color: PropTypes.arrayOf(PropTypes.string),
     tooltip: PropTypes.bool,
+    horizontal: PropTypes.bool,
     smooth: PropTypes.bool, // fallback for series
     lineWidth: PropTypes.number, // fallback for series (pixels)
     series: PropTypes.arrayOf(seriesPropType),
@@ -488,6 +500,7 @@ var Chart = React.createClass({
       theme: require('../theme/default'),
       grid: {},
       tooltip: true,
+      horizontal: false,
       legend: true,
       xAxis: {
         ...defaults.xAxis,

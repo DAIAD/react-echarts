@@ -64,6 +64,7 @@ Properties for the chart (a simplified subset of those supported by ECharts):
 | `smooth` | No | `Boolean` | Smoothen lines for all series (spline interpolation) | `false` |
 | `lineWidth` | No | `Number` | The line width (in pixels) of all plotted series | `2` |
 | `legend` | No | `Boolean` or `Array` | Display legend. If an array is supplied, then it can control the order and layout of items (a nested array generates a legend that wraps over multiple lines) | `true`, `[['A', 'B'], ['C', 'D']]`, `['A', 'C', 'D', 'B']`|
+| `horizontal` | No | `Boolean` | Swap roles for X/Y axes, i.e enable horizontal view | `false` |
 
 The `series` property is an array that provides the actual data to be plotted:
 

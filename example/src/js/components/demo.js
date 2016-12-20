@@ -84,6 +84,7 @@ var Charts = React.createClass({
               name: "Demo 1",
               numTicks: 8,
               formatter: (y) => (y.toFixed(1)),
+              min: 0.0,
             }}
             series={[
               {
@@ -204,6 +205,8 @@ var Charts = React.createClass({
               name: "Demo 4",
               numTicks: 4,
               formatter: (y) => (y.toFixed(2)),
+              //min: 5.0, 
+              //max: 15.0,
             }}
             tooltip={false}
             series={[
@@ -240,7 +243,7 @@ var Charts = React.createClass({
         </div>
       
         <div className="demo chart-wrapper" key={"chart-5/" + this.props.theme} id="chart-5-wrapper">
-          <h4>{'Demo 5: Bar charts - Color palette'}</h4>
+          <h4>{'Demo 5: Bar charts - Color Palette'}</h4>
           <echarts.LineChart {...chartProps}
             xAxis={{
               data: ['A', 'B', 'C', 'D', 'E', 'F'],
@@ -284,7 +287,46 @@ var Charts = React.createClass({
             ]}
           />
         </div>
-      
+        
+        <div className="demo chart-wrapper" key={"chart-6/" + this.props.theme} id="chart-6-wrapper">
+          <h4>{'Demo 6: Bar charts - Horizontal View'}</h4>
+          <echarts.LineChart {...chartProps}
+            horizontal={true}
+            height={Math.max(parseInt(this.props.height * 0.50), 400)} /* make it a bit taller */
+            xAxis={{
+              data: ['A', 'B', 'C', 'D', 'E', 'F'],
+              boundaryGap: [1, 1],
+            }}
+            yAxis={{
+              name: "Demo 6",
+              numTicks: 6,
+              min: 8.0,
+              max: 14.0,
+              formatter: (y) => (y.toFixed(2)),
+            }}
+            tooltip={false}
+            series={[
+              {
+                name: 'Town A',
+                type: 'bar',
+                label: true,
+                data: [
+                  9.76, 10.49, 10.30, 10.15, 11.08, 11.95,
+                ],
+              },
+              {
+                name: 'Town B',
+                type: 'bar',
+                label: true,
+                data: [
+                  8.70, 9.58, 10.11, 10.40, 10.97, 11.46,
+                ],
+
+              },
+            ]}
+          />
+        </div>
+     
       </div>
     );
   },

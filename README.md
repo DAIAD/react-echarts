@@ -73,7 +73,7 @@ The `series` property is an array that provides the actual data to be plotted:
 | `series.0.name` | Yes | `String` | The name of this dataset | `Temperature - Athens` |
 | `series.0.data` | Yes | `Array` | The data points. See [note](#note---series-data) | `[11.0, 11.5, 13, 14, 13, 15, 17]` |
 | `series.0.yAxisIndex` | No | `Number` | The Y axis that a series corresponds to. This is meaningfull only if a dual Y axis is provided as `yAxis` property. | `0` or `1`|
-| `series.0.color` | No | `String` | The color for this line/area | `'#C23531'` |
+| `series.0.color` | No | `String` or `(name, data, dataIndex)=>(<String>)` | The color for this line/bars. | `'#C23531'` |
 | `series.0.smooth` | No | `Boolean` | Smooth line for this series (spline interpolation) | `false` |
 | `series.0.fill` | No | `Number` | Fill areas with the given opacity | `null` or `0.55`|
 | `series.0.symbolSize` | No | `Number` | Radius for symbols for (x,y) points | `4` |

@@ -194,7 +194,7 @@ var Charts = React.createClass({
         </div>
         
         <div className="demo chart-wrapper" key={"chart-4/" + this.props.theme} id="chart-4-wrapper">
-          <h4>{'Demo 4: Bar charts - Category X axis'}</h4>
+          <h4>{'Demo 4: Bar charts'}</h4>
           <echarts.LineChart {...chartProps}
             xAxis={{
               data: ['A', 'B', 'C', 'D', 'E', 'F'],
@@ -211,6 +211,7 @@ var Charts = React.createClass({
                 name: 'Town A',
                 type: 'bar',
                 label: false,
+                color: '#6DE3E6',
                 data: [
                   10.16, 10.39, 10.42, 10.56, 11.08, 11.85,
                 ],
@@ -238,8 +239,54 @@ var Charts = React.createClass({
           />
         </div>
       
+        <div className="demo chart-wrapper" key={"chart-5/" + this.props.theme} id="chart-5-wrapper">
+          <h4>{'Demo 5: Bar charts - Color palette'}</h4>
+          <echarts.LineChart {...chartProps}
+            xAxis={{
+              data: ['A', 'B', 'C', 'D', 'E', 'F'],
+              boundaryGap: [1, 1],
+            }}
+            yAxis={{
+              name: "Demo 5",
+              numTicks: 4,
+              formatter: (y) => (y.toFixed(2)),
+            }}
+            tooltip={false}
+            series={[
+              {
+                name: 'Town A',
+                type: 'bar',
+                label: true,
+                color: (name, data, dataIndex) => {
+                  // Colorize on value levels
+                  var value = Number(data);
+                  return (value < 10)? '#99CBEA' : (value < 11)? '#4D9CCD' : '#0F5A88';
+                },
+                data: [
+                  9.76, 10.39, 10.90, 10.15, 11.08, 11.95,
+                ],
+              },
+              {
+                name: 'Town B',
+                type: 'bar',
+                color: (name, data, dataIndex) => {
+                  // Colorize on category 
+                  return ({
+                    'A': '#ECA3A3', 'B': '#CC5D5D', 'C': '#CC8F5D',
+                    'D': '#EAD731', 'E': '#92BD21', 'F': '#388E37',
+                  })[name];
+                },
+                data: [
+                  8.70, 9.58, 10.11, 10.40, 10.97, 11.46,
+                ],
+
+              },
+            ]}
+          />
+        </div>
+      
       </div>
-    )
+    );
   },
 });
 

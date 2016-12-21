@@ -15,7 +15,7 @@ var validateDimension = function (props, propName, componentName) {
   
   if (_.isNumber(val)) {
     return;
-  } else if (!/^[0-9]+.?([0-9]+)?(px|em|ex|%|vx|vw)$/.test(val.toString())) {
+  } else if (!/^[0-9]+.?([0-9]+)?(px|em|ex|%|vh|vw)$/.test(val.toString())) {
     return new Error(
       'Invalid property `' + propName + '` supplied to' + ' `' + componentName + '`:' +
       'Not a CSS dimension (width/height): ' + val

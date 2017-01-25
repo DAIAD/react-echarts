@@ -527,7 +527,6 @@ var Chart = React.createClass({
 
   componentDidMount: function ()
   {
-    this._el = ReactDOM.findDOMNode(this);
     this._initializeChart();
     this._redrawChart(this.props);
   },
@@ -567,6 +566,7 @@ var Chart = React.createClass({
     return (
       <div 
         id={this._id}
+        ref={(el) => { this._el = el; }}
         className={['portal', this.props.prefix].join(' ')}
         style={{
           width: this.props.width,
@@ -592,6 +592,7 @@ var Chart = React.createClass({
   {
     var cls = this.constructor;
     
+    console.assert(this._el != null, 'Invalid parent DOM element');
     console.assert(this._chart == null, 'Expected an empty EChart instance');
     
     var theme = cls.propsToTheme(this.props);

@@ -62,6 +62,7 @@ Properties for the chart (a simplified subset of those supported by ECharts):
 | `color` | No | `Array` of `String` | A palette of preferred colors | `['#C23531', '#2F4554']` |
 | `tooltip` | No | `Boolean` | Display tooltips for data points or marker points/lines | `true` |
 | `smooth` | No | `Boolean` | Smoothen lines for all series (spline interpolation) | `false` |
+| `lineType` | No | `String` | The line type of all plotted series. One of `solid`, `dotted`, `dashed` | `dashed` |
 | `lineWidth` | No | `Number` | The line width (in pixels) of all plotted series | `2` |
 | `legend` | No | `Boolean` or `Array` | Display legend. If an array is supplied, then it can control the order and layout of items (a nested array generates a legend that wraps over multiple lines) | `true`, `[['A', 'B'], ['C', 'D']]`, `['A', 'C', 'D', 'B']`|
 | `horizontal` | No | `Boolean` | Swap roles for X/Y axes, i.e enable horizontal view | `false` |
@@ -79,6 +80,7 @@ The `series` property is an array that provides the actual data to be plotted:
 | `series.0.fill` | No | `Number` | Fill areas with the given opacity | `null` or `0.55`|
 | `series.0.symbolSize` | No | `Number` | Radius for symbols for (x,y) points | `4` |
 | `series.0.symbol` | No | `String` | Choose a symbol for (x,y) points. One of: `circle`, `rectangle`, `triangle`, `diamond`, `emptyCircle`, `emptyRectangle`, `emptyTriangle`, `emptyDiamond` | `emptyCircle` |
+| `series.0.lineType` | No | `String` | The line type of all plotted series. One of `solid`, `dotted`, `dashed` | `dashed` |
 | `series.0.lineWidth` | No | `Number` | The width (pixels) for this line | `false` |
 | `series.0.label` | No | `Object` or `Boolean`| Describe labels for points on cartesian plane. If present, each (x, y) point is labeled. | `{position: "top"}` |
 | `series.0.label.position` | No | `String` | Specify a position for labels (relative to point). One of: `top`, `bottom`, `left`, `right`, `inside`, `insideTop`, `insideBottom` | `top` |

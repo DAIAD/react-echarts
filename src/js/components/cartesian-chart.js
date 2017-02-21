@@ -63,6 +63,9 @@ var seriesPropType = PropTypes.shape({
     }),
   ]),
   lineWidth: PropTypes.number, // pixels
+  lineType: PropTypes.oneOf([
+    'solid', 'dotted', 'dashed',
+  ]),
   mark: PropTypes.shape({
     points: PropTypes.arrayOf(PropTypes.shape({
       type: PropTypes.oneOf(['min', 'max']),
@@ -375,6 +378,10 @@ var Chart = React.createClass({
         var lineWidth = y.lineWidth || props.lineWidth;
         if (_.isNumber(lineWidth)) 
           r.itemStyle.normal.lineStyle.width = lineWidth;
+        
+        var lineType = y.lineType || props.lineType;
+        if (_.isString(lineType)) 
+          r.itemStyle.normal.lineStyle.type = lineType;
 
         return r;
       });
@@ -484,6 +491,9 @@ var Chart = React.createClass({
     horizontal: PropTypes.bool,
     smooth: PropTypes.bool, // fallback for series
     lineWidth: PropTypes.number, // fallback for series (pixels)
+    lineType: PropTypes.oneOf([ // fallback for series
+      'solid', 'dotted', 'dashed',
+    ]),
     series: PropTypes.arrayOf(seriesPropType),
   },
 
@@ -513,6 +523,7 @@ var Chart = React.createClass({
       },
       smooth: false, // override per-series
       lineWidth: 2,
+      lineType: 'solid',
     };
   },
 

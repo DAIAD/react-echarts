@@ -2,10 +2,11 @@
   "name": "react-echarts",
   "version": "0.0.1",
   "description": "A collection of React components for ECharts charts",
-  "main": "src/js/index.js",
+  "main": "lib/js/index.js",
   "scripts": {
     "test": "./node src/js/test.js",
-    "example": "./node example/server.js"
+    "example": "./node example/server.js",
+    "build": "babel src --out-dir lib"
   },
   "repository": {
     "type": "git",

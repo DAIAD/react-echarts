@@ -531,9 +531,8 @@ var Chart = React.createClass({
   {
     var {randomString} = util;
     develop && console.debug('About to mount <Chart>...');
-    if (!this.props.id)
-      this._id = (this.props.id)? 
-        (this.props.id) : (this.props.prefix + '-' + randomString());
+    this._id = (this.props.id)? 
+      (this.props.id) : (this.props.prefix + '-' + randomString());
   },
 
   componentDidMount: function ()

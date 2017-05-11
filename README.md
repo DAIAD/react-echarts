@@ -34,6 +34,7 @@ Property callbacks:
 | Name | Required | Type | Description | Example |
 | ---- | -------- | ---- | ----------- | --------|
 | `refreshData` | No | `function()` | A callback that can be invoked by the component to explicitly request fresh data | `()=>(dispatch(refreshData("Foo")))` |
+| `onPointClick` | No | `(seriesIndex, dataIndex) => null` | Callback for chart point click. | `(seriesIndex, dataIndex) => { doSomething(seriesIndex, dataIndex); }` |
 
 Properties for the chart (a simplified subset of those supported by ECharts):
 

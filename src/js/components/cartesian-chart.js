@@ -495,6 +495,7 @@ var Chart = React.createClass({
     color: PropTypes.arrayOf(PropTypes.string),
     tooltip: PropTypes.bool,
     horizontal: PropTypes.bool,
+    onPointClick: PropTypes.func,
     smooth: PropTypes.bool, // fallback for series
     lineWidth: PropTypes.number, // fallback for series (pixels)
     lineType: PropTypes.oneOf([ // fallback for series
@@ -621,7 +622,11 @@ var Chart = React.createClass({
     
     var theme = cls.propsToTheme(this.props);
     this._chart = echarts.init(this._el, theme);
-    
+
+    _.isFunction(this.props.onPointClick) && this._chart.on('CLICK', ((p) => { 
+      this.props.onPointClick(p.seriesIndex, p.dataIndex);
+    }));
+
     if (_.isFunction(this.props.refreshData)) {
       // Can refresh itself: fire a request for fresh series data.
       this.props.refreshData();

@@ -558,6 +558,7 @@ var Chart = React.createClass({
   
   componentWillUnmount: function ()
   {
+    this._chart.off('CLICK');
     this._destroyChart();
     this._el = null;
   },

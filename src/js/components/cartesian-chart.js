@@ -85,6 +85,12 @@ var gridPropType = PropTypes.shape({
   y2:  PropTypes.string,
 });
 
+var imageOptionsPropType = PropTypes.shape({
+  type: PropTypes.string,
+  pixelRatio: PropTypes.number, // pixels
+  backgroundColor: PropTypes.string,
+});
+
 // A ECharts-based chart implemented as a React portal component
 var Chart = React.createClass({
   
@@ -495,6 +501,8 @@ var Chart = React.createClass({
     lineType: PropTypes.oneOf([ // fallback for series
       'solid', 'dotted', 'dashed',
     ]),
+    renderAsImage: PropTypes.bool,
+    imageOptions: imageOptionsPropType,  
     series: PropTypes.arrayOf(seriesPropType),
   },
 
@@ -525,6 +533,12 @@ var Chart = React.createClass({
       smooth: false, // override per-series
       lineWidth: 2,
       lineType: 'solid',
+      renderAsImage: false,
+      imageOptions: {
+        type: 'png',
+        pixelRatio: 5,
+        backgroundColor: '#fff',
+      },
     };
   },
 
@@ -532,9 +546,8 @@ var Chart = React.createClass({
   {
     var {randomString} = util;
     develop && console.debug('About to mount <Chart>...');
-    if (!this.props.id)
-      this._id = (this.props.id)? 
-        (this.props.id) : (this.props.prefix + '-' + randomString());
+    this._id = (this.props.id)? 
+      (this.props.id) : (this.props.prefix + '-' + randomString());
   },
 
   componentDidMount: function ()
@@ -545,6 +558,7 @@ var Chart = React.createClass({
   
   componentWillUnmount: function ()
   {
+    this._chart.off('CLICK');
     this._destroyChart();
     this._el = null;
   },
@@ -618,6 +632,7 @@ var Chart = React.createClass({
       // Can refresh itself: fire a request for fresh series data.
       this.props.refreshData();
     }
+
   },
   
   _redrawChart: function (nextProps)
@@ -638,6 +653,26 @@ var Chart = React.createClass({
     } else {
       this._chart.showLoading(options);
     }
+
+    if (nextProps.renderAsImage) {
+      this._renderAsImage(nextProps.imageOptions);
+    }
+  },
+
+  _renderAsImage: function (imageOptions) {
+    // this version of echarts does not support direct renderAsImage
+    // render image as base-64
+    var img = document.createElement('img');
+    var src = this._chart.getDataURL(imageOptions);
+
+    img.setAttribute('src', src);
+    img.setAttribute('id', this._id);
+    img.setAttribute('width', '100%');
+    img.setAttribute('max-height', '100%');
+
+    var parent = document.getElementById(this._id).parentNode;
+    parent.removeChild(parent.childNodes[0]);
+    parent.appendChild(img);
   },
 
   _destroyChart: function ()
